@@ -450,6 +450,8 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
           <input type="file" id="backupFile" accept=".json,.txt,application/json,text/plain" style="display:none" onchange="importBackupFile(this)">
         </div>
         <div class="inline" style="margin-top:6px"><button class="ghost-btn" id="undoRestoreBtn" style="display:none" onclick="undoRestore()">↩ 복원 전 기록으로 되돌리기</button></div>
+        <div class="mdesc" id="autoBackupInfo" style="font-size:12px;color:#c9b88f;margin-top:10px"></div>
+        <div class="inline" style="margin-top:6px"><button class="ghost-btn" id="autoRestoreBtn" style="display:none" onclick="restoreAuto()">🗂 자동 백업에서 복원</button></div>
         <div class="inline" style="margin-top:6px"><button class="ghost-btn" onclick="downloadCSV()">기록 CSV 내보내기</button></div>
         <div style="font-size:11px;color:#a99a76;margin-top:8px;line-height:1.5">복사한 코드는 메모 앱이나 카카오톡 '나에게 보내기'에 붙여넣어 보관하세요. 복원하면 현재 기록이 코드 내용으로 덮어써집니다.</div>
       </div>
@@ -2260,6 +2262,77 @@ input,textarea,select,[contenteditable="true"],input *,textarea *{-webkit-user-s
   function lock(root){ (root.querySelectorAll?root.querySelectorAll('img'):[]).forEach(function(im){ im.draggable=false; }); }
   lock(document);
   new MutationObserver(function(ms){ ms.forEach(function(m){ m.addedNodes.forEach(function(n){ if(n.nodeType!==1) return; if(n.tagName==='IMG') n.draggable=false; lock(n); }); }); }).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+<style>
+/* 자동 백업 알림: 마티가 폴짝폴짝 */
+.mp-all.bk .mp-in{animation:bkHop .9s ease-in-out 4!important}
+.mp-bk{position:absolute;right:-16px;top:14px;font-size:24px;font-style:normal;animation:bkFloat 1.1s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(243,216,138,.85))}
+@keyframes bkHop{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-16px) rotate(-7deg)}65%{transform:translateY(0) rotate(5deg)}80%{transform:translateY(-5px)}}
+@keyframes bkFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.18)}}
+@media (prefers-reduced-motion:reduce){.mp-all.bk .mp-in,.mp-bk{animation:none!important}}
+</style>
+<script>
+/* ===== 3일마다 자동 백업 (이 기기 안에 최근 3개 보관) + 마티 알림 ===== */
+(function(){
+  const AK=KEY+'_auto', NK=KEY+'_autoann', EVERY=3, KEEP=3;
+  const fmt=t=>new Date(t).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const dayGap=(a,b)=>(Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/864e5;
+  function rd(){ try{ const a=JSON.parse(localStorage.getItem(AK)); return Array.isArray(a)?a.filter(x=>x&&x.day&&x.d&&Array.isArray(x.d.dailyQuests)&&x.d.settings&&x.d.history):[]; }catch(e){ return []; } }
+  function wr(a){ a=a.slice(0,KEEP); while(a.length){ try{ localStorage.setItem(AK,JSON.stringify(a)); return true; }catch(e){ a.pop(); } } return false; }
+  function refreshUI(){ const i=document.getElementById('autoBackupInfo'); if(!i) return; const a=rd();
+    i.textContent='자동 백업: '+EVERY+'일마다 이 기기에 최근 '+KEEP+'개까지 보관돼요.'+(a[0]?' 마지막 자동 백업: '+fmt(a[0].t)+'.':' 아직 자동 백업이 없어요.')+' 기기를 바꾸거나 브라우저 데이터를 지우면 함께 사라지니, 가끔 "파일로 저장"도 해 주세요.';
+    const b=document.getElementById('autoRestoreBtn'); if(b) b.style.display=a.length?'':'none'; }
+  window.restoreAuto=function(){ const a=rd(); if(!a.length){ toast('자동 백업이 아직 없어요'); refreshUI(); return; }
+    const go=x=>{ try{ restoreData(JSON.parse(JSON.stringify(x.d))); }catch(e){ toast('이 백업은 읽을 수 없어요'); } };
+    if(typeof dlg==='function') dlg('어느 자동 백업으로 되돌릴까요?','',a.map(x=>['🗂 '+fmt(x.t)+' 백업',()=>go(x)]).concat([['닫기',null]]));
+    else go(a[0]); };
+  const _ub=window.updateBackupInfo; if(typeof _ub==='function') window.updateBackupInfo=function(){ _ub.apply(this,arguments); refreshUI(); };
+
+  const _m=window.martyShow; window.__mtAutoUntil=0;
+  window.martyShow=function(k,t){ if(k!=='autoBackup'&&Date.now()<window.__mtAutoUntil) return; return _m.apply(this,arguments); };
+
+  function canShow(){
+    const sp=document.getElementById('splash'); if(sp){ const cs=getComputedStyle(sp); if(cs.display!=='none'&&cs.visibility!=='hidden'&&+cs.opacity>.05) return false; }
+    if(document.hidden) return false;
+    if(typeof byeOpen!=='undefined'&&byeOpen) return false;
+    if(typeof stampBusy!=='undefined'&&stampBusy) return false;
+    const on=id=>{ const e=document.getElementById(id); return !!(e&&e.className==='show'); };
+    if(on('rowenaPop')||on('martyPop')) return false;
+    const mo=document.getElementById('modalOverlay'), ask=document.getElementById('askOv');
+    if((mo&&mo.classList.contains('show'))||(ask&&ask.classList.contains('show'))||document.querySelector('.mg-box')) return false;
+    return true; }
+  const MORNING=['좋은 아침이에요! 마티가 몰래 자동 백업을 해 뒀어요! 💾✨','짜잔~! 오늘 아침 자동 백업 완료! 기록은 마티가 지켰어요 🛡️','아침 요정 마티 출근! 3일마다 챙기는 백업, 방금 끝났어요! 칭찬해 주세요 😚'];
+  const OTHER=['짜잔! 자동 백업 완료! 기록을 마티가 꼭 안아 뒀어요 🤗💾','3일 만에 자동 백업했어요! 이제 안심이에요 ✨','마티가 몰래 백업해 놨어요! 비밀이에요, 쉿 🤫💾'];
+  function announce(day){
+    const h=kstNow().getUTCHours(), L=(h>=5&&h<12)?MORNING:OTHER, text=L[Math.floor(Math.random()*L.length)];
+    try{ localStorage.setItem(NK,day); }catch(e){}
+    if(S.settings.martyPop===false){ window.__mtAutoUntil=0; toast('마티: '+text); return; }
+    window.__mtAutoUntil=Date.now()+Math.min(9000,Math.max(3400,1800+text.length*130))+800;
+    martyShow('autoBackup',text);
+    const all=document.querySelector('#martyPop .mp-all'); if(all){ all.classList.add('bk'); const mi=all.querySelector('.mp-in'); if(mi) mi.insertAdjacentHTML('beforeend','<i class="mp-bk">💾</i>'); } }
+  let waiting=false;
+  function queue(day){ if(waiting) return; waiting=true; let ok=0, n=0;
+    window.__mtAutoUntil=Date.now()+30*60*1000;              /* 알림 전까지 마티의 평소 수다는 잠시 양보 */
+    (function tick(){ if(++n>1500||todayStr()!==day){ waiting=false; window.__mtAutoUntil=0; return; }
+      ok=canShow()?ok+1:0;
+      if(ok>=3){ waiting=false; announce(day); return; }   /* 스플래시·로웨나 인사가 끝나고 잠깐 조용할 때 */
+      setTimeout(tick,1200); })(); }
+  function check(){ try{
+    if(!S||!S.settings) return;
+    const today=todayStr(), a=rd(), last=a[0];
+    if(!last&&!Object.keys(S.history||{}).length) return;                 /* 처음 쓰는 빈 기록은 백업하지 않음 */
+    if(!last||dayGap(last.day,today)>=EVERY){
+      if(!wr([{t:Date.now(),day:today,d:JSON.parse(JSON.stringify(S))}].concat(a))) return;   /* 저장 실패 시 알리지 않음 */
+    }
+    const cur=rd()[0];
+    if(cur&&cur.day===today&&localStorage.getItem(NK)!==today) queue(today);
+    refreshUI();
+  }catch(e){} }
+  window.autoBackupCheck=check;
+  setTimeout(check,2500);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(check,1500); });
+  setInterval(check,30*60*1000);
 })();
 </script>
 </body>
