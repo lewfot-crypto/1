@@ -107,10 +107,10 @@ main{flex:1; padding:16px 14px 90px; overflow-y:auto;}
 
 nav.bottom{
   position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);background:#0b140e;border-top:1px solid var(--gold-d);
 }
 nav.bottom .inner{
-  max-width:480px;width:100%;display:flex;background:#0b140e;border-top:1px solid var(--gold-d);
+  max-width:480px;width:100%;display:flex;background:#0b140e;
 }
 nav.bottom button{
   flex:1;background:none;border:none;color:#7f9375;padding:11px 2px 9px;font-size:10px;font-family:'Noto Serif KR',serif;
@@ -308,6 +308,7 @@ header.top{position:relative}
         </div>
         <div class="cal-grid" id="calGrid"></div>
       </div>
+      <div class="inline" style="margin:20px 0 10px"><button class="ghost-btn" style="flex:1" onclick="rowenaBye()">🌙 접속 종료 · 로웨나에게 인사하기</button></div>
     </section>
 
     <!-- QUESTS -->
@@ -338,17 +339,14 @@ header.top{position:relative}
       <div class="qm-group">
         <h3>DAILY QUEST 편집</h3>
         <div id="dqEditList"></div>
-        <div class="inline">
-          <input id="newDqInput" placeholder="새 데일리 퀘스트 이름">
-          <button class="ghost-btn" onclick="addDailyQuest()">추가</button>
-        </div>
+        <button class="gold-btn" onclick="mtNewDQ()">+ 마티와 함께 새 퀘스트 만들기</button>
       </div>
 
       <div class="qm-group">
         <h3>RULE EDITOR</h3>
-        <label>하루 시작 시각 (한국시간 · 이 시각 전의 밤은 전날로 계산 · 추천 6시)</label><select id="dayStartSel" onchange="setDayStart(this.value)"><option value="0">0시</option><option value="1">1시</option><option value="2">2시</option><option value="3">3시</option><option value="4">4시 (추천)</option><option value="5">5시</option><option value="6">6시</option></select>
+        <label>하루 시작 시각 (한국시간 · 이 시각 전의 밤은 전날로 계산 · 추천 6시)</label><select id="dayStartSel" onchange="mtRule('day',this)"><option value="0">0시</option><option value="1">1시</option><option value="2">2시</option><option value="3">3시</option><option value="4">4시</option><option value="5">5시</option><option value="6">6시 (추천)</option></select>
         <label>CLEAR 기준 (%) · 추천 75%</label>
-        <select id="clearPercentSelect" onchange="setClearPercent(this.value)">
+        <select id="clearPercentSelect" onchange="mtRule('clear',this)">
           <option value="70">70%</option><option value="75">75%</option>
           <option value="80">80%</option><option value="85">85%</option><option value="90">90%</option>
         </select>
@@ -372,9 +370,15 @@ header.top{position:relative}
         <select id="rwReactSel" onchange="setRw('rowenaReact',this.value==='1')"><option value="1">켜기</option><option value="0">끄기</option></select>
         <label>마티 등장 (잘했을 때 반짝)</label>
         <select id="martySel" onchange="setRw('martyPop',this.value==='1')"><option value="1">켜기</option><option value="0">끄기</option></select>
+        <label>로웨나 인사 (앱을 켤 때)</label>
+        <select id="rowenaGreetSel" onchange="setRw('rowenaGreet',this.value==='1')"><option value="1">켜기</option><option value="0">끄기</option></select>
+        <label>로웨나 등장 (시간대별로 가끔 말 걸기)</label>
+        <select id="rowenaChatSel" onchange="setRw('rowenaChat',this.value==='1')"><option value="1">켜기</option><option value="0">끄기</option></select>
+        <label>마티 잡담 (시간대별 말풍선)</label>
+        <select id="martyChatSel" onchange="setRw('martyChat',this.value==='1')"><option value="1">켜기</option><option value="0">끄기</option></select>
         <label>고해성사 (로웨나에게 털어놓기)</label>
         <select id="cfSel" onchange="setRw('confess',this.value==='1')"><option value="1">켜기</option><option value="0">끄기</option></select>
-        <div class="inline" style="margin-top:8px"><button class="ghost-btn" onclick="martyShow()">마티 불러보기</button></div>
+        <div class="inline" style="margin-top:8px"><button class="ghost-btn" onclick="martyShow(null)">마티 불러보기</button><button class="ghost-btn" onclick="rowenaShow()">로웨나 불러보기</button></div>
         <div class="inline" style="margin-top:14px;border-top:1px dashed var(--gold-d);padding-top:10px"><button class="ghost-btn" style="color:#b5533c;border-color:#b5533c" onclick="resetAllData()">모든 기록 초기화</button></div>
       </div>
       <div class="qm-group">
@@ -404,6 +408,7 @@ header.top{position:relative}
           <button class="ghost-btn" onclick="document.getElementById('backupFile').click()">파일에서 복원</button>
           <input type="file" id="backupFile" accept=".json,.txt,application/json,text/plain" style="display:none" onchange="importBackupFile(this)">
         </div>
+        <div class="inline" style="margin-top:6px"><button class="ghost-btn" id="undoRestoreBtn" style="display:none" onclick="undoRestore()">↩ 복원 전 기록으로 되돌리기</button></div>
         <div class="inline" style="margin-top:6px"><button class="ghost-btn" onclick="downloadCSV()">기록 CSV 내보내기</button></div>
         <div style="font-size:11px;color:#a99a76;margin-top:8px;line-height:1.5">복사한 코드는 메모 앱이나 카카오톡 '나에게 보내기'에 붙여넣어 보관하세요. 복원하면 현재 기록이 코드 내용으로 덮어써집니다.</div>
       </div>
@@ -431,6 +436,9 @@ header.top{position:relative}
 
 <script>
 const KEY='life_quest_save_v1';
+// 보상 절반 규칙: 홀수면 1을 깎아 짝수로 만든 뒤 절반 (예: 5→2, 20→10).
+// 업적/이벤트 골드는 저장 데이터에 원래 값이 들어 있어서, 지급·표시 시점에 이 함수로 절반을 계산함
+const halfG=n=>{ n=Math.floor(+n)||0; return (n-(n%2))/2; };
 function kstNow(){ return new Date(Date.now()+9*36e5); }
 function dayStartH(){ try{ return (S&&S.settings&&S.settings.dayStart!=null)?S.settings.dayStart:6; }catch(e){ return 6; } }
 function todayStr(){ return new Date(Date.now()+9*36e5-dayStartH()*36e5).toISOString().slice(0,10); }
@@ -627,7 +635,7 @@ function toggleQuest(id){
   const before=!!day.cleared;
   sfx(day.done[id]?'check':'uncheck');
   computeToday(); save();
-  if(!before && S.history[t].cleared){ celebClear(); earnDay('clear',10); comebackCheck(); chestCheck(); }
+  if(!before && S.history[t].cleared){ celebClear(); earnDay('clear',5); comebackCheck(); chestCheck(); }
   checkAchievements(); renderHome();
 }
 
@@ -660,7 +668,7 @@ function checkAchievements(){
     else if(c.type==='earlySleep') ok=Object.values(S.sleepLog||{}).filter(e=>e.time>='19:00'&&e.time<'23:00').length>=n;
     else if(c.type==='bodyLogs') ok=(S.bodyLog||[]).length>=n;
     else if(c.type==='journal') ok=Object.values(S.sleepLog||{}).filter(e=>e.note).length>=n;
-    if(ok){ S.gold=(S.gold||0)+(a.gold||20); a.unlocked=true; a.unlockedAt=todayStr(); celebrate('ach',a.name); }
+    if(ok){ S.gold=(S.gold||0)+halfG(a.gold||20); a.unlocked=true; a.unlockedAt=todayStr(); celebrate('ach',a.name); }
   });
   save();
 }
@@ -944,13 +952,52 @@ function openRecipeModal(id){
 
 function buyReward(id){ const r=S.rewards.find(x=>x.id===id); if((S.gold||0)<r.price){ toast('골드가 부족해요'); return; } askOk(r.name+' 을(를) '+r.price+'골드에 구매할까요?',()=>{ S.gold-=r.price; if(r.repeatable) S.rewards.push({id:'r'+Date.now(),name:r.name,price:r.price,owned:true,redeemed:false,repeatable:false}); else r.owned=true; save(); renderTreasure(); renderHome(); toast('보물 획득!'); }); }
 function redeem(id){ const r=S.rewards.find(x=>x.id===id); askOk(r.name+' 을(를) 사용할까요?'+(r.repeatable?'':' (되돌릴 수 없어요)'),()=>{ if(r.repeatable) r.uses=(r.uses||0)+1; else r.redeemed=true; save(); checkAchievements(); renderTreasure(); toast('TREASURE USED'); }); }
-function addReward(){ askText('새 보상 이름 (예: 🎁 작은 쇼핑)','',name=>{ name=name.trim(); if(!name) return;
-  askText('가격 (골드) · 0이면 바로 사용 가능','50',v=>{ const pv=parseInt(v,10); S.rewards.push({id:'r'+Date.now(),name,redeemed:false,price:isNaN(pv)?0:pv,owned:isNaN(pv)||pv<=0}); save(); renderTreasure(); },{num:true}); }); }
+/* ===== 마티의 보상 추천·안내 ===== */
+const MARTY_IDEAS=[['🍓 제철 과일 한 접시',20,1],['🧃 편의점 신상 간식',15,1],['📷 인생네컷 찍기',25,1],['🍪 쿠키 구워 먹기',25,1],['🧦 예쁜 양말 한 켤레',30,1],['🪴 작은 화분 하나',40],
+ ['🧸 귀여운 키링·인형',50],['🍜 좋아하는 면 요리 맛집',60,1],['🛁 입욕제·핸드크림',60],['📓 새 다이어리·노트',70],['🎬 심야 영화 + 팝콘',80],['🧵 뜨개·자수 키트',90],['🥐 브런치 카페 데이',100],['🎨 원데이 클래스',150],
+ ['💇 새 헤어스타일',300],['🛏️ 침구 세트 교체',350],['🖱️ 갖고 싶던 기기 액세서리',400],['🎫 좋아하는 아티스트 콘서트',500],['🏕️ 근교 캠핑·글램핑',700]];
+const MG_DAILY=7; // 하루에 모이는 기본 골드 (클리어 5 + 마무리 2)
+let MG={};
+function mgPicks(){ const have=new Set(S.rewards.map(r=>r.name)), pool=MARTY_IDEAS.filter(i=>!have.has(i[0])), pick=[], used=new Set();
+  const rnd=a=>a[Math.floor(Math.random()*a.length)], add=x=>{ pick.push(x); used.add(x[0]); };
+  [i=>i[1]<=40,i=>i[1]>40&&i[1]<=150,i=>i[1]>150].forEach(f=>{ const c=pool.filter(f); if(c.length) add(rnd(c)); });
+  while(pick.length<3){ const c=pool.filter(i=>!used.has(i[0])); if(!c.length) break; add(rnd(c)); }
+  return pick; }
+function mgDays(price){ const g=S.gold||0; if(price<=0) return '바로 사용할 수 있어요!'; if(price<=g) return '지금 골드로 바로 살 수 있어요!'; return '하루 약 '+MG_DAILY+'골드씩 모이니까, 약 '+Math.ceil((price-g)/MG_DAILY)+'일이면 살 수 있어요.'; }
+function mgRender(){ const o=document.getElementById('askOv'); let say='', body='', foot='';
+  if(MG.step==='pick'){
+    say=MG.picks.length?`안녕하세요, 마티예요! ✨\n오늘은 제가 보상을 골라 드릴게요.\n지금 모은 골드는 ◈${S.gold||0}!`:`제가 준비한 추천을 전부 담으셨네요! 👏\n이제 직접 만들어 볼까요?`;
+    body=MG.picks.map((it,i)=>`<button class="mg-opt" onclick="mgChoose(${i})"><b>${esc(it[0])}</b><span>${it[1]<=40?'가볍게':it[1]<=150?'적당히':'크게'} · ◈${it[1]}${it[1]<=(S.gold||0)?' · 지금 가능':''}</span></button>`).join('');
+    foot=(MG.picks.length?`<button class="ghost-btn" onclick="mgReroll()">🔄 다른 추천</button>`:'')+`<button class="ghost-btn" onclick="mgCustom()">✏️ 직접 만들래요</button><button class="ghost-btn" onclick="mgClose()">닫기</button>`;
+  } else if(MG.step==='name'){
+    say=`좋아요, 직접 만들어 봐요!\n어떤 보상을 주고 싶어요?\n이모지를 하나 붙이면 더 귀여워져요 ✨ (예: 🧸 인형 뽑기)`;
+    body=`<input id="mgName" placeholder="보상 이름" maxlength="40" value="${esc(MG.name||'')}" onkeydown="if(event.key==='Enter')mgNext()">`;
+    foot=`<button class="ghost-btn" onclick="mgBack()">뒤로</button><button class="gold-btn" onclick="mgNext()">다음</button>`;
+  } else {
+    say=`'${esc(MG.name)}', 좋아요! 가격은 어떻게 할까요?\n가벼운 즐거움 10~40 · 적당한 보상 50~150 · 큰 선물 200+ 정도가 좋아요.\n<span id="mgHintT">${mgDays(MG.price)}</span>`;
+    body=`<input id="mgPrice" type="number" inputmode="numeric" min="0" value="${MG.price}" oninput="mgHint()" onkeydown="if(event.key==='Enter')mgAdd()">`;
+    foot=`<button class="ghost-btn" onclick="mgBack()">뒤로</button><button class="gold-btn" onclick="mgAdd()">추가하기</button>`;
+  }
+  o.innerHTML=`<div class="ask-box mg-box"><div class="mg-row"><img class="mg-img" src="${MARTY_IMG}" alt=""><div class="speech-bubble">${say}</div></div>${body}<div class="mg-foot">${foot}</div></div>`;
+  o.classList.add('show'); if(MG.step==='name') setTimeout(()=>{ const i=document.getElementById('mgName'); if(i) i.focus(); },60); }
+function martyRewardGuide(){ MG={step:'pick',picks:mgPicks()}; mgRender(); }
+function mgClose(){ const o=document.getElementById('askOv'); o.classList.remove('show'); o.innerHTML=''; }
+function mgChoose(i){ const it=MG.picks[i]; MG.name=it[0]; MG.price=it[1]; MG.rep=!!it[2]; MG.from='pick'; MG.step='price'; mgRender(); }
+function mgReroll(){ MG.picks=mgPicks(); mgRender(); }
+function mgCustom(){ MG.step='name'; MG.name=''; MG.rep=false; mgRender(); }
+function mgBack(){ MG.step=(MG.step==='price'&&MG.from==='custom')?'name':'pick'; mgRender(); }
+function mgNext(){ const v=document.getElementById('mgName').value.trim(); if(!v){ toast('마티: 이름을 알려주세요!'); return; } MG.name=v; MG.price=50; MG.from='custom'; MG.step='price'; mgRender(); }
+function mgHint(){ const v=parseInt(document.getElementById('mgPrice').value,10); document.getElementById('mgHintT').textContent=mgDays(isNaN(v)?0:v); }
+function mgAdd(){ const pv=parseInt(document.getElementById('mgPrice').value,10), price=(isNaN(pv)||pv<0)?0:pv;
+  const r={id:'r'+Date.now(),name:MG.name,redeemed:false,price,owned:price<=0}; if(MG.rep) r.repeatable=true;
+  S.rewards.push(r); save(); mgClose(); renderTreasure(); toast('마티: 새 보물을 등록했어요! ✨'); if(S.settings.martyPop!==false) martyShow('rewardAdd'); }
+function addReward(){ martyRewardGuide(); }
+document.head.insertAdjacentHTML('beforeend','<style>.mg-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}.mg-img{width:58px;height:auto;flex:none;image-rendering:pixelated;filter:drop-shadow(0 0 6px rgba(243,216,138,.5))}.mg-box .speech-bubble{white-space:pre-line;font-size:13px;line-height:1.55}.mg-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;background:#fbf6e8;border:1px solid var(--gold-d);border-radius:5px;padding:9px 11px;margin-bottom:7px;color:var(--ink);font-family:inherit;font-size:13px;cursor:pointer}.mg-opt span{font-size:11px;color:var(--ink-soft)}.mg-foot{display:flex;gap:8px;margin-top:10px}.mg-box input{width:100%;box-sizing:border-box}</style>');
 
 function updateBackupInfo(){
   const el=document.getElementById('backupInfo'); if(!el) return;
   const t=S.lastBackup;
-  el.textContent = t ? `마지막 백업: ${new Date(t).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})}` : '아직 백업한 적이 없어요. 기록이 사라지지 않게 가끔 백업해 두세요.';
+  el.textContent = t ? `마지막 백업: ${new Date(t).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})}` : '아직 백업한 적이 없어요. 기록이 사라지지 않게 가끔 백업해 두세요.'; updateUndoBtn();
 }
 function exportBackup(){
   S.lastBackup=Date.now(); save();
@@ -968,12 +1015,27 @@ function copyBackup(){
   if(!ok && navigator.clipboard){ navigator.clipboard.writeText(ta.value).then(()=>toast('COPIED')).catch(()=>toast('길게 눌러 복사하세요')); return; }
   toast(ok?'COPIED':'길게 눌러 복사하세요');
 }
+const PREV_KEY=KEY+'_prev';
+function stashPrevData(){ try{ localStorage.setItem(PREV_KEY, JSON.stringify({t:Date.now(), d:S})); }catch(e){} }
+function getPrevData(){ try{ const p=JSON.parse(localStorage.getItem(PREV_KEY)); return (p&&p.d&&Array.isArray(p.d.dailyQuests)&&p.d.settings&&p.d.history)?p:null; }catch(e){ return null; } }
+function updateUndoBtn(){ const btn=document.getElementById('undoRestoreBtn'); if(!btn) return; const p=getPrevData(); btn.style.display=p?'':'none';
+  if(p) btn.textContent='↩ 복원 전 기록으로 되돌리기 ('+new Date(p.t).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})+' 기준)'; }
+function applyRestore(data){
+  const dd=defaultData(); ['mainQuests','subQuests','achievements','rewards'].forEach(k=>{ if(!Array.isArray(data[k])) data[k]=dd[k]; });
+  S=data; _snap=null; _say=null; calOffset=0; ensureAchievements(); ensureMisc(); lastDay=todayStr(); computeToday(); save(); renderHome(); renderCalendar(); renderQuests(); renderAchievements(); renderTreasure(); renderMaster();
+  applyBg(); applyVol(); renderSoundUI();
+  if(bgmOn()){ if(bgmTimer){ const nt=bgmDayTrack(); if(nt!==bgmTrack){ bgmTrack=nt; bgmStep=0; } } else startBgm(); } else stopBgm();
+}
 function restoreData(data){
   if(!data||!Array.isArray(data.dailyQuests) || !data.settings || !data.history) throw new Error('bad');
-  askOk('현재 기록이 백업 내용으로 덮어써져요. 복원할까요?',()=>{
-    const dd=defaultData(); ['mainQuests','subQuests','achievements','rewards'].forEach(k=>{ if(!Array.isArray(data[k])) data[k]=dd[k]; });
-    S=data; ensureAchievements(); ensureMisc(); lastDay=todayStr(); computeToday(); save(); renderHome(); renderCalendar(); renderQuests(); renderAchievements(); renderTreasure(); renderMaster();
-    toast('RESTORED'); });
+  askOk('현재 기록이 백업 내용으로 덮어써져요. 복원할까요? (직전 기록은 "복원 전 기록으로 되돌리기"로 되살릴 수 있어요)',()=>{
+    stashPrevData(); applyRestore(data); updateUndoBtn();
+    toast('복원했어요. 실수라면 "되돌리기"를 눌러요'); });
+}
+function undoRestore(){
+  const p=getPrevData(); if(!p){ toast('되돌릴 기록이 없어요'); updateUndoBtn(); return; }
+  askOk('복원하기 전의 기록으로 되돌릴까요? (지금 기록은 다시 "되돌리기"로 되살릴 수 있어요)',()=>{
+    stashPrevData(); applyRestore(p.d); updateUndoBtn(); toast('복원 전 기록으로 되돌렸어요'); });
 }
 function importBackup(){
   const raw=document.getElementById('backupText').value.trim();
@@ -981,15 +1043,29 @@ function importBackup(){
   try{ restoreData(JSON.parse(decodeURIComponent(escape(atob(raw.slice(4)))))); }
   catch(e){ alert('백업 코드를 읽을 수 없어요. 코드를 통째로 붙여넣었는지 확인해 주세요.'); }
 }
-function downloadBackup(){
-  S.lastBackup=Date.now(); save();
+function saveBackupViaLink(json,fname,done){
   try{
-    const stamp=kstNow().toISOString().slice(0,10).replace(/-/g,'');
-    const blob=new Blob([JSON.stringify(S)],{type:'application/json'}), url=URL.createObjectURL(blob), a=document.createElement('a');
-    a.href=url; a.download='life-quest-backup-'+stamp+'.json'; document.body.appendChild(a); a.click(); a.remove();
+    const blob=new Blob([json],{type:'application/json'}), url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),4000);
-    updateBackupInfo(); toast('백업 파일을 저장했어요');
+    done();
   }catch(e){ toast('파일 저장이 안 돼요. 백업 코드를 이용해 주세요'); }
+}
+function downloadBackup(){
+  const now=Date.now(), prevLB=S.lastBackup;
+  const stamp=kstNow().toISOString().slice(0,10).replace(/-/g,''), fname='life-quest-backup-'+stamp+'.json';
+  S.lastBackup=now; const json=JSON.stringify(S); S.lastBackup=prevLB;
+  const done=()=>{ S.lastBackup=now; save(); updateBackupInfo(); toast('백업 파일을 저장했어요'); };
+  try{
+    if(navigator.share&&navigator.canShare&&typeof File==='function'){
+      const f=new File([json],fname,{type:'application/json'});
+      if(navigator.canShare({files:[f]})){
+        navigator.share({files:[f],title:'LIFE QUEST 백업'}).then(done).catch(e=>{ if(!e||e.name!=='AbortError') saveBackupViaLink(json,fname,done); });
+        return;
+      }
+    }
+  }catch(e){}
+  saveBackupViaLink(json,fname,done);
 }
 function importBackupFile(inp){
   const f=inp.files&&inp.files[0]; if(!f) return;
@@ -1040,6 +1116,21 @@ var bgmTrack=null, _BT=null;
 const BGM_CH=[{b:40,a:[55,59,64,67]},{b:36,a:[55,60,64,67]},{b:43,a:[55,59,62,67]},{b:38,a:[54,57,62,66]},{b:40,a:[55,59,64,67]},{b:36,a:[55,60,64,67]},{b:45,a:[57,60,64,69]},{b:47,a:[54,57,59,63]}];
 const BGM_A=[[83,0,88,0,86,83],[84,0,88,0,84,79],[83,0,86,0,83,79],[81,0,86,0,90,86],[83,0,88,0,91,88],[88,0,84,0,91,88],[88,0,84,0,81,84],[83,0,78,0,83,0]];
 const BGM_B=[[91,0,88,0,83,0],[88,0,91,0,96,0],[95,0,91,0,86,0],[90,0,93,0,90,86],[88,0,83,0,88,0],[84,0,88,0,91,0],[93,0,91,0,88,84],[95,0,90,0,83,0]];
+function bgmVar(T,seed){
+  let x=seed>>>0; const r=()=>(x=(x*1664525+1013904223)>>>0)/4294967296;
+  const all=[]; let nz=0;
+  [T.A,T.B].forEach(S8=>S8.forEach(row=>row.forEach((v,k)=>{ if(v) all.push(v); if(v&&k%2===0) nz++; })));
+  const pcs=new Set(all.map(v=>v%12)), lo=Math.min(...all), hi=Math.max(...all), pool=[];
+  for(let n=lo;n<=hi;n++) if(pcs.has(n%12)) pool.push(n);
+  const dens=Math.min(.85,Math.max(.4,nz/48)); let p=Math.floor(pool.length/2); const bars=[];
+  for(let b=0;b<16;b++){ const c=T.ch[b%8], row=[];
+    for(let k=0;k<6;k++){ let v=0;
+      if((k%2===0&&r()<dens)||(k===5&&r()<dens*.5)){ p=Math.max(0,Math.min(pool.length-1,p+Math.floor(r()*5)-2)); v=pool[p];
+        if(k===0){ const ct=pool.filter(q=>c.a.some(a=>(q-a)%12===0)); if(ct.length){ v=ct.reduce((m,q)=>Math.abs(q-v)<Math.abs(m-v)?q:m); p=pool.indexOf(v); } } }
+      row.push(v); }
+    bars.push(row); }
+  return {A:bars.slice(0,8),B:bars.slice(8)};
+}
 function bgmTr(){ if(_BT) return _BT;
   const mk=(n,bpm,ch,sc,base,seed,dens,o)=>{ let x=seed>>>0; const r=()=>(x=(x*1664525+1013904223)>>>0)/4294967296, pool=[]; for(let o=0;o<2;o++) sc.forEach(i=>pool.push(base+o*12+i));
     let p=Math.floor(pool.length/2); const bars=[];
@@ -1052,9 +1143,10 @@ function bgmTr(){ if(_BT) return _BT;
     mk('입학식의 종소리',84,[{b:48,a:[60,64,67,71]},{b:50,a:[62,66,69,74]},{b:52,a:[59,64,67,71]},{b:48,a:[60,64,67,71]},{b:45,a:[57,60,64,69]},{b:50,a:[62,66,69,74]},{b:43,a:[59,62,67,71]},{b:48,a:[60,64,67,71]}],[0,2,4,6,7,9,11],72,11,.8,{sp:1}),
     mk('금서 구역의 밤',62,[{b:45,a:[57,60,64,69]},{b:40,a:[56,59,64,68]},{b:41,a:[57,60,65,69]},{b:40,a:[56,59,64,68]},{b:45,a:[57,60,64,69]},{b:38,a:[57,62,65,69]},{b:40,a:[56,59,64,68]},{b:45,a:[57,60,64,69]}],[0,2,3,5,7,8,11],69,29,.55,{sp:1,w:'sine'}),
     mk('빗자루 비행 수업',108,[{b:40,a:[59,64,67,71]},{b:48,a:[60,64,67,72]},{b:43,a:[59,62,67,71]},{b:50,a:[62,66,69,74]},{b:40,a:[59,64,67,71]},{b:45,a:[60,64,69,72]},{b:47,a:[59,63,66,71]},{b:40,a:[59,64,67,71]}],[0,2,3,5,7,9,10],76,47,.85,{sp:1})];
+  _BT.forEach((T,i)=>{ T.P=[{A:T.A,B:T.B},bgmVar(T,1013+i*97),bgmVar(T,2027+i*97),bgmVar(T,3041+i*97)]; });
   return _BT; }
 function bgmPlay(step,t){
-  const T=bgmTr()[bgmTrack||0], bar=Math.floor(step/6)%16, k=step%6, c=T.ch[bar%8], d=bgmGain, m=(bar<8?T.A:T.B)[bar%8][k];
+  const T=bgmTr()[bgmTrack||0], PP=T.P||[{A:T.A,B:T.B}], bar=Math.floor(step/6)%(16*PP.length), k=step%6, c=T.ch[bar%8], d=bgmGain, P=PP[Math.floor(bar/16)], bb=bar%16, m=(bb<8?P.A:P.B)[bb%8][k];
   if(k===0){ tone(mf(c.b),t,1.7,'sine',.13,d); [c.a[0],c.a[2],c.a[3]].forEach(n=>tone(mf(n),t,2.2,'triangle',.028,d,0,.7)); }
   tone(mf(c.a[[0,1,2,3,2,1][k]]),t,.9,T.w||'triangle',.045,d);
   if(m) bell(mf(m),t,1.3,.06,d);
@@ -1066,7 +1158,7 @@ function bgmDayTrack(){
   let t=Math.floor(Math.random()*n); if(B&&n>1&&t===B.t) t=(B.t+1+Math.floor(Math.random()*(n-1)))%n;
   S.settings.bgmDay={d,t}; save(); return t;
 }
-function bgmSched(){ while(bgmNext<actx.currentTime+.6){ const T=bgmTr()[bgmTrack||0]; bgmPlay(bgmStep,bgmNext); bgmNext+=60/T.bpm/2; bgmStep=(bgmStep+1)%96;
+function bgmSched(){ while(bgmNext<actx.currentTime+.6){ const T=bgmTr()[bgmTrack||0]; bgmPlay(bgmStep,bgmNext); bgmNext+=60/T.bpm/2; bgmStep=(bgmStep+1)%(96*(T.P?T.P.length:1));
     if(bgmStep===0) bgmTrack=bgmDayTrack(); } }
 function startBgm(){
   if(bgmTimer||window._sleepOn||!initAudio()) return;
@@ -1092,7 +1184,7 @@ function unlockAudio(){ if(!(sfxOn()||bgmOn())) return; initAudio(); if(bgmOn())
 document.addEventListener('click',e=>{ if(e.target.closest&&e.target.closest('button,select')) sfx('tick'); });
 document.addEventListener('visibilitychange',()=>{
   if(!actx) return;
-  if(document.hidden){ stopBgm(); actx.suspend(); }
+  if(document.hidden){ if(window._sleepOn) return; stopBgm(); actx.suspend(); }
   else if(bgmOn()){ actx.resume(); startBgm(); }
 });
 
@@ -1261,7 +1353,7 @@ function rwSay(kind,ctx,opt){
 function rwCat(name){ return /걷|산책/.test(name)?'walk':/근력|웨이트|근육/.test(name)?'str':/운동|헬스|러닝/.test(name)?'ex':/저녁|식사|밥/.test(name)?'dinner':/취침|수면|잠/.test(name)?'sleep':/스트레칭|요가/.test(name)?'stretch':/물|수분/.test(name)?'water':/디저트|간식/.test(name)?'dessert':'generic'; }
 function rwMetrics(){ const d=debtQ(), cf=S.mainQuests.find(q=>q.type==='stages'), cl=S.subQuests.find(q=>q.id==='cafelab');
   return {debt:d?d.current:0, yt:S.mainQuests.filter(q=>q.type==='youtube').reduce((a,q)=>a+(q.videos||0),0), stage:cf?cf.doneStages:0, body:Object.keys(S.bodyDays||{}).length, blog:(S.bodyLog||[]).length, rec:cl?cl.recipes.length:0, rw:S.rewards.reduce((a,r)=>a+(r.redeemed?1:0)+(r.uses||0),0)}; }
-function rwBig(kind,ctx){ rwSay(kind,ctx,{toast:true}); martyMaybe(.5); }
+function rwBig(kind,ctx){ rwSay(kind,ctx,{toast:true}); martyMaybe(.5,kind); }
 function rwWatch(){ const m=rwMetrics(), o=_snap; _snap=m; if(!o||_inTQ) return;
   if(m.debt<o.debt) return rwBig('debt',{n:(o.debt-m.debt).toLocaleString()});
   if(m.yt>o.yt) return rwBig('video'); if(m.stage>o.stage) return rwBig('stage'); if(m.rec>o.rec) return rwBig('recipe');
@@ -1270,11 +1362,71 @@ function rwGreetInit(){ try{ if(S.settings.rowenaReact===false) return; const t=
   if(H[t]&&Object.values(H[t].done||{}).some(Boolean)) return;
   const ks=Object.keys(H).filter(k=>k<t&&Object.values(H[k].done||{}).some(Boolean)).sort(); if(!ks.length) return;
   if(Math.round((Date.parse(t)-Date.parse(ks[ks.length-1]))/864e5)>=4){ rwSay('comeback',{}); _say.ttl=300000; } }catch(e){} }
-function martyShow(){ const el=document.getElementById('martyPop'); if(!el) return;
-  el.innerHTML=`<div class="mp-in"><i class="mp-s a">✦</i><i class="mp-s b">✦</i><i class="mp-s c">✧</i><img src="${MARTY_IMG}" alt="" onclick="martyHide()"></div>`; el.className='show'; clearTimeout(_mtT); _mtT=setTimeout(martyHide,2300); }
+const MT={
+ walk:['걸었어요? 다리 대신 제가 박수 쳐 드릴게요! 👏','한 걸음, 두 걸음… 세다가 저도 신나서 날아왔어요!'],
+ str:['우와, 근육이 반짝반짝! 💪 오늘도 멋졌어요.','무거운 거 들었죠? 저는 이슬 한 방울도 무거운데, 대단해요!'],
+ ex:['땀 흘린 당신, 오늘의 MVP예요! ✨','운동 끝! 이제 물 한 잔이 기다리고 있어요 💧'],
+ dinner:['든든하게 먹었네요! 밥심이 최고예요 🍚','맛있게 먹었어요? 저도 한 입만… 농담이에요, 후후'],
+ sleep:['일찍 자는 사람에겐 꿈나라 특급열차를 태워 드려요 🌙','오늘도 수고했어요. 좋은 꿈 꿔요!'],
+ stretch:['쭈우욱— 늘어나는 건 어깨만이 아니에요, 기분도요! 🙆','몸이 부드러워지면 마음도 말랑해져요 ✨'],
+ water:['물 한 잔 성공! 촉촉한 하루가 되길 💧','작은 습관이 큰 마법이 돼요, 진짜예요!'],
+ dessert:['달콤한 건 마음의 연료예요. 오늘은 죄책감 없이 냠! 🍰','디저트는 들어가는 위장이 따로 있대요. 저도 그래요 😋'],
+ generic:['하나 해냈네요! 이런 분을 응원하는 게 제 일이에요 ✨','잘하고 있어요. 제가 옆에서 반짝이고 있을게요!','작은 걸음도 모이면 큰 길이 돼요. 계속 가요!'],
+ first:['오늘의 첫 퀘스트 완료! 시작이 제일 어려운데 벌써 해냈어요 🌟','좋은 출발이에요! 이 기세로 쭉 가 봐요!'],
+ early:['벌써 시작했어요? 아침 요정도 깜짝 놀랐어요 ☀️','부지런한 하루의 시작, 멋져요!'],
+ almost:['하나만 더요! 결승선이 코앞이에요 🏁','거의 다 왔어요. 마지막 한 걸음은 제가 응원할게요!'],
+ clear:['오늘 퀘스트 클리어! 오늘의 당신, 정말 멋졌어요 🎉','다 해냈네요. 이제 마음껏 쉬어도 돼요, 자격 충분해요!'],
+ streak:['연속 기록이 쭉쭉 늘고 있어요! 꾸준함이 진짜 마법이에요 🔥'],
+ debt:['빚이 줄었어요! 숫자가 작아질수록 마음도 가벼워져요 🪽'],
+ video:['영상 완성! 저 몰래 감독님이 되셨네요 🎬'],
+ stage:['한 단계 돌파! 가게가 점점 모양을 갖춰 가요 🏠'],
+ body:['꾸준한 실천, 몸이 다 알고 있어요 💪'],
+ bodylog:['기록하는 사람은 강해요. 멋진 습관이에요 📝'],
+ recipe:['새 레시피다! 완성되면 저도 한 입만 주세요 🍳'],
+ reward:['보상 타임! 충분히 누릴 자격 있어요 🎁','쉬는 것도 퀘스트예요. 마음껏 즐겨요!'],
+ event:['이벤트 완료! 특별한 하루를 만들었네요 🎊'],
+ ach:['새 업적 달성! 저도 모르게 박수가 나왔어요 🏆'],
+ confess:['털어놓아 줘서 고마워요. 로웨나와 저는 늘 당신 편이에요 🤍'],
+ rewardAdd:['새 보물 등록 완료! 얼른 모아서 누려 봐요 ✨']
+};
+const MT_T={
+ morn:['좋은 아침이에요! 오늘은 어떤 하루가 될까요? ☀️','아침 요정 마티 출근했어요! 물 한 잔부터 어때요? 💧','일어난 것만으로도 오늘의 첫 퀘스트는 성공이에요!'],
+ fore:['오전 잘 보내고 있어요? 어깨 한 번 펴 봐요 🙆','커피 향이 그리울 시간이죠. 저는 이슬 한 방울로 버티지만요 ☕','집중이 안 되면 5분만 시작해 봐요. 시작하면 어떻게든 돼요!'],
+ lunch:['점심시간이에요! 뭐 먹을지 정했어요? 🍚','밥은 챙겨 먹었죠? 든든해야 퀘스트도 잘 풀려요!','점심 뒤엔 졸려도 괜찮아요. 저도 그래요… 😴'],
+ aft:['오후의 고비를 넘는 중이네요. 조금만 힘내요! ✨','잠깐 창밖 한 번 보고 와요. 눈도 쉬어야 해요 🌤️','간식 타임 어때요? 요정 통계상 당 충전이 효과 좋아요 🍪'],
+ eve:['하루 수고 많았어요! 저녁은 맛있게 먹었어요? 🌆','오늘의 나에게 칭찬 한마디 해 줄 시간이에요 👏','오늘도 잘 버텼어요. 정말이에요!'],
+ night:['늦은 시간이네요. 슬슬 하루를 접어 볼까요? 🌙','잠들기 전엔 폰 대신 스트레칭 어때요? 마티의 추천이에요','오늘도 정말 수고했어요. 내일의 당신을 위해 푹 자요 ✨']
+};
+const MT_C={
+ none:['오늘은 아직 퀘스트가 조용하네요. 제일 쉬운 것부터 하나만 해 볼까요? 🌱','시작이 제일 어려워요. 가장 작은 것부터 마티랑 같이 해요!'],
+ mid:['벌써 몇 개 해냈네요! 이 페이스면 충분해요 👍','절반의 마법은 이미 걸렸어요. 남은 것도 천천히!'],
+ near:['퀘스트가 {n}개 남았어요! 조금만 더 하면 오늘 클리어예요 🏁','{n}개만 더! 마티가 응원 요정으로 대기 중이에요 📣'],
+ cleared:['오늘 퀘스트는 이미 클리어! 이제 저랑 수다나 떨어요 😄','다 끝냈으니 오늘은 당신이 주인공이에요. 푹 쉬어요 🎉']
+};
+const MT_J=['퀴즈! 세상에서 가장 빠른 퀘스트는? 이미 끝낸 퀘스트예요 😎','요정 개그예요. 제가 제일 좋아하는 색은? 반짝반짝 ✨ …죄송해요.'];
+var _mtLast='';
+function martyPick(P,n){ let t=P[Math.floor(Math.random()*P.length)]; if(t===_mtLast&&P.length>1) t=P[(P.indexOf(t)+1)%P.length]; _mtLast=t; return t.replace('{n}',n==null?'':n); }
+function martyBand(h){ return h>=22||h<5?'night':h<9?'morn':h<12?'fore':h<14?'lunch':h<18?'aft':'eve'; }
+function martyChatLine(){ const b=martyBand(kstNow().getUTCHours()); let c=null,left=0;
+  try{ const act=computeToday().active, day=S.history[todayStr()]||{}, dn=act.filter(q=>(day.done||{})[q.id]).length; left=act.length-dn;
+    c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){}
+  const r=Math.random(); return martyPick(r<.2?MT_J:(c&&r<.6)?MT_C[c]:MT_T[b],left); }
+function martyShow(kind,txt){ const el=document.getElementById('martyPop'); if(!el) return;
+  const t=txt||(kind&&MT[kind]?martyPick(MT[kind]):martyChatLine()), ms=Math.min(9000,Math.max(3400,1800+t.length*130));
+  el.innerHTML=`<div class="mp-all" style="animation-duration:${ms}ms"><div class="mp-bub" onclick="martyHide()"><b>마티</b>${esc(t)}</div><div class="mp-in"><i class="mp-s a">✦</i><i class="mp-s b">✦</i><i class="mp-s c">✧</i><img src="${MARTY_IMG}" alt="" onclick="martyHide()"></div></div>`;
+  el.className='show'; clearTimeout(_mtT); _mtT=setTimeout(martyHide,ms); }
 function martyHide(){ const el=document.getElementById('martyPop'); if(el){ el.className=''; el.innerHTML=''; } }
-function martyMust(){ if(S.settings.martyPop===false||_mtPend) return; _mtPend=true; let n=0; const go=()=>{ if(stampBusy&&n++<20){ setTimeout(go,500); return; } _mtPend=false; martyShow(); }; setTimeout(go,2300); }
-function martyMaybe(p){ if(S.settings.martyPop===false) return; const t=todayStr(), m=S.marty=(S.marty&&S.marty.d===t)?S.marty:{d:t,n:0}; if(m.n>=2||Math.random()>=p) return; m.n++; save(); martyShow(); }
+function martyMust(kind){ if(S.settings.martyPop===false||_mtPend) return; _mtPend=true; let n=0; const go=()=>{ if(stampBusy&&n++<20){ setTimeout(go,500); return; } _mtPend=false; martyShow(kind); }; setTimeout(go,2300); }
+function martyDay(){ const t=todayStr(); if(!S.marty||S.marty.d!==t) S.marty={d:t,n:0,b:[]}; if(!S.marty.b) S.marty.b=[]; return S.marty; }
+function martyMaybe(p,kind){ if(S.settings.martyPop===false) return; const m=martyDay(); if(m.n>=2||Math.random()>=p) return; m.n++; m.t=Date.now(); save(); martyShow(kind); }
+function martyIdle(){ try{ if(S.settings.martyPop===false||S.settings.martyChat===false||document.hidden||stampBusy||_mtPend) return;
+  const sp=document.getElementById('splash'); if(sp){ const cs=getComputedStyle(sp); if(cs.display!=='none'&&cs.visibility!=='hidden'&&+cs.opacity>.05) return; }
+  if(document.getElementById('modalOverlay').classList.contains('show')||document.querySelector('.mg-box')||document.getElementById('martyPop').className==='show') return;
+  const h=kstNow().getUTCHours(); if(h>=1&&h<7) return;
+  const m=martyDay(), b=martyBand(h); if(m.b.includes(b)||Date.now()-(m.t||0)<20*6e4) return;
+  m.b.push(b); m.t=Date.now(); save(); martyShow(); }catch(e){} }
+setInterval(martyIdle,45000); setTimeout(martyIdle,6000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(martyIdle,2500); });
 function setRw(k,v){ S.settings[k]=v; save(); toast(v?'켰어요':'껐어요'); }
 { const _tq=toggleQuest;
   toggleQuest=function(id){
@@ -1283,10 +1435,10 @@ function setRw(k,v){ S.settings[k]=v; save(); toast(v?'켰어요':'껐어요'); 
     try{ const day=S.history[todayStr()]; if(todayStr()!==t||before||!day||!day.done[id]) return;
       const act=computeToday().active, dn=act.filter(q=>day.done[q.id]).length, need=Math.ceil(act.length*S.settings.clearPercent/100-1e-9)-dn, q=S.dailyQuests.find(x=>x.id===id), hr=kstNow().getUTCHours();
       if(day.cleared&&!bc){ const st=curStreak(); if([3,7,14,21,30,50,100].includes(st)) rwSay('streak',{n:st},{mood:'clear'}); else rwSay('clear',{},{mood:'clear'}); }
-      else{ if(need===1) rwSay('almost'); else if(dn===1) rwSay(hr<8?'early':'first'); else rwSay(rwCat(q?q.name:'')); martyMaybe(.2); }
+      else{ const k=need===1?'almost':dn===1?(hr<8?'early':'first'):rwCat(q?q.name:''); rwSay(k); martyMaybe(.2,k); }
       renderHome(); }catch(e){}
   };
-  const _cel=celebrate; celebrate=function(kind,sub){ _cel(kind,sub); try{ if(kind==='event'){ rwSay('event',{},{mood:'clear'}); setTimeout(renderHome,60); } martyMust(); }catch(e){} };
+  const _cel=celebrate; celebrate=function(kind,sub){ _cel(kind,sub); try{ if(kind==='event'){ rwSay('event',{},{mood:'clear'}); setTimeout(renderHome,60); } martyMust(kind); }catch(e){} };
   const _ca2=checkAchievements; checkAchievements=function(){ _ca2(); try{ rwWatch(); }catch(e){} };
 }
 document.body.insertAdjacentHTML('beforeend','<div id="martyPop"></div>');
@@ -1309,7 +1461,7 @@ function cfSend(){ const t=(document.getElementById('cfText').value||'').trim();
   const crisis=cfCrisis(t), k=cfKind(t,_cfChip); let r;
   if(crisis){ r='지금 많이 힘든 것 같아서 마음이 쓰여요. 적어 줘서 고마워요. 혼자 버티지 말고 지금 이야기할 수 있는 곳이 있어요. 자살예방 상담전화 109(24시간)에 전화해 볼 수 있어요. 위험하다고 느껴지면 119에 연락하고, 가까운 사람에게도 지금 말해 주세요. 저는 여기 있을게요.'; } else r=cfReply(k);
   (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:k,text:t,reply:r}); save();
-  if(!crisis) _say={text:r,t:Date.now(),mood:'cheer',ttl:120000}; if(!crisis&&k!=='sad') setTimeout(()=>martyMaybe(.35),700);
+  if(!crisis) _say={text:r,t:Date.now(),mood:'cheer',ttl:120000}; if(!crisis&&k!=='sad') setTimeout(()=>martyMaybe(.35,'confess'),700);
   const tel=crisis?'<div style="display:flex;gap:6px;margin-top:8px"><a class="cfb" style="flex:1;text-align:center;text-decoration:none" href="tel:109">109 전화</a><a class="cfb" style="flex:1;text-align:center;text-decoration:none" href="tel:119">119 전화</a></div>':'';
   showModal('<div class="mascot-row">'+mascotImg(56,'cheer')+'<div class="speech-bubble">'+esc(r)+'</div></div>'+tel+'<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:1" onclick="openConfessLog()">고해 노트 보기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>'); }
 function openConfessLog(){ const A=(S.confess||[]).slice().reverse();
@@ -1320,7 +1472,7 @@ function renderConfess(){ const el=document.getElementById('homeConfess'); if(!e
 { const _rh=renderHome; renderHome=function(){ _rh(); try{ renderConfess(); }catch(e){} };
   const _rm=renderMaster; renderMaster=function(){ _rm(); try{ const e=document.getElementById('cfSel'); if(e) e.value=S.settings.confess===false?'0':'1'; }catch(e){} }; }
 try{ renderConfess(); }catch(e){}
-document.head.insertAdjacentHTML('beforeend','<style>#martyPop{z-index:1000}</style>');
+document.head.insertAdjacentHTML('beforeend','<style>#martyPop{z-index:1000}.mp-all{display:flex;flex-direction:column;align-items:flex-end;transform-origin:bottom right;animation:mpIn 3s ease both}.mp-in{animation:none!important}.mp-bub{max-width:min(250px,calc(100vw - 32px));background:var(--parch);color:var(--ink);border:1px solid var(--gold-d);border-radius:10px;padding:8px 12px;font-size:12.5px;line-height:1.45;position:relative;margin:0 6px 10px 0;box-shadow:0 4px 14px rgba(0,0,0,.4);pointer-events:auto;word-break:keep-all}.mp-bub b{display:block;font-size:11px;color:var(--gold-d);margin-bottom:2px}.mp-bub:after{content:\'\';position:absolute;right:70px;bottom:-8px;border:8px solid transparent;border-bottom:0;border-top-color:var(--parch)}</style>');
 
 function resetAllData(){
   askOk('모든 기록(퀘스트 체크, 업적, 고해 노트, 설정 등)이 이 기기에서 지워져요. 계속할까요?',()=>{
@@ -1352,7 +1504,7 @@ function downloadCSV(){
   catch(e){ toast('파일 저장이 안 돼요'); }
 }
 function evCheckClear(e){
-  if(!e.cleared && e.items.length && e.items.every(x=>x.done)){ e.cleared=true; S.rewards.push({id:'r'+Date.now(),name:e.reward||'🎁 이벤트 보상',redeemed:false,owned:true,price:0}); S.gold=(S.gold||0)+(e.gold||50); save(); celebrate('event',e.name); renderTreasure(); }
+  if(!e.cleared && e.items.length && e.items.every(x=>x.done)){ e.cleared=true; S.rewards.push({id:'r'+Date.now(),name:e.reward||'🎁 이벤트 보상',redeemed:false,owned:true,price:0}); S.gold=(S.gold||0)+halfG(e.gold||50); save(); celebrate('event',e.name); renderTreasure(); }
 }
 function toggleEvItem(id,i){
   const e=S.events.find(x=>x.id===id); e.items[i].done=!e.items[i].done; sfx(e.items[i].done?'check':'uncheck');
@@ -1401,7 +1553,7 @@ function condLabel(c){
   c=c||{type:'manual'}; const n=c.value||1;
   return ({manual:'직접 달성 처리',totalClear:`데일리 퀘스트 누적 ${n}일 클리어`,streak:`${n}일 연속 클리어`,recipes:`레시피 ${n}개 만들기`,videos:`유튜브 영상 ${n}개 완성`,debtZero:'빚 전액 상환',cafeOpen:'404 DRINK BAR 오픈',debtPct:`빚 ${n}% 상환`,bodyDays:`BODY ${n}일 실천`,recipeDone:`COMPLETE 레시피 ${n}개`,nightCount:`하루 마무리 ${n}회`,flag:'히든 조건',rewardsUsed:`보상 ${n}개 사용`,stages:`404 준비 ${n}단계 완료`,earlySleep:`23시 전 마무리 ${n}회`,bodyLogs:`몸 기록 ${n}회`,journal:`밤 한 줄 일기 ${n}회`})[c.type]||'직접 달성 처리';
 }
-function manualUnlock(id){ const a=S.achievements.find(x=>x.id===id); if(!a) return; S.gold=(S.gold||0)+(a.gold||20); a.unlocked=true; a.unlockedAt=todayStr(); save(); celebrate('ach',a.name); renderAchievements(); renderHome(); }
+function manualUnlock(id){ const a=S.achievements.find(x=>x.id===id); if(!a) return; S.gold=(S.gold||0)+halfG(a.gold||20); a.unlocked=true; a.unlockedAt=todayStr(); save(); celebrate('ach',a.name); renderAchievements(); renderHome(); }
 function renderAchEditList(){
   const el=document.getElementById('achEditList'); if(!el) return;
   el.innerHTML = pgSlice('ed',S.achievements).map(a=>`<div class="quest-row"><div class="label">${esc(a.name)}${a.unlocked?' ✦':''}<div class="qdesc2">${condLabel(a.cond)}</div></div>
@@ -1461,7 +1613,7 @@ function saveDQ(id){
 
 function renderMaster(){
   updateBackupInfo(); renderAchEditList(); renderEvEditList(); renderSoundUI();
-  document.getElementById('clearPercentSelect').value = S.settings.clearPercent; document.getElementById('dayStartSel').value=dayStartH(); document.getElementById('rwReactSel').value=S.settings.rowenaReact===false?'0':'1'; document.getElementById('martySel').value=S.settings.martyPop===false?'0':'1';
+  document.getElementById('clearPercentSelect').value = S.settings.clearPercent; document.getElementById('dayStartSel').value=dayStartH(); document.getElementById('rwReactSel').value=S.settings.rowenaReact===false?'0':'1'; document.getElementById('martySel').value=S.settings.martyPop===false?'0':'1'; document.getElementById('martyChatSel').value=S.settings.martyChat===false?'0':'1';
   applyBg(); document.getElementById('bgPatSel').value=S.settings.bgPattern==null?'castle':S.settings.bgPattern;
   document.getElementById('dqEditList').innerHTML = S.dailyQuests.map(q=>
     `<div class="quest-row"><div class="label" style="${q.active?'':'opacity:.4'}">${esc(q.name)}${q.desc?`<div class="qdesc2">${esc(q.desc)}</div>`:''}</div>
@@ -1596,8 +1748,8 @@ function nightFinish(){
     S.sleepLog[t]={time:tm,note:n.note,quote:n.quote[1]}; if(k.getUTCHours()<dayStartH()) S.flags.midnight=true;
     const sq=S.dailyQuests.find(q=>q.active&&/취침/.test(q.name));
     if(sq){ const d=S.history[t]||{done:{}}; d.done[sq.id]=true; S.history[t]=d; }
-    const before=!!(S.history[t]&&S.history[t].cleared); computeToday(); earnDay('night',5);
-    if(!before&&S.history[t].cleared){ celebClear(); earnDay('clear',10); comebackCheck(); chestCheck(); }
+    const before=!!(S.history[t]&&S.history[t].cleared); computeToday(); earnDay('night',2);
+    if(!before&&S.history[t].cleared){ celebClear(); earnDay('clear',5); comebackCheck(); chestCheck(); }
     save(); checkAchievements(); renderHome();
   }
   n.step=3; nightRender();
@@ -1667,15 +1819,15 @@ function newRewards(){ const R=(id,name,price)=>({id,name,price,owned:false,rede
 const PG={ach:0,tre:0,ed:0}, PER=6, FIL={ach:'all',tre:'shop'};
 function pgSlice(k,l){ const n=Math.max(1,Math.ceil(l.length/PER)); PG[k]=Math.min(PG[k],n-1); return l.slice(PG[k]*PER,PG[k]*PER+PER); }
 function pgHTML(k,total){ const n=Math.max(1,Math.ceil(total/PER)); if(n<=1) return '';
-  return `<div class="pager"><button onclick="pgGo('${k}',-1)" ${PG[k]<=0?'disabled':''}>‹</button><span>${PG[k]+1} / ${n}</span><button onclick="pgGo('${k}',1)" ${PG[k]>=n-1?'disabled':''}>›</button></div>`; }
-function pgGo(k,d){ PG[k]+=d; ({ach:renderAchievements,tre:renderTreasure,ed:renderAchEditList})[k](); if(window.scrollTo&&k!=='ed') window.scrollTo(0,0); }
+  return `<div class="pager"><button onclick="pgGo('${k}',-1,${n})">‹</button><span>${PG[k]+1} / ${n}</span><button onclick="pgGo('${k}',1,${n})">›</button></div>`; }
+function pgGo(k,d,n){ const y=window.scrollY; PG[k]=n>1?(PG[k]+d+n)%n:0; ({ach:renderAchievements,tre:renderTreasure,ed:renderAchEditList})[k](); if(window.scrollTo) window.scrollTo(0,y); }
 function pgSet(k,v){ FIL[k]=v; PG[k]=0; ({ach:renderAchievements,tre:renderTreasure})[k](); }
 function tabsHTML(k,a){ return '<div class="ftabs">'+a.map(([v,l])=>`<button class="${FIL[k]===v?'on':''}" onclick="pgSet('${k}','${v}')">${l}</button>`).join('')+'</div>'; }
 function renderAchievements(){
   const all=S.achievements, un=all.filter(a=>a.unlocked).length, f=FIL.ach;
   const list=all.filter(a=>f==='all'||(f==='on'?a.unlocked:!a.unlocked));
   const rows=pgSlice('ach',list).map(a=>{ const h=a.hidden&&!a.unlocked;
-    return `<div class="seal ${a.unlocked?'':'locked'}"><div class="icon">${a.unlocked?'✦':'🔒'}</div><div style="flex:1"><div class="t">${h?'???':esc(a.name)}${a.unlocked?' · 해금':''}</div><div class="d">${h?'숨겨진 업적이에요':esc(a.desc||'')}</div><div class="d" style="opacity:.7;margin-top:3px">조건: ${h?'???':condLabel(a.cond)} · ◈${a.gold||20}${a.unlocked&&a.unlockedAt?' · '+a.unlockedAt:''}</div>${(!a.unlocked&&(!a.cond||a.cond.type==='manual'))?`<button class="ghost-btn" style="margin-top:6px" onclick="manualUnlock('${a.id}')">달성 처리</button>`:''}</div></div>`; }).join('')||'<div class="empty">해당하는 업적이 없어요</div>';
+    return `<div class="seal ${a.unlocked?'':'locked'}"><div class="icon">${a.unlocked?'✦':'🔒'}</div><div style="flex:1"><div class="t">${h?'???':esc(a.name)}${a.unlocked?' · 해금':''}</div><div class="d">${h?'숨겨진 업적이에요':esc(a.desc||'')}</div><div class="d" style="opacity:.7;margin-top:3px">조건: ${h?'???':condLabel(a.cond)} · ◈${halfG(a.gold||20)}${a.unlocked&&a.unlockedAt?' · '+a.unlockedAt:''}</div>${(!a.unlocked&&(!a.cond||a.cond.type==='manual'))?`<button class="ghost-btn" style="margin-top:6px" onclick="manualUnlock('${a.id}')">달성 처리</button>`:''}</div></div>`; }).join('')||'<div class="empty">해당하는 업적이 없어요</div>';
   document.getElementById('achieveList').innerHTML=`<div class="gold-bar">✦ ${un} / ${all.length} 해금</div>`+tabsHTML('ach',[['all','전체'],['on','해금'],['off','잠김']])+rows+pgHTML('ach',list.length);
 }
 function rwState(r){ if(r.redeemed) return 'used'; return (r.owned||!(r.price>0))?'own':'shop'; }
@@ -1702,16 +1854,16 @@ function renderPass(){ const el=document.getElementById('passRow'); if(!el) retu
 function usePass(){ const t=todayStr(), d=S.history[t]||{done:{}}; S.history[t]=d;
   if(d.pass){ d.pass=false; save(); renderHome(); return; }
   askOk('오늘을 쉬는 날로 할까요?\n연속 기록이 끊기지 않아요. (주 1회)',()=>{ d.pass=true; save(); renderHome(); renderCalendar(); toast('☾ 푹 쉬어요'); }); }
-function xpNow(){ let x=0; Object.values(S.history).forEach(d=>{ x+=Object.values(d.done||{}).filter(Boolean).length*2+(d.cleared?10:0); }); return x+Object.keys(S.sleepLog||{}).length*5+S.achievements.filter(a=>a.unlocked).length*20; }
+function xpNow(){ let x=0; Object.values(S.history).forEach(d=>{ x+=Object.values(d.done||{}).filter(Boolean).length*1+(d.cleared?5:0); }); return x+Object.keys(S.sleepLog||{}).length*2+S.achievements.filter(a=>a.unlocked).length*10; }
 const TITLES=['견습 모험가','떠오르는 모험가','숙련 모험가','길잡이','용맹한 탐험가','이야기꾼','전설의 서기','별을 읽는 자','404의 주인','끝없는 여정의 주인'];
 function lvInfo(){ const x=xpNow(); let n=1; while(x>=40*n*n) n++; return {n,x,lo:40*(n-1)*(n-1),hi:40*n*n,title:TITLES[Math.min(n-1,TITLES.length-1)]}; }
 function lvHTML(){ const L=lvInfo(); return `<div class="lvbar">LV ${L.n} · ${L.title} <span style="float:right">${L.x} / ${L.hi} XP</span><div class="bar"><i style="width:${Math.round((L.x-L.lo)/(L.hi-L.lo)*100)}%"></i></div></div>`; }
-function checkLevel(){ const L=lvInfo(); if(S.lastLv==null){ S.lastLv=L.n; return; } if(L.n>S.lastLv){ S.lastLv=L.n; S.gold=(S.gold||0)+20*L.n; celebrate('ach','LV '+L.n+' · '+L.title); } }
+function checkLevel(){ const L=lvInfo(); if(S.lastLv==null){ S.lastLv=L.n; return; } if(L.n>S.lastLv){ S.lastLv=L.n; S.gold=(S.gold||0)+10*L.n; celebrate('ach','LV '+L.n+' · '+L.title); } }
 const _origCA=checkAchievements; checkAchievements=function(){ _origCA(); checkLevel(); save(); };
 function chestCheck(){ const st=curStreak(), k=todayStr()+'chest'; if(st>0&&st%7===0&&!S.goldDay[k]){ S.goldDay[k]=1; S.chests=(S.chests||0)+1; toast('📦 7일 연속! 보물상자를 얻었어요'); } }
 function chestBtn(){ return (S.chests>0)?`<button class="gold-btn" style="margin:0 0 12px" onclick="openChest()">📦 보물상자 열기 (${S.chests}개)</button>`:'<div class="night-done">📦 7일 연속 클리어할 때마다 보물상자를 받아요</div>'; }
 function openChest(){ if(!(S.chests>0)) return; S.chests--; const pool=S.rewards.filter(r=>rwState(r)==='shop'&&r.price<=150); let m;
-  if(pool.length&&Math.random()<.6){ const r=pool[Math.floor(Math.random()*pool.length)]; r.owned=true; m='🎁 '+r.name+' 획득! (보유 탭 확인)'; } else { const g=30+Math.floor(Math.random()*71); S.gold=(S.gold||0)+g; m='◈ '+g+' 골드 획득!'; }
+  if(pool.length&&Math.random()<.6){ const r=pool[Math.floor(Math.random()*pool.length)]; r.owned=true; m='🎁 '+r.name+' 획득! (보유 탭 확인)'; } else { const g=15+Math.floor(Math.random()*36); S.gold=(S.gold||0)+g; m='◈ '+g+' 골드 획득!'; }
   save(); renderTreasure(); toast(m); }
 function lastDays(n){ const o=[], d=new Date(todayStr()+'T00:00:00Z'); for(let i=0;i<n;i++){ o.unshift(d.toISOString().slice(0,10)); d.setUTCDate(d.getUTCDate()-1); } return o; }
 function bedMin(t){ let m=+t.slice(0,2)*60+ +t.slice(3,5); if(m<720) m+=1440; return m; }
@@ -1798,5 +1950,242 @@ renderCalendar();
 renderSoundUI();
 if(bgmOn()){ startBgm(); setTimeout(()=>{ if(!actx||actx.state!=='running') toast('♪ 화면을 터치하면 음악이 시작돼요'); },900); }
 </script>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const inM=()=>{const e=$('screen-master');return !!(e&&e.classList.contains('active'));};
+const pop=t=>{ if(S.settings.martyPop===false) toast('마티: '+t); else martyShow(null,t); };
+document.head.insertAdjacentHTML('beforeend','<style>.mt-qb{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.mt-qb button{background:#fbf6e8;border:1px solid var(--gold-d);border-radius:12px;color:var(--ink);padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit}#mtGuide{margin-bottom:14px}#mtGuide .speech-bubble b{font-size:11px;color:var(--gold-d)}.mg-box .mg-foot .gold-btn,.mg-box .mg-foot .ghost-btn{flex:1}</style>');
+function dlg(say,body,btns){ const o=$('askOv'); window._mtB=btns;
+  o.innerHTML='<div class="ask-box mg-box"><div class="mg-row"><img class="mg-img" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble">'+say+'</div></div>'+(body||'')+'<div class="mg-foot">'+btns.map((b,i)=>'<button class="'+(b[2]||'ghost-btn')+'" onclick="_mtBtn('+i+')">'+b[0]+'</button>').join('')+'</div></div>';
+  o.classList.add('show'); const inp=o.querySelector('input[type=text],input:not([type])'); if(inp) setTimeout(()=>inp.focus(),60); }
+window._mtBtn=i=>{ const o=$('askOv'), b=window._mtB[i], before=o.innerHTML, r=b[1]?b[1]():null; if(r!=='keep'&&o.innerHTML===before){ o.classList.remove('show'); o.innerHTML=''; } };
+const _ad=window.askDlg;
+window.askDlg=function(title,inner,ok,no){ if(!inM()) return _ad(title,inner,ok,no);
+  dlg(esc(title),inner,[['잠깐만요',()=>{ if(no) no(); }],['네, 부탁해요',()=>{ const i=$('askIn'); ok(i?i.value:''); },'gold-btn']]); };
+/* 새 데일리 퀘스트: 마티와 함께 */
+const IDEAS=['💧 물 2L 마시기','🚶 30분 걷기','🧘 스트레칭 10분','📖 책 10쪽 읽기','🛏 12시 전에 눕기','🍽 저녁 챙겨 먹기','📝 하루 한 줄 기록','🪥 영양제 챙기기','☀️ 아침 햇빛 쬐기'];
+let G={};
+function dqPick(){ const have=new Set(S.dailyQuests.map(q=>q.name)), pool=IDEAS.filter(x=>!have.has(x)), a=[]; while(a.length<3&&pool.length) a.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]); return a; }
+window.mtNewDQ=function(){ G={step:'pick',picks:dqPick()}; rd(); };
+window._mtDq=i=>{ G.name=G.picks[i]; G.step='detail'; rd(); };
+function rd(){
+  if(G.step==='pick') dlg('새 데일리 퀘스트를 만들어 볼까요? ✨\n제가 골라 봤어요. 마음에 드는 걸 눌러 주세요!',G.picks.map((t,i)=>'<button class="mg-opt" onclick="_mtDq('+i+')"><b>'+esc(t)+'</b><span>눌러서 담기</span></button>').join(''),[['🔄 다른 추천',()=>{G.picks=dqPick();rd();}],['✏️ 직접 쓸래요',()=>{G.step='name';G.name='';rd();}],['닫기',null]]);
+  else if(G.step==='name') dlg('어떤 퀘스트예요?\n하루 끝에 해냈는지 바로 알 수 있게 짧게 적어 봐요.','<input id="mtDqName" maxlength="30" placeholder="예: 💧 물 2L 마시기" value="'+esc(G.name||'')+'">',[['뒤로',()=>{G.step='pick';G.picks=dqPick();rd();}],['다음',()=>{ const v=$('mtDqName').value.trim(); if(!v){ toast('마티: 이름을 알려 주세요!'); return 'keep'; } G.name=v; G.step='detail'; rd(); },'gold-btn']]);
+  else dlg("'"+esc(G.name)+"' 좋아요!\n완료 조건이나 쉬는 요일을 정해 두면 더 지키기 쉬워요. (건너뛰어도 돼요)",'<input id="mtDqDesc" maxlength="40" placeholder="완료 조건 (선택) 예: 저녁 식사 후 30분 이내" value="'+esc(G.desc||'')+'"><div style="display:flex;flex-wrap:wrap;margin-top:8px">'+['일','월','화','수','목','금','토'].map((d,i)=>'<label style="margin:0 8px 4px 0;font-size:13px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="mtOff" value="'+i+'" style="width:auto;margin:0">'+d+'</label>').join('')+'</div><div style="font-size:11px;color:var(--ink-soft);margin-top:4px">체크한 요일은 쉬어요</div>',[['뒤로',()=>{G.desc=$('mtDqDesc').value;G.step='pick';G.picks=dqPick();rd();}],['만들기',()=>{ const q={id:'d'+Date.now(),name:G.name,active:true}, d=$('mtDqDesc').value.trim(), off=[...document.querySelectorAll('.mtOff')].filter(x=>x.checked).map(x=>+x.value); if(d) q.desc=d; if(off.length) q.off=off; S.dailyQuests.push(q); save(); renderMaster(); renderHome(); pop("새 퀘스트 '"+G.name+"' 등록 완료! 내일부터 같이 해 봐요 🌱"); },'gold-btn']]);
+}
+/* 규칙 변경: 설명 후 확인 */
+window.mtRule=function(k,el){ const old=k==='clear'?S.settings.clearPercent:dayStartH(), v=+el.value; if(v===old) return;
+  let n=0; try{ n=computeToday().active.length; }catch(e){}
+  const say=k==='clear'?'CLEAR 기준을 '+old+'% → '+v+'%로 바꿀까요?\n지금 퀘스트가 '+n+'개라면 '+Math.ceil(n*v/100-1e-9)+'개를 해야 클리어예요. '+(v>old?'조금 더 도전적이에요!':'조금 더 여유로워져요.'):'하루 시작을 '+old+'시 → '+v+'시로 바꿀까요?\n한국시간 '+v+'시 전의 밤은 전날로 계산돼요. 캘린더의 날짜 구분이 달라질 수 있어요.';
+  dlg(say,'',[['그대로 둘래요',()=>{ el.value=old; }],['바꿀게요',()=>{ (k==='clear'?setClearPercent:setDayStart)(v); pop(k==='clear'?'기준을 '+v+'%로 맞췄어요. 오늘 계산부터 적용돼요!':'하루 시작을 '+v+'시로 맞췄어요!'); },'gold-btn']]); };
+/* 삭제/일시정지/초기화 */
+window.deleteDQ=function(id){ const q=S.dailyQuests.find(d=>d.id===id); if(!q) return;
+  dlg("'"+esc(q.name)+"' 퀘스트를 삭제할까요?\n삭제하면 목록에서 사라져요. 잠깐만 쉬게 하려면 ⏸(일시정지)가 더 안전해요!",'',[['⏸ 일시정지',()=>{ if(q.active) toggleActiveDQ(id); }],['삭제할게요',()=>{ S.dailyQuests=S.dailyQuests.filter(d=>d.id!==id); save(); renderMaster(); renderHome(); pop('삭제했어요. 필요하면 언제든 새로 만들어요!'); },'gold-btn'],['취소',null]]); };
+const _tg=window.toggleActiveDQ; window.toggleActiveDQ=function(id){ _tg(id); const q=S.dailyQuests.find(d=>d.id===id); if(q) pop(q.active?"'"+q.name+"' 다시 시작해요! 💪":"'"+q.name+"'는 잠깐 쉬어요. ▶로 언제든 깨워 줘요 🌙"); };
+window.resetAllData=function(){ dlg('모든 기록을 지우려는 거예요? 😢\n퀘스트 체크, 업적, 고해 노트, 설정이 이 기기에서 전부 사라져요. 먼저 백업해 두면 안전해요!','',[['💾 백업부터',()=>{ exportBackup(); const t=$('backupText'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'center'}); }],['그래도 지울게요',()=>{ dlg('정말 정말 지울까요?\n되돌릴 수 없어요. 마지막 확인이에요!','',[['아니에요',null],['지울게요',()=>{ try{ S=defaultData(); S.firstSeen=Date.now(); localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} location.reload(); },'gold-btn']]); }],['취소',null]]); };
+/* 모달 안내 + 저장 후 반응 */
+function tip(t){ const h=$('modalBox').querySelector('h2'); if(!h) return; const d=document.createElement('div'); d.className='mg-row'; d.innerHTML='<img class="mg-img" style="width:44px" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble" style="white-space:pre-line">'+t+'</div>'; h.insertAdjacentElement('afterend',d); }
+[['openDqModal',()=>'이름은 그대로 두고 완료 조건만 적어도 좋아요.\n쉬는 요일을 체크하면 그날은 이 퀘스트가 빠져요!'],
+ ['openAchModal',id=>id?'이름이나 조건을 바꿔도 이미 해금한 기록은 그대로예요 ✨':'나만의 업적을 만들어 봐요!\n조건을 고르면 자동으로 해금되고, "직접 달성 처리"는 내가 눌러 해금해요.'],
+ ['openEvModal',id=>id?'항목 이름을 고쳐도 완료한 표시는 이어져요 ✨':'이번 달에만 열리는 한정 퀘스트예요. 항목은 3~5개가 딱 좋아요!\n모두 끝내면 보물이 생겨요 🎁']].forEach(([n,f])=>{ const o=window[n]; window[n]=function(id){ o(id); if(inM()) tip(f(id)); }; });
+[['saveDQ','퀘스트를 고쳤어요! 홈 화면에도 바로 반영됐어요 ✨'],['saveAch','업적이 준비됐어요! 조건을 채우면 반짝 해금돼요 🏆'],['saveEv','이벤트가 저장됐어요! 홈에서 확인해 봐요 🎊']].forEach(([n,m])=>{ const o=window[n]; window[n]=function(id){ o(id); if(!$('modalOverlay').classList.contains('show')) pop(m); }; });
+/* 토글·배경·백업 반응 */
+const _rw=window.setRw; window.setRw=function(k,v){ _rw(k,v); const L={rowenaReact:['로웨나가 다시 말을 걸어 줄 거예요 📖','로웨나는 조용히 지켜볼게요. 필요하면 다시 켜 줘요'],martyPop:['다시 불러 줘서 고마워요! 반짝반짝 등장할게요 ✨',null],martyChat:['시간대별로 수다 떨러 올게요! ☀️','알겠어요, 말 거는 건 참을게요 🤐'],confess:['언제든 로웨나에게 털어놓아도 돼요 🤍','고해성사는 잠시 접어 둘게요']}[k]; if(!L) return;
+  const t=v?L[0]:L[1]; if(t===null) toast('마티: 알겠어요, 조용히 있을게요. 필요하면 다시 불러 줘요 🌙'); else if(t) pop(t); };
+const _bg=window.setBgPattern; window.setBgPattern=function(v){ _bg(v); pop(v==='none'?'원래 배경으로 돌아왔어요!':"배경이 '"+bgNames()[v]+"'로 바뀌었어요. 분위기 좋죠? ✨"); };
+const _eb=window.exportBackup; window.exportBackup=function(){ _eb(); if(inM()) pop('백업 코드를 만들었어요! 복사해서 메모 앱이나 카카오톡 "나에게 보내기"에 보관해 두세요 💾'); };
+/* 설정 탭 상단 마티 안내 */
+function guide(){ let b=$('mtGuide'); if(!b){ b=document.createElement('div'); b.id='mtGuide'; document.querySelector('#screen-master .section-h').insertAdjacentElement('afterend',b); }
+  const old=!S.lastBackup||Date.now()-S.lastBackup>7*864e5, noEv=!S.events.some(e=>!evExpired(e));
+  const tip=!S.dailyQuests.length?'데일리 퀘스트가 아직 없어요. 같이 하나 만들어 볼까요? 🌱':old?'백업한 지 좀 됐어요. 기록이 사라지지 않게 코드를 만들어 둘까요? 💾':noEv?'이번 달 이벤트가 아직 없어요. 한정 퀘스트를 만들어 볼까요? 🎊':'바꾸고 싶은 게 있어요? 제가 옆에서 안내할게요! ✨';
+  b.innerHTML='<div class="mg-row" style="margin:0"><img class="mg-img" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble"><b>마티의 설정 안내</b><br>'+tip+'<div class="mt-qb"><button onclick="mtNewDQ()">🌱 새 퀘스트</button><button onclick="openAchModal()">🏆 새 업적</button><button onclick="openEvModal()">🎊 이벤트</button><button onclick="exportBackup()">💾 백업</button></div></div></div>'; }
+const _rm=window.renderMaster; window.renderMaster=function(){ _rm(); guide(); };
+if(inM()) window.renderMaster();
+})();
+</script>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const inM=()=>{const e=$('screen-master');return !!(e&&e.classList.contains('active'));};
+const pop=t=>{ if(S.settings.martyPop===false) toast('마티: '+t); else martyShow(null,t); };
+const won=n=>Math.round(n).toLocaleString()+'원';
+const pct=(o,c)=>o>0?Math.max(0,Math.min(100,Math.round((o-c)/o*100))):0;
+/* 1) 빚·BODY 숫자 수정: 마티가 계산해서 알려 주고 확인 */
+const _sp=window.setProg;
+window.setProg=function(k,el){
+  const tgt=(k==='total')?bodyQ():debtQ(); if(!tgt) return _sp(k,el);
+  const raw=String(el.value).trim(), n=Number(raw), old=tgt[k];
+  if(raw===''||!isFinite(n)||n<0||((k==='total'||k==='original')&&n<1)) return _sp(k,el);
+  const r=Math.round(n); if(r===old) return;
+  let say,done;
+  if(k==='original'){ const c=tgt.current; say='빚 원금을 '+won(old)+' → '+won(r)+'으로 바꿀까요?\n남은 금액은 그대로라서 상환율이 '+pct(old,c)+'% → '+pct(r,c)+'%로 달라져요.'+(c>r?'\n(남은 금액이 원금보다 커요. 남은 금액도 확인해 봐요!)':''); done='원금을 고쳤어요. 상환율도 다시 계산했어요 🧮'; }
+  else if(k==='current'){ const d=old-r, o=tgt.original; say='남은 금액을 '+won(old)+' → '+won(r)+'으로 바꿀까요?\n'+(d>0?won(d)+' 더 갚은 걸로':won(-d)+' 늘어난 걸로')+' 기록돼요. 상환율은 '+pct(o,old)+'% → '+pct(o,r)+'%예요.'; done=d>0?won(d)+'이나 갚았네요! 대단해요 🎉':'괜찮아요, 숫자는 다시 줄이면 돼요. 같이 가요 💪'; }
+  else { const p=tgt.progress||0; say='BODY 프로젝트를 '+old+'일 → '+r+'일로 바꿀까요?\n지금까지 '+p+'일 채웠어요.'+(r<p?'\n(이미 채운 일수보다 짧아져요)':''); done='BODY 목표를 '+r+'일로 맞췄어요. 천천히 함께 가요 🌿'; }
+  askOk(say,()=>{ _sp(k,el); if(tgt[k]===r) pop(done); },()=>{ el.value=old; });
+};
+/* 2) 사운드 */
+const _tsf=window.toggleSfx; window.toggleSfx=function(){ _tsf(); if(inM()) pop(sfxOn()?'효과음이 켜졌어요! 체크할 때마다 톡톡 울려요 🔔':'효과음을 껐어요. 조용히 할 수 있어요 🤫'); };
+const _tbg=window.toggleBgm; window.toggleBgm=function(){ _tbg(); if(inM()) pop(bgmOn()?'배경음악을 켰어요! 브라우저 규칙상 첫 터치 때부터 흘러나올 수 있어요 🎵':'배경음악을 껐어요. 다시 듣고 싶으면 ♪를 눌러요'); };
+let vt=null; const _sv=window.setVol; window.setVol=function(v){ _sv(v); clearTimeout(vt); vt=setTimeout(()=>{ if(!inM()) return; v=+v; pop(v===0?'볼륨이 0이에요. 소리를 들으려면 슬라이더를 올려 줘요 🔈':v<30?'살짝 작게 맞췄어요. 밤에 쓰기 좋아요 🌙':v>80?'우와, 빵빵해요! 주변 사람 놀라지 않게 조심해요 📢':'딱 좋은 소리예요 🎶'); },700); };
+/* 3) 업적·이벤트 편집창: 마티의 추천 */
+const bub=()=>$('modalBox').querySelector('.mg-row .speech-bubble');
+const say=t=>{ const b=bub(); if(b) b.textContent=t; };
+const streakNext=()=>{ let c=0; try{ c=curStreak(); }catch(e){} return [3,5,7,10,14,21,30,50,100].find(x=>x>c)||100; };
+function achIdeas(){ const A=[['🔥 다음 불꽃','연속 '+streakNext()+'일 클리어','streak',streakNext()],['📅 한 달의 모험가','누적 30일 클리어','totalClear',30],['🎁 보상 애호가','보상을 5번 사용하기','rewardsUsed',5],['🌙 일찍 자는 사람','일찍 자기 7번','earlySleep',7],['💰 빚 절반 돌파','빚 50% 상환','debtPct',50],['🏅 나만의 훈장','내가 직접 달성 처리','manual',1]];
+  return A.filter(a=>COND_TYPES.some(t=>t[0]===a[2])).sort(()=>Math.random()-.5).slice(0,4); }
+const mon=()=>kstNow().getUTCMonth()+1;
+function evIdeas(){ const m=mon(), E=[['🌿 '+m+'월 건강 챌린지',['물 2L 마시기 5일','30분 걷기 3번','스트레칭 5번','일찍 자기 3번'],'🍰 좋아하는 디저트'],['📚 '+m+'월 마음 채우기',['책 30쪽 읽기','영화 한 편 보기','산책하며 사진 3장 찍기','메모나 편지 써 보기'],'☕ 카페 나들이'],['🏠 '+m+'월 정리 챌린지',['서랍 하나 정리하기','안 입는 옷 5벌 고르기','책상 위 비우기','사진·앱 정리하기'],'🪴 작은 화분'],['🍳 '+m+'월 집밥 챌린지',['새 요리 하나 도전','도시락 3번 싸기','간식 직접 만들기','장 보고 냉장고 정리'],'🧁 예쁜 컵케이크'],['🎨 '+m+'월 취미 챌린지',['새로운 취미 검색하기','30분 몰입해 보기','결과물 사진 남기기','친구에게 자랑하기'],'🎁 취미 용품 하나']];
+  return E.sort(()=>Math.random()-.5).slice(0,3); }
+let AI=[],EI=[];
+function chips(list,fn,label){ const d=document.createElement('div'); d.className='mt-qb'; d.style.margin='-2px 0 10px'; d.innerHTML=list.map((x,i)=>'<button onclick="'+fn+'('+i+')">'+esc(x[0])+'</button>').join('')+'<button onclick="'+label+'()">🔄 다른 추천</button>'; return d; }
+function mountChips(kind){ const row=$('modalBox').querySelector('.mg-row'); if(!row) return; const old=$('modalBox').querySelector('.mt-qb'); if(old) old.remove(); row.insertAdjacentElement('afterend',kind==='ach'?chips(AI,'_mtAch','_mtAchR'):chips(EI,'_mtEv','_mtEvR')); }
+window._mtAchR=()=>{ AI=achIdeas(); mountChips('ach'); };
+window._mtEvR=()=>{ EI=evIdeas(); mountChips('ev'); };
+window._mtAch=i=>{ const a=AI[i]; if(!a||!$('achName')) return; $('achName').value=a[0]; $('achDesc').value=a[1]; $('achType').value=a[2]; achTypeChange(); if($('achVal')&&a[2]!=='manual') $('achVal').value=a[3]; say("'"+a[0]+"'로 채웠어요! 마음대로 고쳐서 저장해 봐요 ✨"); };
+window._mtEv=i=>{ const e=EI[i]; if(!e||!$('evName')) return; $('evName').value=e[0]; $('evItems').value=e[1].join('\n'); $('evReward').value=e[2]; say("'"+e[0]+"' 골랐어요! 항목과 보상은 자유롭게 바꿔도 돼요 🎊"); };
+const _oa=window.openAchModal; window.openAchModal=function(id){ _oa(id); if(inM()&&!id){ AI=achIdeas(); mountChips('ach'); } };
+const _oe=window.openEvModal; window.openEvModal=function(id){ _oe(id); if(inM()&&!id){ EI=evIdeas(); mountChips('ev'); } };
+/* 4) 빈칸 저장 시 마티가 부드럽게 안내 */
+const guard=(fn,check)=>{ const o=window[fn]; window[fn]=function(id){ const m=inM()&&check(); if(m){ say(m); return; } return o(id); }; };
+guard('saveAch',()=>{ const n=$('achName'); return n&&!n.value.trim()?'이름부터 정해 볼까요?\n위의 추천을 눌러 보면 쉬워요!':''; });
+guard('saveDQ',()=>{ const n=$('dqName'); return n&&!n.value.trim()?'퀘스트 이름이 비어 있어요. 짧게라도 적어 줘요 ✏️':''; });
+guard('saveEv',()=>{ const n=$('evName'), it=$('evItems'); if(n&&!n.value.trim()) return '이벤트 이름부터 정해 볼까요?\n위의 추천을 눌러 보면 쉬워요!'; if(it&&!it.value.trim()) return '항목이 하나도 없어요!\n한 줄에 하나씩 적어 줘요. 3~5개가 딱 좋아요 📝'; return ''; });
+})();
+</script>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const RT={
+ morn:['좋은 아침이에요. 오늘도 우리 함께 천천히 시작해 봐요.','아침이에요. 물 한 잔 마시고, 오늘 할 일을 한 번 훑어볼까요?','서두르지 않아도 돼요. 오늘의 첫 페이지를 같이 열어요.','밤새 쉬었으니 오늘은 가볍게 시작해도 충분해요.'],
+ fore:['오전이 흐르고 있어요. 지금 할 수 있는 작은 것 하나부터 해 볼까요?','숨을 한 번 깊게 쉬고, 어깨의 힘을 풀어요. 그다음에 시작해요.','한 번에 하나씩, 그게 가장 빠른 길이에요.','지금 이 순간에 집중해도 충분해요. 나는 옆에 있어요.'],
+ lunch:['점심 시간이에요. 잠시 멈추고 제대로 챙겨 먹어요.','든든히 먹는 것도 오늘의 중요한 퀘스트예요.','식사하고 나면 잠깐 걸어 보는 것도 좋아요.'],
+ aft:['오후는 조금 나른하죠. 괜찮아요, 천천히 가도 우리는 도착해요.','지금까지 한 것만 돌아봐도 충분히 잘하고 있어요.','잠깐 창밖을 바라보고, 다시 이어가요.','피곤하면 쉬어도 돼요. 쉬는 것도 여정의 일부니까요.'],
+ eve:['하루가 저물어 가요. 오늘의 나에게 수고했다고 말해 줘요.','저녁이에요. 남은 퀘스트가 있다면 무리하지 말고 하나만 골라 봐요.','오늘 걸어온 길을 잠시 돌아봐요. 생각보다 멀리 왔을 거예요.'],
+ night:['늦은 시간이에요. 이제 하루를 접고 쉬어도 좋아요.','내일의 페이지는 내일 쓰면 돼요. 오늘은 여기까지 해요.','잘 자요. 내일도 내가 옆에 있을게요.','오늘 못한 건 내일 다시 하면 돼요. 벌점은 없어요.']
+};
+const RC={
+ none:['아직 오늘의 페이지가 비어 있네요. 가장 쉬운 것 하나만 같이 해 볼까요?','시작이 가장 무겁게 느껴질 때가 있어요. 제일 작은 것부터 해요.'],
+ mid:['벌써 {d}개를 해냈어요. 이 리듬 그대로 가요.','좋은 흐름이에요. 남은 건 차근차근 이어가요.'],
+ near:['{n}개만 더 하면 오늘의 페이지가 완성돼요. 거의 다 왔어요.','{n}개 남았어요. 지금의 당신이라면 충분히 할 수 있어요.'],
+ cleared:['오늘의 퀘스트를 모두 마쳤어요. 정말 수고했어요.','오늘의 페이지가 완성됐어요. 이제 편히 쉬어요.']
+};
+const RM=['마티는 오늘도 정신없이 날아다니네요. 그래도 당신을 위해서예요.','마티가 또 뭔가 준비하고 있는 것 같아요. 같이 응원해 줄 거예요.','제 조수가 조금 소란스럽죠? 하지만 마음만은 누구보다 진심이에요.'];
+const MTA=['로웨나 님 말씀 들었죠? 저는 옆에서 응원 요정으로 대기 중이에요! 📣','로웨나 님의 조수 마티, 출동! 어려우면 저를 불러요 ✨','로웨나 님이 이끌고 제가 반짝이면 무적이에요! 🌟','방금 그 말, 마티가 보증해요! 우리 셋이 함께면 해낼 수 있어요 💫'];
+/* 마티는 로웨나의 조수라는 설정 반영 */
+MT_T.morn.push('로웨나 님이 아침부터 기다리고 계세요! 조수답게 제가 먼저 인사하러 왔어요 ☀️');
+MT_T.fore.push('로웨나 님은 차분하게, 저는 발랄하게! 둘이 합치면 완벽하죠? ✨');
+MT_T.lunch.push('점심 챙기라고 로웨나 님이 시켰어요… 아니, 제가 자원했어요! 🍚');
+MT_T.aft.push('로웨나 님께 오늘 진행 상황 보고드릴게요. 꽤 좋아요! 📋');
+MT_T.eve.push('로웨나 님이 오늘 수고했다고 전해 달래요. (제가 하는 말이지만요 😚)');
+MT_T.night.push('로웨나 님이 이제 쉬라고 하셨어요. 저도 하품이 나와요… 🥱');
+document.head.insertAdjacentHTML('beforeend','<style>#rowenaPop{position:fixed;left:max(10px,calc((100vw - 480px)/2 + 10px));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:1000;pointer-events:none;display:none;max-width:calc(100vw - 20px)}#rowenaPop.show{display:block}.rp-all{display:flex;align-items:flex-end;gap:8px;animation:rpIn 8s ease both}.rp-all .mascot{flex:none;pointer-events:auto}.rp-bub{max-width:min(230px,calc(100vw - 100px));background:var(--parch);color:var(--ink);border:1px solid var(--gold-d);border-radius:10px;padding:8px 12px;font-size:12.5px;line-height:1.5;position:relative;margin-bottom:8px;box-shadow:0 4px 14px rgba(0,0,0,.4);pointer-events:auto;word-break:keep-all}.rp-bub b{display:block;font-size:11px;color:var(--gold-d);margin-bottom:2px}.rp-bub:before{content:"";position:absolute;left:-7px;bottom:14px;border:7px solid transparent;border-left:0;border-right-color:var(--gold-d)}.rp-bub:after{content:"";position:absolute;left:-5px;bottom:15px;border:6px solid transparent;border-left:0;border-right-color:var(--parch)}@keyframes rpIn{0%{opacity:0;transform:translateY(10px)}9%{opacity:1;transform:none}90%{opacity:1}100%{opacity:0}}</style>');
+document.body.insertAdjacentHTML('beforeend','<div id="rowenaPop"></div>');
+let _rT=null, visUntil=0, _lastR='';
+const pick=(P,f)=>{ let t=P[Math.floor(Math.random()*P.length)]; if(t===_lastR&&P.length>1) t=P[(P.indexOf(t)+1)%P.length]; _lastR=t; return f?f(t):t; };
+function rowenaLine(){ const b=martyBand(kstNow().getUTCHours()); let c=null,left=0,dn=0;
+  try{ const act=computeToday().active, day=S.history[todayStr()]||{}; dn=act.filter(q=>(day.done||{})[q.id]).length; left=act.length-dn;
+    c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){}
+  const fill=t=>t.replace('{n}',left).replace('{d}',dn), r=Math.random();
+  if(r<.18) return {t:pick(RM),mood:''};
+  if(c&&r<.65) return {t:pick(RC[c],fill),mood:c==='cleared'?'clear':''};
+  return {t:pick(RT[b]),mood:''}; }
+window.rowenaHide=function(){ clearTimeout(_rT); visUntil=0; const el=$('rowenaPop'); if(el){ el.className=''; el.innerHTML=''; } };
+window.rowenaShow=function(txt){ const el=$('rowenaPop'); if(!el) return 0; let L=txt?{t:txt,mood:''}:rowenaLine(), ms=Math.min(11000,Math.max(5500,2800+L.t.length*150));
+  el.innerHTML='<div class="rp-all" style="animation-duration:'+ms+'ms">'+mascotImg(64,L.mood)+'<div class="rp-bub" onclick="rowenaHide()"><b>로웨나</b>'+esc(L.t)+'</div></div>';
+  el.className='show'; clearTimeout(_rT); _rT=setTimeout(rowenaHide,ms); visUntil=Date.now()+ms; return ms; };
+/* 로웨나가 나와 있는 동안엔 마티가 잠깐 기다렸다가 등장 */
+const _ms=window.martyShow; window.martyShow=function(k,t){ const w=visUntil-Date.now(); if(w>0){ setTimeout(()=>_ms(k,t),w+900); return; } return _ms(k,t); };
+function rwDay(){ const t=todayStr(), o=S.rwChat; if(!o||o.d!==t) S.rwChat={d:t,b:[],t:o&&o.t||0}; return S.rwChat; }
+function rowenaIdle(){ try{
+  if(S.settings.rowenaReact===false||S.settings.rowenaChat===false||document.hidden||stampBusy) return;
+  const sp=$('splash'); if(sp){ const cs=getComputedStyle(sp); if(cs.display!=='none'&&cs.visibility!=='hidden'&&+cs.opacity>.05) return; }
+  if($('modalOverlay').classList.contains('show')||$('askOv').classList.contains('show')) return;
+  if($('rowenaPop').className==='show'||$('martyPop').className==='show') return;
+  const h=kstNow().getUTCHours(); if(h>=1&&h<7) return;
+  const m=rwDay(), b=martyBand(h); if(m.b.includes(b)||Date.now()-(m.t||0)<45*6e4) return;
+  m.b.push(b); if(Math.random()>.45){ save(); return; }
+  m.t=Date.now(); save(); const ms=rowenaShow();
+  if(S.settings.martyPop!==false&&Math.random()<.4) setTimeout(()=>{ if($('martyPop').className!=='show') martyShow(null,pick(MTA)); },ms+1300);
+}catch(e){} }
+setInterval(rowenaIdle,50000); setTimeout(rowenaIdle,9000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(rowenaIdle,3500); });
+/* 설정 연동 */
+const _rw=window.setRw; window.setRw=function(k,v){ _rw(k,v); if(k==='rowenaChat'){ if(v) rowenaShow('다시 때때로 찾아올게요. 우리 함께 천천히 가요.'); else toast('로웨나: 필요할 때 불러 줘요. 언제든 여기 있어요.'); } };
+const _rm=window.renderMaster; window.renderMaster=function(){ _rm(); const e=$('rowenaChatSel'); if(e) e.value=S.settings.rowenaChat===false?'0':'1'; };
+if($('screen-master')&&$('screen-master').classList.contains('active')) window.renderMaster();
+})();
+</script>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const pick=P=>P[Math.floor(Math.random()*P.length)];
+let byeOpen=false;
+document.head.insertAdjacentHTML('beforeend','<style>.rp-bub{white-space:pre-line}#byeScreen{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;background:radial-gradient(ellipse at 50% 30%,rgba(120,80,45,.38),transparent 62%),linear-gradient(#1f130b,#170e08 78%);opacity:0;transition:opacity .6s}#byeScreen.show{display:flex}#byeScreen.in{opacity:1}#byeScreen .by-b{width:min(320px,100%);background:var(--parch);color:var(--ink);border:1px solid var(--gold-d);border-radius:10px;padding:14px 16px;font-size:14px;line-height:1.7;white-space:pre-line;box-shadow:0 6px 20px rgba(0,0,0,.5);position:relative;text-align:center}#byeScreen .by-b b{display:block;font-size:11px;color:var(--gold-d);margin-bottom:4px}#byeScreen .by-m{display:flex;align-items:center;gap:8px;width:min(320px,100%);font-size:12.5px;color:var(--parch)}#byeScreen .by-m img{width:44px;image-rendering:pixelated;filter:drop-shadow(0 0 6px rgba(243,216,138,.5));flex:none}#byeScreen .by-h{font-size:11.5px;color:#a99a76;text-align:center;line-height:1.5;min-height:17px}#byeScreen .by-f{display:flex;gap:8px;width:min(320px,100%)}#byeScreen .by-f button{flex:1;margin:0}</style>');
+document.body.insertAdjacentHTML('beforeend','<div id="byeScreen"></div>');
+/* 상황 파악 */
+function ctx(){ let c=null,left=0,dn=0; try{ const act=computeToday().active, day=S.history[todayStr()]||{}; dn=act.filter(q=>(day.done||{})[q.id]).length; left=act.length-dn; c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){} let st=0; try{ st=curStreak(); }catch(e){} return {c,left,dn,st}; }
+const fill=(t,x)=>t.replace('{n}',x.left).replace('{d}',x.dn).replace('{s}',x.st);
+const GO={
+ morn:['좋은 아침이에요. 오늘도 우리 함께 시작해요.','어서 와요. 오늘의 첫 페이지를 같이 열어 볼까요?'],
+ fore:['어서 와요. 오전이 한창이네요. 오늘 할 일을 함께 살펴봐요.','반가워요. 천천히, 하나씩 시작해 봐요.'],
+ lunch:['어서 와요. 점심은 챙겨 먹었어요?','반가워요. 잠깐 쉬어 가는 시간이네요.'],
+ aft:['어서 와요. 오후도 천천히 함께 가요.','반가워요. 오늘도 와 줘서 고마워요.'],
+ eve:['어서 와요. 하루 수고 많았어요.','저녁이에요. 오늘의 페이지를 함께 돌아볼까요?'],
+ night:['늦은 시간에 왔네요. 무리하지 말고 오늘을 정리해요.','어서 와요. 하루를 마무리하러 왔군요.']
+};
+const GL=['다시 왔군요. 반가워요.','어서 와요. 이어서 함께 해 봐요.','돌아왔군요. 기다리고 있었어요.'];
+const GR=['돌아와 줘서 반가워요. 오랜만이에요.\n천천히 다시 시작해도 괜찮아요. 나는 여기 있었어요.','어서 와요. 쉬는 동안 어떻게 지냈어요?\n오늘부터 다시, 한 걸음씩 함께 가요.'];
+const GC={none:'아직 오늘의 첫 퀘스트 전이에요. 하나씩 같이 해요.',mid:'벌써 {d}개나 해냈네요. 이 리듬 좋아요.',near:'{n}개만 더 하면 오늘의 페이지가 완성돼요.',cleared:'오늘의 퀘스트는 이미 모두 마쳤어요. 편히 있어요.'};
+const MG_OPEN=['어서 와요, 어서 와요! 마티가 기다렸어요 ✨','왔다 왔다! 오늘도 로웨나 님이랑 셋이서 힘내 봐요 🌟','조수 마티, 인사 담당 출동! 반가워요 👋'];
+const BB={morn:'좋은 하루 보내요.',fore:'남은 오전도 평안하길 바라요.',lunch:'맛있게 먹고 오후도 잘 보내요.',aft:'오후도 무탈하길 바라요.',eve:'편안한 저녁 보내요.',night:'푹 자요. 내일 또 만나요.'};
+const BS={cleared:'오늘의 퀘스트를 모두 마쳤어요. 정말 수고했어요.',none:'오늘은 아직 시작 전이지만 괜찮아요. 준비되면 언제든 돌아와요.',near:'{n}개만 남았어요. 잠깐 쉬었다가 다시 돌아와요. 기다릴게요.',mid:'오늘 {d}개를 해냈어요. 충분히 잘했어요.'};
+const MG_BYE=['로웨나 님 조수 마티도 배웅해요! 또 만나요 👋','다녀오세요~! 마티는 여기서 반짝이며 기다릴게요 ✨','오늘도 수고했어요! 다음에 또 놀아요 🌙','조수 마티의 마지막 한마디! 물 한 잔 꼭 마셔요 💧'];
+function isFirstToday(){ const t=todayStr(), g=S.rwGreet; return !g||g.d!==t; }
+function comebackGap(){ try{ const t=todayStr(), H=S.history, ks=Object.keys(H).filter(k=>k<t&&Object.values(H[k].done||{}).some(Boolean)).sort(); if(!ks.length) return 0; return Math.round((Date.parse(t)-Date.parse(ks[ks.length-1]))/864e5); }catch(e){ return 0; } }
+function greetText(kind,first){ const h=kstNow().getUTCHours(), b=martyBand(h), x=ctx();
+  if(kind==='back') return pick(['어서 와요. 벌써 돌아왔군요.','다시 만났네요. 이어서 함께 해요.'])+(x.c?'\n'+fill(GC[x.c],x):'');
+  if(first&&comebackGap()>=4) return pick(GR);
+  let main=(first?pick(GO[b]):(b==='night'?'늦은 시간에 다시 왔네요. 무리는 말아요.':pick(GL)));
+  let sub=x.c?fill(GC[x.c],x):''; if(x.st>=3&&Math.random()<.45&&x.c!=='cleared') sub=(sub?sub+' ':'')+x.st+'일째 이어 가고 있어요.';
+  return main+(sub?'\n'+sub:''); }
+function byeText(){ const h=kstNow().getUTCHours(), b=martyBand(h), x=ctx();
+  let sit=(b==='night'&&x.c==='none')?'오늘은 쉬어도 괜찮아요. 벌점은 없어요. 내일 다시 함께 해요.':(BS[x.c]||'오늘도 와 줘서 고마워요.');
+  sit=fill(sit,x); if(x.c==='cleared'&&x.st>=3) sit+=' '+x.st+'일 연속, 참 대단해요.';
+  return sit+'\n'+BB[b]; }
+/* 인사 */
+function greet(kind){ try{
+  if(byeOpen||S.settings.rowenaReact===false||S.settings.rowenaGreet===false) return;
+  const first=isFirstToday(); S.rwGreet={d:todayStr(),n:((S.rwGreet&&S.rwGreet.d===todayStr())?S.rwGreet.n:0)+1};
+  const b=martyBand(kstNow().getUTCHours()); if(!S.rwChat||S.rwChat.d!==todayStr()) S.rwChat={d:todayStr(),b:[],t:(S.rwChat&&S.rwChat.t)||0}; if(!S.rwChat.b.includes(b)) S.rwChat.b.push(b); S.rwChat.t=Date.now(); save();
+  const ms=rowenaShow(greetText(kind==='return'?'open':kind,first&&kind!=='return'));
+  if(S.settings.martyPop!==false&&Math.random()<(first?.6:.25)) setTimeout(()=>{ if(!byeOpen&&$('martyPop').className!=='show') martyShow(null,pick(MG_OPEN)); },ms+1300);
+}catch(e){} }
+/* 실행화면 다음에 인사 */
+const sp=$('splash');
+if(!sp||!document.body.contains(sp)) setTimeout(()=>greet('open'),800);
+else { const mo=new MutationObserver(()=>{ if(sp.classList.contains('hide')){ mo.disconnect(); setTimeout(()=>greet('open'),1100); } }); mo.observe(sp,{attributes:true,attributeFilter:['class']}); }
+/* 앱으로 돌아왔을 때(오래 떠나 있었다면) 다시 인사 */
+let hiddenAt=0; document.addEventListener('visibilitychange',()=>{ if(document.hidden){ hiddenAt=Date.now(); return; } const away=hiddenAt?Date.now()-hiddenAt:0; hiddenAt=0; if(away>=30*6e4&&!byeOpen&&$('splash')===null) setTimeout(()=>greet('return'),900); });
+/* 접속 종료 */
+const _sb=window.startBgm; window.startBgm=function(){ if(byeOpen) return; return _sb.apply(this,arguments); };
+const _rs=window.rowenaShow; window.rowenaShow=function(t){ if(byeOpen&&!t) return 0; return _rs(t); };
+const _ms=window.martyShow; window.martyShow=function(k,t){ if(byeOpen) return; return _ms(k,t); };
+window.rowenaBye=function(){ if(byeOpen) return; byeOpen=true; try{ rowenaHide(); martyHide(); }catch(e){} try{ stopBgm(); }catch(e){}
+  S.lastBye=Date.now(); save();
+  const o=$('byeScreen'); o.innerHTML=mascotImg(96)+'<div class="by-b"><b>로웨나</b>'+esc(byeText())+'</div><div class="by-m"><img src="'+MARTY_IMG+'" alt=""><span>'+esc(pick(MG_BYE))+'</span></div><div class="by-f"><button class="gold-btn" onclick="byeBack()">다시 돌아가기</button></div>';
+  o.classList.add('show'); requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add('in'))); };
+window.byeBack=function(){ const o=$('byeScreen'); o.classList.remove('in'); setTimeout(()=>{ o.classList.remove('show'); o.innerHTML=''; },600); byeOpen=false; try{ if(bgmOn()) startBgm(); }catch(e){} setTimeout(()=>greet('back'),700); };
+/* 설정 연동 */
+const _rw=window.setRw; window.setRw=function(k,v){ _rw(k,v); if(k==='rowenaGreet'){ if(v) rowenaShow('앱을 켤 때마다 인사할게요. 어서 와요, 하고요.'); else toast('로웨나: 조용히 맞이할게요. 필요하면 다시 켜 줘요.'); } };
+const _rm=window.renderMaster; window.renderMaster=function(){ _rm(); const e=$('rowenaGreetSel'); if(e) e.value=S.settings.rowenaGreet===false?'0':'1'; };
+if($('screen-master')&&$('screen-master').classList.contains('active')) window.renderMaster();
+})();
+</script>
+<script>document.head.insertAdjacentHTML('beforeend','<style>.mp-bub{max-width:min(440px,calc(100vw - 24px));padding:8px 14px;line-height:1.5}.mp-bub b,.rp-bub b{display:block;margin:0 0 3px 0}.rp-all{flex-direction:column-reverse;align-items:flex-start;gap:6px}.rp-bub{max-width:min(440px,calc(100vw - 20px));margin:0;padding:8px 14px;line-height:1.5}.rp-bub:before{left:27px;top:auto;bottom:-8px;border:8px solid transparent;border-bottom:0;border-top-color:var(--gold-d)}.rp-bub:after{left:29px;top:auto;bottom:-6px;border:6px solid transparent;border-bottom:0;border-top-color:var(--parch)}</style>');</script>
 </body>
 </html>
