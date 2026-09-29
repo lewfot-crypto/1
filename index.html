@@ -265,6 +265,46 @@ header.top{position:relative}
 @keyframes mpBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes mpTw{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
 @media (prefers-reduced-motion:reduce){.mp-in img{display:none}.mp-in{animation:none;width:60px;height:40px}}
+
+/* ===== 홈: 로웨나의 서재 (시간대별 조명) ===== */
+.rowena-scene{position:relative;margin:0 0 16px;border:2px solid var(--gold-d);border-radius:3px;overflow:hidden;background:#0e0a06;box-shadow:0 0 0 3px #0e0a06,0 6px 18px rgba(0,0,0,.5);aspect-ratio:900/492;--b:1;--s:1;--se:0;--c:#fff;--g:0}
+.rowena-scene img{display:block;width:100%;height:100%;object-fit:cover;filter:brightness(var(--b)) saturate(var(--s)) sepia(var(--se));transition:filter 1.6s ease}
+.rowena-scene .rs-tint{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;background-color:var(--c);transition:background-color 1.6s ease}
+.rowena-scene .rs-glow{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:var(--g);transition:opacity 1.6s ease;animation:rsFlick 3.6s ease-in-out infinite;
+background:
+radial-gradient(circle at 31.5% 82%,rgba(255,200,110,.85),transparent 15%),
+radial-gradient(circle at 65% 81%,rgba(190,150,255,.65),transparent 12%),
+radial-gradient(circle at 67% 73%,rgba(255,140,60,.5),transparent 13%),
+radial-gradient(circle at 59.5% 52%,rgba(255,205,120,.6),transparent 9%),
+radial-gradient(circle at 4% 9%,rgba(255,205,120,.6),transparent 8%),
+radial-gradient(circle at 24% 12%,rgba(255,205,120,.5),transparent 6%),
+radial-gradient(circle at 24% 57%,rgba(255,205,120,.5),transparent 6%),
+radial-gradient(circle at 36.5% 57%,rgba(255,205,120,.5),transparent 6%),
+radial-gradient(circle at 76.5% 49%,rgba(255,205,120,.5),transparent 6%)}
+@keyframes rsFlick{0%,100%{filter:brightness(1)}50%{filter:brightness(.86)}}
+.rowena-scene[data-light="dawn"]{--b:.86;--s:.9;--se:.08;--c:#d5cdf0;--g:.55}
+.rowena-scene[data-light="morning"]{--b:1;--s:1.02;--se:.04;--c:#f7f1e0;--g:.2}
+.rowena-scene[data-light="day"]{--b:1.08;--s:1.05;--se:0;--c:#f3f6ff;--g:.1}
+.rowena-scene[data-light="afternoon"]{--b:1;--s:1.1;--se:.12;--c:#ffe8c4;--g:.3}
+.rowena-scene[data-light="evening"]{--b:.8;--s:1.05;--se:.2;--c:#dcae7c;--g:.85}
+.rowena-scene[data-light="night"]{--b:.66;--s:.9;--se:0;--c:#8f9be0;--g:1}
+/* 창밖 풍경 (아치 창 위치에 맞춰 잘라낸 하늘). 밤에는 원본 밤하늘 그대로 */
+.rs-window{position:absolute;left:30.8%;top:10.9%;width:4.05%;height:16.8%;pointer-events:none;overflow:hidden;
+clip-path:polygon(0 88%,0 32%,11% 14%,31.6% 4.7%,62.5% .2%,77.5% 1.1%,90% 7.7%,97.5% 21%,99% 47%,100% 100%);
+background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
+.rs-window i{position:absolute;display:block}
+.rs-window .sun{left:var(--sx,50%);top:var(--sy,50%);width:var(--ss,30%);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);background:var(--sc,#fff);box-shadow:0 0 5px 2px var(--sg,transparent);opacity:var(--so,0)}
+.rs-window .cloud{height:13%;border-radius:20px;background:var(--cc,#fff);opacity:var(--co,0);filter:blur(.4px)}
+.rs-window .c1{left:8%;top:30%;width:58%}
+.rs-window .c2{left:38%;top:52%;width:60%}
+.rs-window .stars{inset:0;opacity:var(--st,0);background:radial-gradient(circle at 25% 20%,#fff 0 .8px,transparent 1.3px),radial-gradient(circle at 72% 12%,#fff 0 .8px,transparent 1.3px),radial-gradient(circle at 55% 38%,#fff 0 .8px,transparent 1.3px)}
+.rowena-scene[data-light="dawn"]{--wo:1;--sky:linear-gradient(#2a2f6b 0%,#6a5b9e 45%,#e59a9a 80%,#ffc99a 100%);--sx:55%;--sy:92%;--ss:30%;--sc:#ffe2a8;--sg:rgba(255,190,130,.8);--so:.95;--st:.55;--co:0}
+.rowena-scene[data-light="morning"]{--wo:1;--sky:linear-gradient(#8ec5ee 0%,#bfe0f3 55%,#fff0c2 100%);--sx:38%;--sy:62%;--ss:28%;--sc:#fff3b0;--sg:rgba(255,235,150,.8);--so:1;--st:0;--co:.55;--cc:#fff}
+.rowena-scene[data-light="day"]{--wo:1;--sky:linear-gradient(#3f9be8 0%,#79c3f5 60%,#b9e4fb 100%);--sx:68%;--sy:24%;--ss:26%;--sc:#fffbe0;--sg:rgba(255,255,220,.8);--so:1;--st:0;--co:.95;--cc:#fff}
+.rowena-scene[data-light="afternoon"]{--wo:1;--sky:linear-gradient(#63adea 0%,#a9d3ef 45%,#ffe0a0 100%);--sx:70%;--sy:58%;--ss:28%;--sc:#ffd97a;--sg:rgba(255,200,100,.85);--so:1;--st:0;--co:.6;--cc:#fff3dc}
+.rowena-scene[data-light="evening"]{--wo:1;--sky:linear-gradient(#3b2f74 0%,#a8508a 40%,#ff8a5c 78%,#ffc36b 100%);--sx:48%;--sy:88%;--ss:36%;--sc:#ffb45a;--sg:rgba(255,140,70,.85);--so:1;--st:.4;--co:.5;--cc:#ff9d7a}
+.rowena-scene[data-light="night"]{--wo:0}
+@media (prefers-reduced-motion:reduce){.rowena-scene .rs-glow{animation:none}.rowena-scene img,.rowena-scene .rs-tint,.rowena-scene .rs-glow,.rs-window{transition:none}}
 </style>
 </head>
 <body>
@@ -290,6 +330,7 @@ header.top{position:relative}
           <div id="passRow" style="margin-top:8px"></div>
         </div>
       </div>
+      <div id="homeRowena" class="rowena-scene" data-light="day"><img id="rowenaSceneImg" alt="로웨나가 책을 펼치고 앉아 있는 마법 도서관"><div class="rs-window" aria-hidden="true"><i class="stars"></i><i class="sun"></i><i class="cloud c1"></i><i class="cloud c2"></i></div><div class="rs-tint"></div><div class="rs-glow"></div></div>
       <div id="homeMascot"></div>
       <div id="homeNight"></div>
       <div id="homeConfess"></div>
@@ -1933,6 +1974,12 @@ computeToday(); save();
 applyBg();
 document.documentElement.style.setProperty('--libimg','url('+LIB_FULL+')');
 document.getElementById('splashImg').src=LIB_FULL;
+(function(){ const box=document.getElementById('homeRowena'), im=document.getElementById('rowenaSceneImg'); if(!box||!im) return; im.src=LIB_FULL;
+  const L=['dawn','morning','day','afternoon','evening','night'];
+  function band(h){ return h>=21||h<4?'night':h<7?'dawn':h<11?'morning':h<15?'day':h<18?'afternoon':'evening'; }
+  function apply(){ let b; try{ let q=new URLSearchParams(location.search).get('light'); if(q==='sunset') q='evening'; b=L.includes(q)?q:band(kstNow().getUTCHours()); }catch(e){ b='day'; } if(box.dataset.light!==b) box.dataset.light=b; }
+  apply(); setInterval(apply,300000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) apply(); });
+})();
 (function(){
   const sp=document.getElementById('splash'), h=kstNow().getUTCHours(), L=lvInfo(), st=curStreak();
   document.getElementById('spHi').textContent = (h<5||h>=22)?'늦은 밤이에요 🌙':h<11?'좋은 아침이에요 ☀️':h<17?'좋은 오후예요 🌿':'좋은 저녁이에요 🌆';
