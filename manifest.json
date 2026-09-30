@@ -1,0 +1,17 @@
+{
+ "name": "LIFE QUEST",
+ "short_name": "LIFE QUEST",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#0b140e",
+ "theme_color": "#0b140e",
+ "lang": "ko",
+ "icons": [
+  {
+   "src": "assets/743d3d128d.png",
+   "sizes": "180x180",
+   "type": "image/png"
+  }
+ ]
+}
