@@ -44,9 +44,14 @@ const _bg=window.setBgPattern; window.setBgPattern=function(v){ _bg(v); pop(v===
 const _eb=window.exportBackup; window.exportBackup=function(){ _eb(); if(inM()) pop('백업 코드를 만들었어요! 복사해서 메모 앱이나 카카오톡 "나에게 보내기"에 보관해 두세요 💾'); };
 /* 설정 탭 상단 마티 안내 */
 function guide(){ let b=$('mtGuide'); if(!b){ b=document.createElement('div'); b.id='mtGuide'; document.querySelector('#screen-master .section-h').insertAdjacentElement('afterend',b); }
-  const old=!S.lastBackup||Date.now()-S.lastBackup>7*864e5, noEv=!S.events.some(e=>!evExpired(e));
-  const tip=!S.dailyQuests.length?'데일리 퀘스트가 아직 없어요. 같이 하나 만들어 볼까요? 🌱':old?'백업한 지 좀 됐어요. 기록이 사라지지 않게 코드를 만들어 둘까요? 💾':noEv?'이번 달 이벤트가 아직 없어요. 한정 퀘스트를 만들어 볼까요? 🎊':'바꾸고 싶은 게 있어요? 제가 옆에서 안내할게요! ✨';
-  b.innerHTML='<div class="mg-row" style="margin:0"><img class="mg-img" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble"><b>마티의 설정 안내</b><br>'+tip+'<div class="mt-qb"><button onclick="mtNewDQ()">🌱 새 퀘스트</button><button onclick="openAchModal()">🏆 새 업적</button><button onclick="openEvModal()">🎊 이벤트</button><button onclick="exportBackup()">💾 백업</button></div></div></div>'; }
+  /* 마티의 백업 안내: 마지막 백업(없으면 처음 쓴 날)부터 7일 동안 백업을 안 했을 때만 나와요. 그 외엔 말풍선 자체가 없어요.
+     '아니'라고 하면 7일 뒤에 다시 물어요 */
+  const base=S.lastBackup||S.firstSeen||Date.now(), askBk=(Date.now()-base>=7*864e5)&&!(S.bkNo&&Date.now()-S.bkNo<7*864e5);
+  if(!askBk){ b.innerHTML=''; b.style.display='none'; return; }
+  b.style.display='';
+  b.innerHTML='<div class="mg-row" style="margin:0"><img class="mg-img" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble"><b>마티의 설정 안내</b><br>'+(S.lastBackup?'백업한 지 일주일이 넘었어요.':'아직 백업을 안 했어요.')+' 백업할까요? 💾<div class="mt-qb"><button onclick="mtBkYes()">응</button><button onclick="mtBkNo()">아니</button></div></div></div>'; }
+window.mtBkYes=function(){ exportBackup(); setTimeout(guide,300); };
+window.mtBkNo=function(){ S.bkNo=Date.now(); save(); guide(); toast('알겠어요. 일주일 뒤에 다시 물어볼게요'); };
 LQ.on('master:after',function(){ guide(); });
 if(inM()) window.renderMaster();
 })();

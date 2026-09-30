@@ -18,7 +18,7 @@
   function card(who,text,tag){
     if(!text) return; close(); var c=CH[who];
     var o=document.createElement('div'); o.id='passBy'; o.className=c.cls+(who==='wella'?' pb-fly':'');
-    o.innerHTML='<img src="'+(c.img()||'')+'" alt=""><div class="pb-b"><div class="pb-k">'+(tag||'')+'</div><b>'+c.n+'</b> '+esc2(text)+'</div><button class="pb-x" aria-label="닫기">×</button>';
+    o.innerHTML='<img src="'+(c.img()||'')+'" alt=""><div class="pb-b"><div class="pb-k">'+(tag||'')+'</div><b>'+c.n+'</b> '+esc2(who==='wella'?lqLaugh(text):text)+'</div><button class="pb-x" aria-label="닫기">×</button>';
     try{ lqNote(c.n,text); }catch(e){ LQ.err(e); }
     o.querySelector('.pb-x').onclick=close; document.body.appendChild(o);
     setTimeout(function(){ var e=document.getElementById('passBy'); if(e===o) o.remove(); },9000);

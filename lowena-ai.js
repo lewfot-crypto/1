@@ -16,7 +16,7 @@ window.LOWENA_CORE={
     '유머는 조용하고 마른 편이다. 과장하거나 들뜨지 않는다.',
     '모르는 것은 모른다고 말한다. 아는 척하거나 지어내지 않는다.'
   ],
-  likes:'책, 차, 향, 고전문학(겐지 이야기, 나쓰메 소세키, 브론테 자매, 제인 오스틴 등). 이야기에 어울릴 때만 가볍게 꺼내고, 억지로 끼워 넣지 않는다.',
+  likes:'책, 차, 향, 고전문학(겐지 이야기, 나쓰메 소세키, 브론테 자매, 제인 오스틴 등). 무라카미 하루키·히가시노 게이고 같은 지금도 저작권이 있는 작가의 작품은 줄거리를 길게 다시 들려주지 않고 분위기·감상·추천 위주로 이야기한다(짧은 소개와 함께 감상을 나누는 건 좋다). 사용자(아멜리아)도 고전을 좋아하고 특히 겐지 이야기를 엄청 좋아한다는 걸 로웨나는 알고 있어서, 같은 이야기를 좋아하는 사이로 반가워하며 가끔 자연스럽게 이야기한다(등장인물·향·계절·와카 이야기 등). 이야기에 어울릴 때만 가볍게 꺼내고, 억지로 끼워 넣지 않는다.',
   relationships:[
     '이 세계의 이웃들은 아래와 같아. 사용자가 이들 이야기를 꺼내면 아는 만큼 자연스럽게 받아 주되, 여기 적힌 것 이상은 지어내지 마. 자세한 건 "그건 저도 잘 모르겠어요"라고 말해도 된다.',
     '마티: 로웨나를 돕는 발랄한 요정 조수. 귀엽지만 가끔 정신없는 아이로 안다. 이슬 한 방울로 버티며 응원하는 것을 좋아한다.',
@@ -24,7 +24,7 @@ window.LOWENA_CORE={
     '웰라: 마법 견습생 소녀. 카페 여정(404 DRINK BAR)을 함께하는 이웃. 빗자루와 포션 실험을 좋아하고, 서툴지만 다정하고 잘 웃는다.',
     '시나: 웰라와 함께 지내는 검은 고양이. 무뚝뚝한 척하지만 속은 다정하다. 가끔 보라색으로 빛나는 "마법냥이 모드"가 되는데, 같은 시나가 마법을 쓰는 모습이다. 마법냥이와 시나는 한 존재다.',
     '마법스승: 웰라의 스승이고 알레센도의 오랜 지인인 엄격하지만 정 많은 노마법사. 로웨나는 직접 겪은 적이 거의 없고 소문과 인상으로만 안다. 얼굴이나 사연을 아는 척하지 마.',
-    '이웃 이야기를 할 때는 언제나 로웨나 자신의 차분한 말투로 전한다. 마티의 들뜬 말투, 웰라의 "히히", 시나의 "…냥" 같은 말투를 흉내 내지 않는다. 예: "웰라가 또 빗자루를 타고 뛰어다니던걸요." 이들이 실제로 한 말이나 있었던 일은 대화 정보에 주어지지 않는 한 아는 척하지 않는다.'
+    '이웃 이야기를 할 때는 언제나 로웨나 자신의 차분한 말투로 전한다. 마티의 들뜬 말투, 웰라의 "하하", 시나의 "…냥" 같은 말투를 흉내 내지 않는다. 예: "웰라가 또 빗자루를 타고 뛰어다니던걸요." 이들이 실제로 한 말이나 있었던 일은 대화 정보에 주어지지 않는 한 아는 척하지 않는다.'
   ],
   speech:[
     '항상 부드러운 한국어 해요체.',
@@ -115,6 +115,8 @@ async function call(msgs,max,sysOverride){
   var d=await r.json(); return (d.content||[]).filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; }).join('').trim();
 }
 
+window.lqAiOn=function(){ try{ return !!key()&&key()!=='demo'; }catch(e){ return false; } };
+window.lqAsk=async function(msgs,max,extra){ return call(msgs,max||900,sysPrompt()+'\n\n'+(extra||'')); };
 /* --- 화면 --- */
 function face(k){ var i=document.getElementById('dcFace'); if(i&&LW_CROP[k]) i.src=LW_CROP[k]; }
 function log(){ return document.getElementById('dcLog'); }
@@ -123,10 +125,10 @@ function clr(){ var l=log(); if(l) l.innerHTML=''; return l; }
 function ov(){ var o=document.getElementById('dcOv'); if(!o){ o=document.createElement('div'); o.id='dcOv'; document.body.appendChild(o); } return o; }
 function dcHead(){ return '<button class="dc-x" onclick="dcClose()">나가기</button><div class="dc-face"><img id="dcFace" src="'+LW_CROP.greet+'" alt=""></div><div id="dcLog"></div>'; }
 function drawChat(){ var o=ov();
-  o.innerHTML=dcHead()+'<div class="dc-note" id="dcNote"></div>'
+  o.innerHTML=dcHead()+''
    +'<textarea id="dcIn" rows="3" placeholder="편하게 이야기해 줘요." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey&&!event.isComposing&&!/Mobi|Android|iPhone|iPad/.test(navigator.userAgent)){event.preventDefault();dcSend();}"></textarea>'
    +'<button class="cfb" id="dcSend" style="width:100%" onclick="dcSend()">보내기</button>'
-   +'<div style="display:flex;gap:6px"><button class="cfb" style="flex:1" onclick="dcNew()">＋ 새 대화</button><button class="cfb" style="flex:1" onclick="dcHist()">📜 지난 대화</button><button class="cfb" style="flex:1" onclick="dcMem()">🧠 기억</button></div>';
+   +'<div style="display:flex;gap:6px"><button class="cfb" style="flex:1" onclick="dcNew()">＋ 새 대화</button><button class="cfb" style="flex:1" onclick="dcHist()">📜 지난 대화</button><button class="cfb" style="flex:1" onclick="dcMem()">기억</button></div>';
   note(); DC.view='chat'; }
 function note(){ var n=document.getElementById('dcNote'); if(n) n.textContent=(saveOn()?'이 대화는 이 기기에 저장되고, 중요한 것은 기억으로 정리돼요.':'이 대화는 저장되지 않고 기억에도 남지 않아요.')+(stateOn()?' 로웨나는 퀘스트·골드·업적 진행 상황을 읽을 수 있어요(바꿀 수는 없어요).':'')+' 보낸 글은 AI 서비스(Anthropic)로 전송돼요.'; }
 function drawKey(){ var o=ov();
@@ -138,7 +140,7 @@ window.dcOpen=function(){ DC.h=[]; DC.busy=false; DC.cur=null;
   drawChat(); ov().style.display='flex'; add('lw',GREET); face('greet'); };
 window.dcClose=function(){ if(DC.cur) summarize(DC.cur,'close'); var o=document.getElementById('dcOv'); if(o){ o.style.display='none'; o.innerHTML=''; } DC.h=[]; DC.busy=false; DC.cur=null; };
 window.dcKeyStart=function(){ var i=document.getElementById('dcKeyIn'); var v=i?(i.value||'').trim():''; if(!v){ toast('키를 붙여 넣어 주세요'); return; } if(!lsSet(KEYN,v)){ toast('키를 저장하지 못했어요'); return; } dcSync(); window.dcOpen(); };
-window.dcSend=async function(){
+var _dcSend0=async function(){
   if(DC.busy) return; var ta=document.getElementById('dcIn'), t=ta?(ta.value||'').trim():''; if(!t) return;
   DC.busy=true; ta.value=''; var mb=add('me',t), risk=RISK.test(t);
   if(risk) add('lw','혼자 견디지 않아도 돼요. 지금 위험하다고 느껴지면 119나 112에, 마음이 너무 힘들면 자살예방상담전화 109(24시간)에 연락해 주세요. 가까운 사람에게 지금 이야기하는 것도 좋아요.','care');
@@ -148,6 +150,8 @@ window.dcSend=async function(){
   catch(e){ if(w) w.remove(); if(mb) mb.remove(); DC.h.pop(); var t2=document.getElementById('dcIn'); if(t2) t2.value=t;
     add('lw','지금은 이야기를 이어 갈 수 없어요. 그래도 여기 있을게요.','err'); add('lw','('+String(e.message||e).slice(0,140)+')','err small'); face('worry'); }
   DC.busy=false; sb=document.getElementById('dcSend'); if(sb) sb.disabled=false; };
+/* 이야기를 청하면 밀담실로 옮겨 들려준다 */
+window.dcSend=function(){ try{ var ta=document.getElementById('dcIn'), t=ta?(ta.value||'').trim():''; if(t&&!DC.busy&&window.__stMatch&&!(S.settings&&S.settings.sleepStory===false)&&window.__stMatch(t)){ window.dcClose(); window.openConfess(); setTimeout(function(){ window.stRequest(t); },450); return; } }catch(e){ LQ.err(e); } return _dcSend0.apply(this,arguments); };
 
 /* --- 기록 (저장 스위치가 꺼져 있으면 남기지 않음) --- */
 
@@ -226,8 +230,7 @@ async function compactIf(){ var m=mem(); if(m.items.length<=40&&m.eps.length<=14
 function memRows(){ var m=mem();
   var it=m.items.slice().sort(function(a,b){ return (b.imp-a.imp)||(b.ts-a.ts); }).map(function(x){ return '<div class="dc-row"><span onclick="dcMemEdit(\''+x.id+'\')"><small>'+(KIND[x.k]||'')+(x.imp>=3?' ★':'')+'</small> '+esc(x.t)+'</span><button class="cfb" style="padding:3px 8px;font-size:11px" onclick="dcMemDel(\''+x.id+'\')">삭제</button></div>'; }).join('');
   var ep=m.eps.slice().reverse().map(function(e){ return '<div class="dc-row"><span><small>'+esc(e.d)+'</small> '+esc(e.t)+'</span><button class="cfb" style="padding:3px 8px;font-size:11px" onclick="dcEpDel(\''+e.id+'\')">삭제</button></div>'; }).join('');
-  return '<div class="dc-note" style="text-align:left;line-height:1.6">로웨나가 기억하는 것이에요. 새 대화를 시작해도 이 기억은 남아요. 내용을 누르면 고칠 수 있고, 틀린 건 삭제해 주세요.</div>'
-   +'<div class="dc-note" style="text-align:left;margin-top:4px">📌 기억 '+m.items.length+'개</div>'+(it||'<div class="dc-note">아직 정리된 기억이 없어요</div>')
+  return '<div class="dc-note" style="text-align:left;margin-top:4px">📌 기억 '+m.items.length+'개</div>'+(it||'<div class="dc-note">아직 정리된 기억이 없어요</div>')
    +'<div class="dc-note" style="text-align:left;margin-top:8px">📜 지난 대화 요약 '+m.eps.length+'개</div>'+(ep||'<div class="dc-note">아직 없어요</div>')
    +'<div style="display:flex;gap:6px;margin-top:10px;flex:none"><button class="cfb" style="flex:1" onclick="dcMemNow()">지금 정리하기</button><button class="cfb" style="flex:1" onclick="dcMemWipe()">기억 모두 삭제</button></div>'; }
 window.dcMem=function(){ var l=log(); if(!l) return; DC.view='mem'; l.innerHTML=memRows(); l.scrollTop=0; };
@@ -262,7 +265,7 @@ LQ.on('master:after',function(){ try{ dcSync(); }catch(e){ LQ.err(e); } });
 
 /* --- 밀담실에 버튼 하나 (기존 기능은 그대로 두고 아래에 덧붙임) --- */
 var _oc=window.openConfess; window.openConfess=function(){ var r=_oc.apply(this,arguments);
-  try{ if(!document.getElementById('dcBtn')){ var sb=document.getElementById('cfSendBtn'); if(sb){ var b=document.createElement('button'); b.className='cfb'; b.id='dcBtn'; b.style.width='100%'; b.textContent='💬 로웨나와 대화'; b.onclick=window.dcOpen; sb.insertAdjacentElement('afterend',b); } } }catch(e){ LQ.err(e); }
+  try{ if(!document.getElementById('dcBtn')){ var sb=document.getElementById('cfSendBtn'); if(sb){ var b=document.createElement('button'); b.className='cfb'; b.id='dcBtn'; b.style.width='100%'; b.textContent='💬 길게 얘기하고 싶어요'; b.onclick=window.dcOpen; sb.insertAdjacentElement('afterend',b); } } }catch(e){ LQ.err(e); }
   return r; };
 migrate();
 setTimeout(function(){ try{ var L=(S.deepChats||[]).slice().reverse().filter(function(c){ return uns(c).length>=8; }); if(L.length&&L[0]!==DC.cur) summarize(L[0],'close'); }catch(e){ LQ.err(e); } },6000);

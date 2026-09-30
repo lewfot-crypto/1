@@ -24,7 +24,7 @@
     var e=document.getElementById('bnCard'); if(!e||!cur) return;
     var t=cur.turns[cur.i], w=WHO[t[0]]||WHO.w;
     e.querySelector('.bn-face').innerHTML=cur.who.map(function(k){ return '<img class="'+(k===t[0]?'on':'')+'" src="'+WHO[k].img()+'" alt="'+WHO[k].n+'">'; }).join('');
-    e.querySelector('.bn-line').innerHTML='<b>'+w.n+'</b>'+h(t[1]);
+    e.querySelector('.bn-line').innerHTML='<b>'+w.n+'</b>'+h(t[0]==='w'?lqLaugh(t[1]):t[1]);
     e.querySelector('.bn-pg').textContent=(cur.i+1)+' / '+cur.turns.length;
     e.querySelector('.bn-nx').textContent=cur.i>=cur.turns.length-1?'닫기 ✓':'다음 ▸';
     var l=e.querySelector('.bn-line'); l.style.animation='none'; void l.offsetWidth; l.style.animation='';

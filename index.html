@@ -406,6 +406,7 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
         <label>생일이나 기념일을 적어 두면 그날 알레센도가 챙겨 줘요. (12월 30~31일엔 알레센도가 올해 결산도 해 줘요)</label>
         <div id="anniList"></div>
         <input id="anniName" maxlength="20" placeholder="이름 (예: 엄마 생일, 결혼기념일)">
+        <label for="anniDate">날짜 (매년 같은 월·일에 챙겨요)</label>
         <input id="anniDate" type="date">
         <button class="gold-btn" onclick="lqAnniAdd()">장부에 적기</button>
         <div class="inline" style="margin-top:10px"><button class="ghost-btn" onclick="lqRetroNow(true)">지난달 회고 보기</button><button class="ghost-btn" onclick="lqYearNow(true)">올해 결산 미리 보기</button></div>
@@ -422,7 +423,7 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
          <label>대화 기록·장기 기억 남기기 (끄면 대화가 저장되지 않고 기억에도 남지 않아요)</label>
          <select id="dcSaveSel" onchange="dcSaveToggle(this.value==='1')"><option value="1">남기기</option><option value="0">남기지 않기 (기억하지 않기)</option></select>
          <div class="inline row1" style="margin-top:8px"><button class="ghost-btn" onclick="dcWipe()">대화 모두 삭제</button><button class="ghost-btn" onclick="dcTest()">연결 테스트</button><button class="ghost-btn" onclick="dcClearKey()">키 삭제</button></div>
-         <div style="font-size:11px;color:#a99a76;line-height:1.5;margin-top:6px">밀담실의 <b>💬 로웨나와 대화</b> 버튼으로 이야기해요. 보낸 글은 Anthropic 서버로 전송되고 사용량만큼 API 요금이 나가니 콘솔에서 월 사용 한도를 걸어 두세요. 키 칸에 <b>demo</b>를 넣으면 서버 없이 화면만 시험해 볼 수 있어요.</div>
+         <div style="font-size:11px;color:#a99a76;line-height:1.5;margin-top:6px">밀담실의 <b>💬 길게 얘기하고 싶어요</b> 버튼으로 이야기해요. 보낸 글은 Anthropic 서버로 전송되고 사용량만큼 API 요금이 나가니 콘솔에서 월 사용 한도를 걸어 두세요. 키 칸에 <b>demo</b>를 넣으면 서버 없이 화면만 시험해 볼 수 있어요.</div>
         <div class="inline" style="margin-top:14px;border-top:1px dashed var(--gold-d);padding-top:10px"><button class="ghost-btn" style="color:#b5533c;border-color:#b5533c" onclick="resetAllData()">모든 기록 초기화</button></div>
       </div>
       <div class="qm-group">
@@ -538,6 +539,16 @@ a,a *{-webkit-touch-callout:none}
 
 
 
+<script src="stories/stories.js"></script>
+<script src="stories/story_gu.js"></script>
+<script src="stories/story_ar.js"></script>
+<script src="stories/story_genji.js"></script>
+<script src="stories/story_genji2.js"></script>
+<script src="stories/story_genji3.js"></script>
+<script src="stories/story_genji4.js"></script>
+<script src="stories/story_soseki.js"></script>
+<script src="stories/story_soseki2.js"></script>
+<script src="stories/story_soseki3.js"></script>
 <script src="lowena-talk.js"></script>
 
 

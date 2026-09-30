@@ -466,9 +466,26 @@ var ST_QUIT=[
 /* "자기 싫어 / 안 자고 싶어 / 잠이 안 와" 류. 위기 표현(죽고 싶다 등)은 제외한다. */
 var ST_INTENT=/(자기|잠들기|잠자기|눕기|자러\s*가기)\s*(가\s*|는\s*|엔\s*)?(너무\s*|정말\s*|진짜\s*|아직\s*)?(싫|아쉽|아깝)|안\s*자고\s*싶|자고\s*싶지\s*(않|는\s*않)|자고\s*싶진\s*않|더\s*(놀고|있고|깨어\s*있고|안\s*자고)\s*싶|아직\s*(안\s*졸|졸리지\s*않|잘\s*생각\s*없|잠\s*안\s*(와|오))|잠이\s*안\s*(와|와요|오|온|올)|잠\s*(이|을)\s*못\s*(자|들)|잠들\s*수\s*없|잠이\s*(오지|안)\s*않/;
 var ST_CRISIS=/죽고\s*싶|자살|자해|사라지고\s*싶|끝내고\s*싶|살기\s*싫|살고\s*싶지/;
+/* 새 이야기(stories.js)와 연속 이야기 합치기 */
+ST_LIST=ST_LIST.concat(window.LQ_STORIES||[]);
+var ST_SER=window.LQ_SERIES||[], ST_EPS=[];
+function stChunk(pages){ var out=[]; pages.forEach(function(pg){ var ss=String(pg).match(/[^.!?…]+[.!?…]+["」』”]?\s*|[^.!?…]+$/g)||[String(pg)]; ss=ss.map(function(x){ return x.trim(); }).filter(Boolean); var n=ss.length; if(n<=3){ out.push(ss.join(' ')); return; } var k=Math.ceil(n/3), base=Math.floor(n/k), extra=n%k, idx=0; for(var c=0;c<k;c++){ var sz=base+(c<extra?1:0); out.push(ss.slice(idx,idx+sz).join(' ')); idx+=sz; } }); return out; }
+ST_LIST.forEach(function(x){ if(!x._ch){ x.p=stChunk(x.p); x._ch=1; } });
+ST_SER.forEach(function(sr){ sr.eps.forEach(function(e,i){ ST_EPS.push({id:sr.id+':'+i,t:'📚 '+sr.t.replace(/^\S+\s/,'')+' '+e.t,p:stChunk(e.p),ser:sr.id,idx:i,n:sr.eps.length}); }); });
+function stSerIdx(sid){ var pg=(S.stProg||{})[sid]; if(pg==null&&S.stSer&&S.stSer.id===sid) pg=S.stSer.next; return pg; }
+var ST_GJ_FIRST='아멜리아 님이 가장 좋아하는 겐지 이야기예요. 저도 정말 좋아하는 이야기라서 오늘은 조금 설레요. 천천히 들려줄게요.';
+var ST_GJ_LEAD=['겐지 이야기를 들으러 왔군요. 아멜리아 님이 이 이야기를 좋아하는 걸 알아서, 오늘도 정성껏 들려줄게요.','아멜리아 님이 좋아하는 겐지 이야기의 다음 장이에요. 향 하나 피운 마음으로 들어요.','겐지 이야기는 몇 번을 들어도 새로워요. 아멜리아 님도 그렇게 좋아하지요. 그럼 시작할게요.'];
+var ST_GJ_MID=['오늘은 여기까지예요. 겐지 이야기는 아껴 들을수록 좋으니까요. 다음 장은 다음 밤에 들려줄게요.','여기서 잠깐 쉬어 가요. 아멜리아 님이 이 이야기를 참 좋아하니, 다음 화도 정성껏 준비해 둘게요. 잘 자요.'];
+var ST_GJ_END2=['2부는 여기까지예요. 3부는 봄의 저택에서 이어질 거예요. 아멜리아 님이 좋아하는 이야기라서 더 곱게 준비해 둘게요. 잘 자요.'];
+var ST_GJ_END3=['3부는 여기까지예요. 빛나던 겐지의 이야기는 이렇게 조용히 저물었어요. 이어지는 4부는 그 뒤 세대의 이야기예요. 아멜리아 님이 좋아하는 이야기라 더 곱게 들려줄게요. 잘 자요.'];
+var ST_SS_END=['열 밤의 꿈이 모두 끝났어요. 소세키의 꿈들은 이유 없이 시작하고 이유 없이 끝나서 좋았지요. 오늘은 그 꿈 곁에서 편히 자요.'];
+var ST_GJ_END4=['겐지 이야기를 끝까지 함께 들었어요. 아멜리아 님과 이 이야기를 함께 좋아해서 참 좋았어요. 언제든 처음부터 다시 들려줄게요. 잘 자요.'];
+var ST_GJ_END=['1부는 여기까지예요. 스마 바닷가의 이야기는 2부에서 이어 들려줄게요. 아멜리아 님이 좋아하는 이야기니까 꼭 잘 준비해 둘게요. 잘 자요.'];
+var ST_SER_MID=['오늘 이야기는 여기까지예요. 다음 이야기는 내일 밤에 이어서 들려줄게요. 그 사이에 어떻게 될지 궁금해하며 자요.','여기서 잠깐 쉬어 가요. 다음 화는 다음 밤에 들려줄게요. 이어질 이야기가 있으니 내일도 기다려져요.'];
+var ST_SER_END=['긴 이야기가 이렇게 끝났어요. 함께 들어 줘서 고마워요. 이제 정말 눈을 감아요.','마지막 화까지 들어 줬네요. 이야기는 끝났지만 그 밤들은 남아 있을 거예요. 잘 자요.'];
 function stOn(){ try{ return !(S.settings&&S.settings.sleepStory===false); }catch(e){ return true; } }
 function stIntent(t){ return ST_INTENT.test(t)&&!ST_CRISIS.test(t); }
-function stById(id){ for(var i=0;i<ST_LIST.length;i++) if(ST_LIST[i].id===id) return ST_LIST[i]; return null; }
+function stById(id){ var i; for(i=0;i<ST_LIST.length;i++) if(ST_LIST[i].id===id) return ST_LIST[i]; for(i=0;i<ST_EPS.length;i++) if(ST_EPS[i].id===id) return ST_EPS[i]; return null; }
 function stRnd(a){ return a[Math.floor(Math.random()*a.length)]; }
 function stPick(){
   var rec=(S.stRecent=S.stRecent||[]), keep=Math.min(rec.length,Math.max(0,ST_LIST.length-2)), recent=rec.slice(-keep||rec.length), pool=ST_LIST.filter(function(s){ return recent.indexOf(s.id)<0; });
@@ -482,32 +499,228 @@ window.stOffer=function(t){
   window.__stText=t||'';
   var rs=S.stResume&&stById(S.stResume.id), line=stRnd(ST_OFFER);
   if(rs) line+='\n\n지난번에 「'+rs.t.replace(/^\S+\s/,'')+'」는 아직 끝까지 못 들었어요. 이어서 들려줄 수도 있어요.';
-  var btns='<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px"><button class="cfb" onclick="stStart()">🌙 들려주세요</button>'+(rs?'<button class="cfb" onclick="stStart(true)">📖 지난 이야기 이어서</button>':'')+'<button class="cfb" onclick="stDecline()">오늘은 괜찮아요</button></div>';
+  var sbtn=''; if(!rs&&S.stSer&&S.stSer.next>0){ var ep0=stById(S.stSer.id+':'+S.stSer.next), sr0=null; ST_SER.forEach(function(x){ if(x.id===S.stSer.id) sr0=x; }); if(ep0&&sr0) sbtn='<button class="cfb" onclick="stSerGo(\''+sr0.id+'\')">📖 '+esc(sr0.t.replace(/^\S+\s/,''))+' '+(S.stSer.next+1)+'화 이어 듣기</button>'; }
+  var btns='<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px"><button class="cfb" onclick="stStart()">🌙 들려주세요</button>'+(rs?'<button class="cfb" onclick="stStart(true)">📖 지난 이야기 이어서</button>':'')+sbtn+'<button class="cfb" onclick="stDecline()">오늘은 괜찮아요</button></div>';
   cfShowTyped(bubble(line,btns)); };
 window.stDecline=function(){ window.__stSkip=true; closeModal(); try{ window.cfSend(); }catch(e){ window.__stSkip=false; } };
+window.stSerGo=function(sid){ var pg=stSerIdx(sid), ep=stById(sid+':'+(pg>0?pg:0)); if(!ep){ stStart(); return; } window.__stEp=ep; stStart(); };
 window.stStart=function(resume){
   var s=null, i=0; if(resume&&S.stResume){ s=stById(S.stResume.id); i=S.stResume.i||0; }
+  if(!s&&window.__stEp){ s=window.__stEp; i=0; } window.__stEp=null;
   if(!s){ s=stPick(); i=0; }
-  stChain=0; cur={s:s,i:Math.min(i,s.p.length-1)};
+  if(s.ser){ S.stSer={id:s.ser,next:s.idx}; }
+  if(window.__stI!=null&&!resume){ i=window.__stI; } window.__stI=null;
+  stChain=0; cur={s:s,i:Math.min(i,s.p.length-1),leadPending:!(resume&&i>0)}; if(window.__stLead){ cur.lead=window.__stLead; window.__stLead=null; }
+  else if(s.ser&&s.ser.indexOf('sr_genji')===0&&!resume) cur.lead=(s.ser==='sr_genji1'&&s.idx===0&&!(S.stProg&&S.stProg.sr_genji1!=null))?ST_GJ_FIRST:stRnd(ST_GJ_LEAD);
   try{ var t=window.__stText||''; (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(잠들기 전 이야기를 들었어요 · '+s.t.replace(/^\S+\s/,'')+')',reply:'🌙 '+s.t.replace(/^\S+\s/,'')+' 이야기를 들려줬어요'}); save(); }catch(e){ LQ.err(e); }
   clearInput(); roomHush('이야기를 들려주는 중이에요.\n눈은 감고 들어도 좋아요.'); stShow(); };
+function stSayRow(){ return '<div style="display:flex;gap:6px;margin-top:8px"><input id="stSay" type="text" maxlength="120" autocomplete="off" placeholder="이야기에 대해 로웨나에게 말해 봐요" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){event.preventDefault();stSay();}" style="flex:1;font-size:16px"><button class="cfb" style="flex:0 0 auto" onclick="stSay()">💬</button></div>'; }
 function stShow(){
   var s=cur.s, n=s.p.length, i=cur.i, last=(i>=n-1);
   S.stResume={id:s.id,i:i}; try{ save(); }catch(e){ LQ.err(e); }
-  var head='<div style="font-size:12px;color:var(--ink-soft);margin:0 0 8px">'+esc(s.t)+' · '+(i+1)+' / '+n+'</div>';
+  if(cur.leadPending){ cur.leadPending=false; var ld=cur.lead||stRnd(ST_INTRO); cfShowTyped(bubble(ld,'<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:2" onclick="stBack()">이야기 시작</button><button class="cfb" style="flex:1" onclick="stQuit()">그만 들을래요</button></div>'+stSayRow())); return; }
+  var head='<div style="font-size:12px;color:var(--ink-soft);margin:0 0 8px">'+(i+1)+' / '+n+'</div>';
   var btns='<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:2" onclick="stNext()">'+(last?'끝까지 들었어요':'다음')+'</button><button class="cfb" style="flex:1" onclick="stQuit()">그만 들을래요</button></div>';
-  var txt=s.p[i]; if(i===0&&!cur.intro){ cur.intro=1; txt=(cur.lead||stRnd(ST_INTRO))+'\n\n'+txt; }
-  cfShowTyped(head+bubble(txt,btns)); }
+  cfShowTyped(head+bubble(s.p[i],btns+stSayRow())); }
 window.stNext=function(){ if(!cur) return; cur.i++; if(cur.i>=cur.s.p.length) stEnd(); else stShow(); };
-function stEnd(){ S.stResume=null; try{ save(); }catch(e){ LQ.err(e); }
+function stEnd(){ S.stResume=null; var sr=cur&&cur.s&&cur.s.ser, fin=false;
+  if(sr){ var pg=(S.stProg=S.stProg||{}); if(cur.s.idx+1<cur.s.n){ S.stSer={id:sr,next:cur.s.idx+1}; pg[sr]=cur.s.idx+1; } else { pg[sr]=-1; fin=true; S.stSer=null; var dn=(S.stSerDone=S.stSerDone||[]); if(dn.indexOf(sr)<0) dn.push(sr); if(dn.length>=ST_SER.length) S.stSerDone=[]; } }
+  try{ save(); }catch(e){ LQ.err(e); }
   roomHush('이야기가 끝났어요.\n이제 눈을 감아도 좋아요.');
-  var more=(stChain<2), line=more?stRnd(ST_END):ST_LAST;
-  cfShowTyped(bubble(line,'<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">'+(more?'<button class="cfb" onclick="stMore()">📖 하나만 더 들려주세요</button>':'')+'<button class="cfb" onclick="stBye()">🌙 접속 종료 · 인사하고 잘래요</button><button class="cfb" onclick="closeModal()">밀담실에 더 있을래요</button></div>')); }
-window.stMore=function(){ stChain++; var s=stPick(); cur={s:s,i:0,lead:stRnd(ST_MORE)};
+  var more=(stChain<2), line=sr?(sr==='sr_yume10'?stRnd(fin?ST_SS_END:ST_SER_MID):sr.indexOf('sr_genji')===0?stRnd(fin?(sr==='sr_genji1'?ST_GJ_END:sr==='sr_genji2'?ST_GJ_END2:sr==='sr_genji3'?ST_GJ_END3:ST_GJ_END4):ST_GJ_MID):stRnd(fin?ST_SER_END:ST_SER_MID)):(more?stRnd(ST_END):ST_LAST);
+  window.__stEndState={line:line,more:more}; stReflect(); }
+function stEndScreen(pre){ var e=window.__stEndState||{line:'',more:false};
+  if(pre){ cfShowTyped(bubble(pre,'<div style="display:flex;margin-top:12px"><button class="cfb" style="flex:1" onclick="stEndScreen(\'\')">다음</button></div>')); return; }
+  cfShowTyped(bubble(e.line,'<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">'+(e.more?'<button class="cfb" onclick="stMore()">📖 하나만 더 들려주세요</button>':'')+'<button class="cfb" onclick="stBye()">🌙 접속 종료 · 인사하고 잘래요</button><button class="cfb" onclick="closeModal()">밀담실에 더 있을래요</button></div>')); }
+function stReflect(){
+  var row='<div style="display:flex;gap:6px;margin-top:10px"><input id="stRef" type="text" maxlength="160" autocomplete="off" placeholder="이야기가 어땠는지 한 줄 남겨 줘요" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){event.preventDefault();stRefSend();}" style="flex:1;font-size:16px"><button class="cfb" style="flex:0 0 auto" onclick="stRefSend()">남기기</button></div><div style="display:flex;margin-top:8px"><button class="cfb" style="flex:1" onclick="stRefSkip()">건너뛸게요</button></div>';
+  cfShowTyped(bubble('이야기가 끝났어요. 들으면서 어땠는지, 마음에 남은 장면이나 궁금한 게 있으면 한 줄만 남겨 줘요.',row)); }
+window.stRefSkip=function(){ stEndScreen(''); };
+var ST_THEME=[[/^sr_genji|^st_gj_/,'겐지 이야기는 계절과 향, 짧은 노래에 마음을 담는 이야기라서 끝나고 나면 여운이 오래 남아요.'],[/^sr_guunmong/,'구운몽은 긴 꿈에서 깨어나 진짜 마음을 알게 되는 이야기예요. 부귀영화가 꿈처럼 지나가도 배운 마음은 남아요.'],[/^sr_arabian/,'천 하룻밤 동안 이야기가 이야기를 낳는 것처럼, 이야기 하나가 마음을 살려 내기도 해요.'],[/^sr_kusamakura/,'풀베개는 세상 이해득실에서 한 걸음 물러나 풍경을 바라보는 이야기예요. 조용히 그림을 보는 것 같지요.'],[/^sr_neko/,'이름 없는 고양이의 눈으로 보면 사람들의 소동도 어쩐지 정겨워요.'],[/^sr_botchan/,'도련님은 무모하지만 정직해서 시원한 이야기예요. 기요 같은 사람이 곁에 있다는 건 큰 힘이에요.'],[/^sr_kokoro/,'마음은 한 사람이 다른 사람에게 마음을 건네는 이야기예요. 무거운 대목은 접어 두었지만 그 조용한 무게는 남아요.'],[/^sr_makura/,'마쿠라노소시는 좋아하는 것을 한 줄씩 적은 천 년 전의 글이에요. 오늘의 좋아하는 것 하나를 떠올려 봐도 좋아요.'],[/^sr_yume10/,'소세키의 꿈은 이유 없이 시작해서 이유 없이 끝나요. 그래서 설명하지 않아도 마음에 남지요.'],[/^sr_starmap/,'웰라와 시나의 별 지도는 이름 없는 별에게 이름을 붙여 주는 다정한 이야기예요.'],[/^sr_nightshop/,'알레센도의 밤 가게에는 언제든 쉬어 가도 되는 자리가 있어요.'],[/^st_/,'잠들기 전에 듣는 이야기는 조용히 마음에 내려앉아요.']];
+var ST_REF_A=['들려주는 동안 저도 즐거웠어요. 그렇게 느껴 줘서 고마워요.','아멜리아 님 이야기를 들으니 저도 다시 그 장면이 떠올라요.','그렇게 느꼈군요. 이야기는 그렇게 각자 마음에 남는 거예요.','한 줄이지만 마음이 전해졌어요. 고마워요.'];
+var ST_REF_Q='좋은 질문이에요. 답은 이야기 속에도, 아멜리아 님 마음속에도 조금씩 있는 것 같아요. 잠들기 전에 천천히 생각해 봐요.';
+function stThemeFor(s){ var id=(s&&(s.ser||s.id))||''; for(var i=0;i<ST_THEME.length;i++) if(ST_THEME[i][0].test(id)) return ST_THEME[i][1]; return ''; }
+function stReflectLocal(t){
+  var q=ST_R_Q.test(t), i, a='';
+  if(q){ for(i=0;i<ST_FACT.length;i++) if(ST_FACT[i][0].test(t)) return ST_FACT[i][1]+' '+stThemeFor(cur&&cur.s); a=ST_REF_Q; }
+  else if(ST_R_SLEEP.test(t)) a='졸린 걸 보니 이야기가 잘 스며들었나 봐요.';
+  else if(ST_R_SCARY.test(t)) a='무섭게 들렸다면 미안해요. 이야기 속 밤도 결국은 조용해지니까 괜찮아요.';
+  else if(ST_R_SAD.test(t)) a='조금 쓸쓸한 대목이 있었지요. 그 마음을 느꼈다는 건 이야기를 깊이 들었다는 뜻이에요.';
+  else if(ST_R_POS.test(t)) a='좋았다니 저도 기뻐요. 아멜리아 님이 좋아해 주면 이야기하는 보람이 커요.';
+  else { try{ a=lwChatAnswer(t); }catch(e){ LQ.err(e); } if(!a) a=stRnd(ST_REF_A); }
+  var th=stThemeFor(cur&&cur.s); return a+(th?' '+th:''); }
+window.stRefSend=async function(){
+  var el=document.getElementById('stRef'), t=el?(el.value||'').trim():''; if(!t){ stEndScreen(''); return; } el.value='';
+  if(ST_CRISIS.test(t)){ window.__stSkip=true; closeModal(); var ta=document.getElementById('cfText'); if(ta) ta.value=t; try{ window.cfSend(); }catch(e){ window.__stSkip=false; } return; }
+  var ans='';
+  if(window.lqAiOn&&window.lqAiOn()&&window.lqAsk&&cur&&cur.s){
+    cfShowTyped(bubble('…',''));
+    try{ ans=await window.lqAsk([{role:'user',content:t}],900,'방금 사용자에게 잠들기 전 이야기 「'+cur.s.t.replace(/^\S+\s/,'')+'」를 다 들려주었어. 사용자가 이야기를 듣고 감상이나 질문을 남겼어. 로웨나답게 반드시 3문장 이내로 공감하며 답하고, 마지막은 이제 편히 쉬어도 좋다는 부드러운 마무리로 해. 이야기 밖의 것은 지어내지 말고, 현대 작가의 저작권 있는 작품 내용은 길게 재현하지 마.'); }catch(e){ LQ.err(e); ans=''; } }
+  if(!ans) ans=stReflectLocal(t);
+  try{ (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'chat',text:'(이야기 감상) '+t,reply:ans}); save(); }catch(e){ LQ.err(e); }
+  stEndScreen(ans); };
+window.stMore=function(){ stChain++; var s=stPick(); cur={s:s,i:0,lead:stRnd(ST_MORE),leadPending:true};
   try{ (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(잠들기 전 이야기를 한 편 더 들었어요 · '+s.t.replace(/^\S+\s/,'')+')',reply:'🌙 '+s.t.replace(/^\S+\s/,'')+' 이야기를 들려줬어요'}); save(); }catch(e){ LQ.err(e); }
   roomHush('이야기를 들려주는 중이에요.\n눈은 감고 들어도 좋아요.'); stShow(); };
 window.stBye=function(){ closeModal(); try{ cfRoomClose(); }catch(e){ LQ.err(e); } setTimeout(function(){ try{ lowenaBye(); }catch(e){ LQ.err(e); } },300); };
 window.stQuit=function(){ cfShowTyped(bubble(stRnd(ST_QUIT),'<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>')); };
+
+/* ===== 이야기 도중 로웨나에게 반응·질문하기 ===== */
+var ST_FACT=[
+[/겐지|히카루/,'히카루 겐지는 천황의 아들로 태어났지만 신하로 살아가게 된, 빛나는 사람이에요. 이 이야기의 주인공이에요.'],
+[/무라사키/,'무라사키는 어릴 때 겐지가 데려와 곁에서 자란 사람이에요. 겐지가 가장 오래 마음을 둔 사람이에요.'],
+[/후지쓰보/,'후지쓰보는 겐지의 어머니를 닮았다고 소문난 궁궐의 여인이에요.'],
+[/유가오|박꽃/,'유가오는 저녁에 피는 하얀 박꽃이에요. 이야기 속 여인의 이름이기도 해요.'],
+[/다마카즈라/,'다마카즈라는 유가오의 딸이에요. 규슈에서 자라 도읍으로 돌아왔어요.'],
+[/유기리/,'유기리는 겐지의 아들이에요. 학문을 열심히 닦은 성실한 청년이에요.'],
+[/아카시/,'아카시노키미는 아카시 바닷가에서 자란 조용하고 품위 있는 사람이에요. 거문고와 비파를 잘 다뤄요.'],
+[/도노추조/,'도노추조는 겐지의 오랜 벗이에요. 서로 경쟁도 하고 아끼기도 하는 사이예요.'],
+[/와카|노래/,'와카는 서른한 글자로 짓는 짧은 노래예요. 그 시대에는 마음을 전하는 가장 좋은 방법이었어요.'],
+[/로쿠조/,'로쿠조인은 겐지가 지은 큰 저택이에요. 네 계절의 정원이 있어요.'],
+[/성진/,'성진은 연화봉의 젊은 스님이에요. 이야기 속에서 양소유로 태어나 긴 꿈을 꿔요.'],
+[/육관대사|대사/,'육관대사는 성진의 스승이에요. 제자를 엄하게, 그러나 깊이 아끼는 분이에요.'],
+[/양소유/,'양소유는 성진이 꿈속에서 살게 되는 인물이에요. 재주가 뛰어나고 마음이 곧아요.'],
+[/팔선녀|선녀/,'팔선녀는 위부인을 모시던 여덟 선녀예요. 성진과 함께 세상에 내려가 저마다의 삶을 살아요.'],
+[/샤흐라자드/,'샤흐라자드는 왕에게 밤마다 이야기를 들려주는 지혜로운 여인이에요.'],
+[/신드바드/,'신드바드는 바다를 누비며 일곱 번 항해를 떠나는 상인이에요.'],
+[/알라딘|지니|램프/,'알라딘은 낡은 램프를 얻어 소원을 이루는 소년이에요. 램프의 지니가 소원을 들어줘요.'],
+[/알리바바|모르자나/,'알리바바는 가난한 나무꾼이고, 모르자나는 그 집안을 지혜로 지키는 하녀예요.'],
+[/웰라/,'웰라는 마법 견습생 소녀예요. 서툴지만 다정하고 잘 웃어요.'],
+[/시나/,'시나는 웰라와 함께 지내는 검은 고양이예요. 무뚝뚝한 척하지만 속은 다정해요.'],
+[/알레센도/,'알레센도는 마법 상점의 서기관이에요. 차분하고 정중한 분이에요.'],
+[/세이\s*쇼나곤/,'세이 쇼나곤은 천 년쯤 전 중궁 데이시를 모신 궁중 여인이에요. 좋아하는 것과 얄미운 것을 솔직하게 적은 마쿠라노소시를 남겼어요.'],[/선생님/,'마음의 선생님은 세상에서 물러나 조용히 사는 사람이에요. 학생이 그를 선생님이라 부르며 따라요.'],[/구샤미/,'구샤미 선생은 중학교 영어 교사예요. 위가 약하고 고집이 세지만 속은 다정한 사람이에요.'],[/메이테이/,'메이테이는 그럴듯한 거짓말로 사람들을 웃기는 미학자예요.'],[/간게쓰/,'간게쓰는 유리구슬을 매일 갈고 있는 성실한 물리학자 청년이에요.'],[/기요/,'기요는 도련님을 어릴 때부터 아껴 준 나이 든 하녀예요. 도련님이 가장 믿은 사람이에요.'],[/산미치광이/,'산미치광이는 도련님이 수학 주임에게 붙인 별명이에요. 덩치는 커도 속이 곧은 사람이에요.'],[/빨간\s*셔츠/,'빨간 셔츠는 늘 붉은 셔츠를 입는 교감의 별명이에요. 겉과 속이 다른 사람이에요.'],[/나미|화가/,'풀베개의 화가는 세상의 인정에서 한 걸음 물러나 여행하는 사람이고, 나미는 나고미 여관의 아가씨예요.'],
+[/소세키/,'나쓰메 소세키는 백여 년 전 일본의 소설가예요. 열흘 밤의 꿈, 풀베개, 나는 고양이로소이다, 도련님을 로웨나가 들려줄 수 있어요.'],
+[/운케이/,'운케이는 가마쿠라 시대의 유명한 조각가예요. 절 문을 지키는 인왕상으로 알려져 있어요.'],
+[/인왕/,'인왕은 절 문 양쪽에서 지키는 힘센 수호신이에요.']];
+var ST_R_POS=/좋|재밌|재미|예쁘|아름|멋|감동|귀엽|신기|대박|최고|사랑|웃겨|웃기/, ST_R_SAD=/슬프|안타|불쌍|짠하|눈물|울컥|아프/, ST_R_SCARY=/무섭|무서|겁나|소름/, ST_R_SLEEP=/졸려|졸리|잠와|하품|잘래|졸음/, ST_R_Q=/[?？]|왜|어떻게|무슨|뭐야|뭔데|뭐지|누구|어디|언제|뜻|어떤|어때/;
+var ST_A_POS=['저도 그 장면이 좋아요. 마음에 들어 주니 이야기하는 보람이 있어요.','아멜리아 님이 좋아해 주니 저도 기뻐요. 이어서 들려줄게요.','좋은 장면이지요. 천천히 더 들어 봐요.'];
+var ST_A_SAD=['조금 쓸쓸한 대목이지요. 그래도 이야기는 부드럽게 흘러가니 괜찮아요.','그 마음 알 것 같아요. 여기서는 잠깐 숨을 고르고, 조용히 이어서 들어 봐요.'];
+var ST_A_SCARY=['괜찮아요. 잠들기 좋게 부드럽게 다듬어서 들려주고 있어요. 제가 곁에 있어요.','무섭게 들렸다면 미안해요. 이야기 속 밤도 곧 조용해질 거예요.'];
+var ST_A_SLEEP=['졸리면 눈을 감고 들어도 좋아요. 제가 끝까지 들려줄게요.','하품이 나오면 잘 가고 있다는 뜻이에요. 눈은 감아도 돼요.'];
+var ST_A_ANY=['네, 듣고 있어요. 그 말에 저도 조금 웃었어요. 이어서 들려줄게요.','그렇게 느꼈군요. 이야기는 그렇게 각자 마음에 남는 거예요.','들어 줘서 고마워요. 그럼 이어서 갈게요.'];
+function stLocalAnswer(t){
+  var q=ST_R_Q.test(t), i, a='';
+  if(q){ for(i=0;i<ST_FACT.length;i++) if(ST_FACT[i][0].test(t)) return ST_FACT[i][1]+' 이야기를 더 들으면 조금씩 알게 될 거예요.';
+    try{ a=lwChatAnswer(t); }catch(e){ LQ.err(e); } if(a) return a;
+    return '좋은 질문이에요. 지금은 이야기를 들려주는 중이라 자세히 답하기 어렵지만, 다음 쪽을 들으면 조금씩 풀릴 거예요.'+((window.lqAiOn&&window.lqAiOn())?'':' (설정에서 로웨나와의 대화 키를 넣으면 이야기 도중에도 더 자세히 대답해 줄 수 있어요.)'); }
+  if(ST_R_SLEEP.test(t)) return stRnd(ST_A_SLEEP);
+  if(ST_R_SCARY.test(t)) return stRnd(ST_A_SCARY);
+  if(ST_R_SAD.test(t)) return stRnd(ST_A_SAD);
+  if(ST_R_POS.test(t)) return stRnd(ST_A_POS);
+  try{ a=lwChatAnswer(t); }catch(e){ LQ.err(e); } if(a) return a;
+  for(i=0;i<ST_FACT.length;i++) if(ST_FACT[i][0].test(t)) return ST_FACT[i][1];
+  return stRnd(ST_A_ANY); }
+function stAfterAnswer(ans){
+  cfShowTyped(bubble(ans,'<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:2" onclick="stBack()">📖 이야기 이어서 듣기</button><button class="cfb" style="flex:1" onclick="stQuit()">그만 들을래요</button></div>'+stSayRow())); }
+window.stBack=function(){ if(cur) stShow(); };
+window.stSay=async function(){
+  var el=document.getElementById('stSay'), t=el?(el.value||'').trim():''; if(!t||!cur) return; el.value='';
+  if(ST_CRISIS.test(t)){ window.__stSkip=true; closeModal(); var ta=document.getElementById('cfText'); if(ta) ta.value=t; try{ window.cfSend(); }catch(e){ window.__stSkip=false; } return; }
+  if(!ST_R_Q.test(t)&&ST_WANT.test(t)&&stMatch(t)){ stRequest(t); return; }
+  var ans='';
+  if(window.lqAiOn&&window.lqAiOn()&&window.lqAsk){
+    cfShowTyped(bubble('…',''));
+    try{ ans=await window.lqAsk([{role:'user',content:t}],900,'지금 사용자에게 잠들기 전 이야기 「'+cur.s.t.replace(/^\S+\s/,'')+'」를 들려주는 중이야. 방금 들려준 부분: '+(cur.s.p[cur.i]||'')+'\n사용자가 이 이야기에 반응하거나 질문했어. 로웨나답게 반드시 3문장 이내로 짧게 답해. 이야기 밖의 것은 지어내지 말고, 원작을 알면 간단히 덧붙여도 좋아. 현대 작가의 저작권 있는 작품 내용은 길게 재현하지 마.'); }catch(e){ LQ.err(e); ans=''; } }
+  if(!ans) ans=stLocalAnswer(t);
+  stAfterAnswer(ans); };
+window.__stLocalAnswer=stLocalAnswer;
+
+/* ===== 책 소개 (줄거리를 다시 들려주지 않고, 분위기·추천만) ===== */
+var BK_NOTE='줄거리를 이야기로 다시 들려주는 건 하지 않아요. 대신 이 책 이야기는 로웨나와 대화로 나눌 수 있어요.';
+var BK=[
+/* [정규식, 제목줄, 소개, 분위기 태그, {story:이야기 id}] */
+/* 무라카미 하루키 (생존 작가: 줄거리는 다시 들려주지 않아요) */
+[/노르웨이의?\s*숲|상실의\s*시대/,'📕 노르웨이의 숲 · 무라카미 하루키','1987년에 나온 장편이에요. 1960년대 말 도쿄, 한 대학생이 상실을 안고 청춘을 지나가는 이야기를 세월이 흐른 뒤 되돌아보는 형식이에요. 밝지만은 않은데 이상하게 조용히 오래 남는 연애 소설이라고들 해요. 제목은 비틀즈의 노래에서 따왔어요. 한국에는 상실의 시대라는 제목으로도 알려져 있어요. 하루키는 생존 작가라 줄거리는 다시 들려주지 않지만, 이 책의 분위기나 읽는 법, 좋았던 장면에 대한 감상은 로웨나와 편하게 나눌 수 있어요. 처음 읽는다면 비 오는 날 조용한 방에서 천천히 읽는 걸 권해요.','조용한 연애 · 청춘 · 여운'],
+[/해변의\s*카프카/,'📕 해변의 카프카 · 무라카미 하루키','2002년에 나온 장편이에요. 열다섯 살에 집을 떠난 소년과, 고양이와 이야기할 수 있는 노인의 이야기가 번갈아 흘러가요. 현실과 꿈의 경계가 흐려지는 신비로운 이야기라, 한 번에 다 알기보다 다시 읽는 사람이 많아요.','신비 · 성장 · 고양이'],
+[/태엽\s*감는\s*새/,'📕 태엽 감는 새 연대기 · 무라카미 하루키','1994년부터 1995년에 걸쳐 나온 긴 장편이에요. 평범한 일상에서 시작해 우물, 전화, 역사의 그림자까지 차츰 넓어지는 이야기예요. 분량이 많아서 시간이 넉넉한 시기에 천천히 읽기 좋아요.','묵직한 장편 · 미스터리'],
+[/1Q84|일큐팔사/,'📕 1Q84 · 무라카미 하루키','2009년과 2010년에 걸쳐 나온 장편이에요. 제목은 1984년과 비슷하지만 조금 다른 세계라는 뜻을 담고 있어요. 서로 다른 두 사람의 시간이 번갈아 흐르는 구성이라 긴 호흡으로 읽는 책이에요.','긴 호흡 · 평행 세계'],
+[/양을\s*쫓는\s*모험/,'📕 양을 쫓는 모험 · 무라카미 하루키','1982년에 나온 장편이에요. 평범한 사람이 뜻밖의 일에 휘말려 홋카이도까지 가게 되는 모험담이에요. 하루키 특유의 담담한 유머가 잘 느껴지는 초기 대표작이에요.','모험 · 담담한 유머'],
+[/스푸트니크의?\s*연인/,'📕 스푸트니크의 연인 · 무라카미 하루키','1999년에 나온 장편이에요. 사랑의 어긋남과 외로움을 다룬 비교적 짧고 서정적인 소설이에요. 제목은 소련이 쏘아 올린 인공위성 이름에서 왔어요.','서정 · 외로움 · 비교적 짧음'],
+[/먼\s*북소리/,'📕 먼 북소리 · 무라카미 하루키','유럽에서 지낸 몇 해 동안의 생활을 적은 에세이예요. 소설이 부담스러운 날, 여행지의 공기를 읽는 기분으로 펼치기 좋아요.','여행 에세이 · 가벼운 마음'],
+[/여자\s*없는\s*남자들/,'📕 여자 없는 남자들 · 무라카미 하루키','2014년에 나온 단편집이에요. 짧은 이야기 여러 편이라 밤에 한 편씩 끊어 읽기 좋아요. 고독과 상실이 조용히 스며 있는 책이에요.','단편집 · 한 편씩'],
+/* 히가시노 게이고 (생존 작가: 줄거리는 다시 들려주지 않아요) */
+[/연애의\s*행방|恋のゴンドラ|연애의\s*곤돌라/,'📗 연애의 행방 · 히가시노 게이고','스키장을 무대로 한 연작 소설집이에요. 원제는 恋のゴンドラ예요. 눈 덮인 슬로프에서 서로 다른 사람들의 사랑과 뜻밖의 만남이 이어지는 이야기라, 추리 작가 게이고의 밝고 경쾌한 연애물 쪽이에요. 단편이 이어지는 형식이라 밤에 한 편씩 끊어 읽기 좋아요.','스키장 · 경쾌한 연애 · 연작'],
+[/나미야\s*잡화점/,'📗 나미야 잡화점의 기적 · 히가시노 게이고','2012년에 나온 소설이에요. 오래된 잡화점에 고민 상담 편지가 닿는, 시간을 넘어 이어지는 따뜻한 이야기예요. 추리 작가가 쓴 책이지만 이 책은 포근한 쪽이라 잠들기 전에도 잘 어울려요.','포근한 · 편지 · 위로'],
+[/용의자\s*X/,'📗 용의자 X의 헌신 · 히가시노 게이고','2005년 작이고 나오키상을 받았어요. 논리와 감정이 맞부딪치는 추리 소설이에요. 결말을 알고 나면 처음으로 돌아가고 싶어지는 책이라고들 해요.','정통 추리 · 반전'],
+[/백야행/,'📗 백야행 · 히가시노 게이고','1999년 작이에요. 오랜 세월에 걸친 두 사람의 그림자 같은 이야기라 어둡고 묵직해요. 잠들기 전보다는 낮에 읽는 편이 좋겠어요.','어둡고 묵직한 · 낮에'],
+[/녹나무/,'📗 녹나무의 파수꾼 · 히가시노 게이고','2020년 작이에요. 신비한 녹나무와 그 곁을 지키는 사람의 이야기예요. 조용하고 따뜻한 분위기의 소설이에요.','조용하고 따뜻한'],
+[/『편지』|히가시노.{0,8}편지|게이고.{0,8}편지|소설\s*편지/,'📗 편지 · 히가시노 게이고','2003년 작이에요. 범죄가 남긴 그림자를 가족의 입장에서 바라보는 묵직한 소설이에요. 마음이 단단한 날 읽기를 권해요.','묵직한 · 사회파'],
+[/라플라스의?\s*마녀/,'📗 라플라스의 마녀 · 히가시노 게이고','2015년 작이에요. 과학적인 발상이 이야기의 중심에 있는 미스터리예요. 추리와 조금의 판타지가 섞인 분위기라 처음 게이고를 읽는 사람에게도 무난해요.','과학 미스터리'],
+[/기린의?\s*날개/,'📗 기린의 날개 · 히가시노 게이고','2011년 작이에요. 가가 형사 시리즈 중 한 편이고, 도쿄 니혼바시의 다리 위 장면이 상징으로 나와요. 사람의 마음을 따라가는 차분한 추리물이에요.','가가 형사 · 차분한 추리'],
+[/『악의』|히가시노.{0,8}악의|게이고.{0,8}악의|소설\s*악의/,'📗 악의 · 히가시노 게이고','1996년 작이에요. 범인이 누구냐보다 왜 그랬느냐에 무게를 두는 이야기예요. 형식이 독특해서 읽는 재미가 있어요.','왜 그랬나 · 독특한 구성'],
+[/방과\s*후|放課後/,'📗 방과 후 · 히가시노 게이고','1985년에 에도가와 란포상을 받은 데뷔작이에요. 학교를 배경으로 한 본격 추리라, 초기 게이고의 패기가 느껴져요.','학원 추리 · 데뷔작'],
+[/매스커레이드\s*호텔/,'📗 매스커레이드 호텔 · 히가시노 게이고','2011년에 시작된 시리즈예요. 호텔을 무대로 손님과 직원이 서로 가면을 쓰고 마주하는 이야기라 밝고 경쾌한 편이에요.','호텔 · 경쾌한 추리'],
+/* 나쓰메 소세키 (저작권 만료: 이야기로 들을 수 있어요) */
+[/열흘\s*밤의?\s*꿈|십야/,'📘 열흘 밤의 꿈 · 나쓰메 소세키','1908년에 쓴 짧은 꿈 이야기 열 편이에요. 이유 없이 시작해서 이유 없이 끝나는 꿈들이라, 설명하려 하지 않고 풍경처럼 들으면 좋아요.','짧은 꿈 · 신비',{story:'sr_yume10'}],
+[/풀베개|구사마쿠라/,'📘 풀베개 · 나쓰메 소세키','1906년 작이에요. 세상의 다툼에서 한 걸음 물러난 화가가 산속 온천 마을에서 지내는 조용한 이야기예요. 사건보다 풍경과 시가 많아서 그림 한 폭을 넘기는 기분이에요.','조용한 풍경 · 그림 같은',{story:'sr_kusamakura'}],
+[/나는\s*고양이|고양이로소이다/,'📘 나는 고양이로소이다 · 나쓰메 소세키','1905년부터 연재한 소세키의 첫 소설이에요. 이름 없는 고양이가 주인집 사람들을 관찰하며 들려주는 이야기라 웃음이 많아요.','유쾌한 · 관찰 · 고양이',{story:'sr_neko'}],
+[/도련님|봇짱/,'📘 도련님 · 나쓰메 소세키','1906년 작이에요. 곧고 급한 성격의 청년이 시골 학교 교사로 가서 벌이는 소동을 그렸어요. 소세키 작품 중 가장 시원하고 유쾌한 편이라 입문으로 좋아요.','시원한 · 유쾌한 · 입문',{story:'sr_botchan'}],
+[/『마음』|「마음」|소세키.{0,8}마음|소설\s*마음|마음\s*(이라는\s*)?(소설|책)/,'📘 마음 · 나쓰메 소세키','1914년 작이에요. 메이지 시대가 끝나가는 무렵, 젊은 학생과 그가 선생님이라 부르는 사람의 이야기예요. 읽고 나면 한동안 말이 없어지는 소설이라고들 해요. 이야기로 들려줄 때는 무거운 대목을 접어서 잠들기 좋게 들려줘요.','깊은 여운 · 선생님과 나',{story:'sr_kokoro'}],
+[/소세키.{0,8}그\s*후|소설\s*그\s*후|『그\s*후』/,'📘 그 후 · 나쓰메 소세키','1909년 작이에요. 일을 하지 않고 지내는 지식인 청년의 마음 변화를 따라가는 이야기예요. 삼부작의 두 번째 작품으로 꼽혀요.','삼부작 · 마음의 변화'],
+[/산시로/,'📘 산시로 · 나쓰메 소세키','1908년 작이에요. 시골에서 도쿄로 올라온 청년이 새로운 사람들과 세상을 만나 조금씩 흔들리는 성장 이야기예요. 삼부작의 첫 작품이에요.','청춘 · 도시 · 성장'],
+[/『문』|「문」|소세키.{0,6}\s문(\s|$)/,'📘 문 · 나쓰메 소세키','1910년 작이에요. 조용히 살아가는 부부의 일상을 그리며 삼부작을 마무리해요. 소란 없이 차분한 분위기의 책이에요.','차분한 일상 · 부부'],
+[/유리문\s*안에서/,'📘 유리문 안에서 · 나쓰메 소세키','1915년에 쓴 짧은 수필집이에요. 병상에서 유리문 너머를 바라보며 쓴 글들이라 소세키의 일상 목소리를 가까이서 들을 수 있어요.','수필 · 일상의 목소리'],
+/* 세계 고전 (저작권 만료) */
+[/제인\s*에어/,'📙 제인 에어 · 샬럿 브론테','1847년에 나온 소설이에요. 고아로 자란 여성이 스스로의 힘으로 삶을 세워 가는 이야기예요. 자존감과 사랑 사이에서 흔들리지 않는 주인공이 오래 사랑받아요.','자립 · 사랑 · 고딕'],
+[/폭풍의?\s*언덕/,'📙 폭풍의 언덕 · 에밀리 브론테','1847년에 나온 소설이에요. 황량한 요크셔 언덕을 무대로 한 강렬한 사랑과 집착의 이야기예요. 어둡고 거센 분위기라 낮에 읽는 편이 좋아요.','강렬 · 어두운 · 황야'],
+[/오만과\s*편견/,'📙 오만과 편견 · 제인 오스틴','1813년에 나온 소설이에요. 응접실의 대화와 오해, 재치 있는 문장으로 가득한 연애 소설이에요. 아침에 읽기 좋은 밝고 가벼운 고전이에요.','밝고 재치 있는 · 연애'],
+[/마쿠라노\s*소시|베갯머리|베개머리\s*서책|세이\s*쇼나곤/,'📙 마쿠라노소시 · 세이 쇼나곤','천 년쯤 전 궁중 여인이 쓴 수필이에요. 봄은 동틀 무렵이 좋다는 글처럼 좋아하는 것과 얄미운 것을 한 줄씩 적어 내려가요. 겐지 이야기와 같은 시대의 글이라 함께 읽으면 그 시대가 입체적으로 보여요. 한 편씩 골라 읽어도 돼요.','짧은 수필 · 계절감 · 헤이안',{story:'sr_makura'}],
+[/방장기|호조키/,'📙 방장기 · 가모노 조메이','1212년쯤 쓴 짧은 수필이에요. 큰 재난들을 겪은 뒤 작은 오두막에서 살아가는 마음을 담았어요. 흐르는 강물처럼 변하는 세상을 바라보는 글이에요.','작은 오두막 · 무상'],
+[/도연초|쓰레즈레구사/,'📙 도연초 · 요시다 겐코','1330년쯤 쓴 수필집이에요. 짧은 글 이백 편 남짓이 이어져서 아무 데나 펼쳐 읽어도 돼요. 일상의 관찰과 유머가 섞여 있어요.','짧은 글 · 유머 · 아무 데나'],
+[/빨강\s*머리\s*앤|붉은\s*머리\s*앤|초록\s*지붕/,'📙 빨강 머리 앤 · L. M. 몽고메리','1908년에 나온 소설이에요. 초록 지붕 집에 온 수다스러운 소녀가 마을 사람들과 정을 쌓아 가는 이야기예요. 상상력이 넘쳐서 읽는 내내 마음이 밝아져요.','포근한 · 상상력 · 성장'],
+[/작은\s*아씨들/,'📙 작은 아씨들 · 루이자 메이 올콧','1868년에 나온 소설이에요. 네 자매가 서로 의지하며 자라 가는 이야기예요. 겨울밤에 읽으면 따뜻한 난롯가 같은 기분이 들어요.','자매 · 따뜻한 · 겨울'],
+[/비밀의?\s*화원/,'📙 비밀의 화원 · 프랜시스 버넷','1911년에 나온 소설이에요. 잠긴 정원의 문을 여는 아이들 이야기예요. 흙과 봄, 마음이 살아나는 과정이 다정해요.','정원 · 봄 · 치유'],
+[/이상한\s*나라의?\s*앨리스|앨리스/,'📙 이상한 나라의 앨리스 · 루이스 캐럴','1865년에 나온 소설이에요. 토끼굴로 떨어진 소녀가 겪는 엉뚱하고 논리가 뒤집힌 세계예요. 말장난이 많아서 소리 내어 읽으면 더 재미있어요.','엉뚱한 · 말장난'],
+[/어린\s*왕자/,'📙 어린 왕자 · 생텍쥐페리','1943년에 나온 짧은 소설이에요. 사막에 불시착한 조종사와 별에서 온 작은 왕자의 대화를 담았어요. 짧아서 밤에 한 번에 읽기 좋아요.','짧고 맑은 · 별']
+];
+var BK_AUTH=[[/하루키/,'무라카미 하루키','하루키라면 노르웨이의 숲이 조용한 연애 이야기라 입문으로 좋아요. 신비로운 쪽이 궁금하면 해변의 카프카, 긴 호흡이 좋다면 태엽 감는 새 연대기나 1Q84, 짧게 읽고 싶다면 여자 없는 남자들이에요. 여행 에세이 먼 북소리도 있어요.'],[/히가시노|게이고/,'히가시노 게이고','게이고라면 포근한 쪽은 나미야 잡화점의 기적, 정통 추리는 용의자 X의 헌신, 묵직한 쪽은 백야행이에요. 가볍게는 스키장 연애 이야기 연애의 행방이나 매스커레이드 호텔, 데뷔작이 궁금하면 방과 후, 과학 미스터리는 라플라스의 마녀예요. 요즘 나온 녹나무의 파수꾼도 조용하고 좋아요.'],[/소세키|나쓰메/,'나쓰메 소세키','소세키라면 유쾌한 도련님과 나는 고양이로소이다, 조용한 풍경의 풀베개, 꿈 같은 열흘 밤의 꿈은 로웨나가 이야기로 들려줄 수 있어요. 깊이 읽고 싶다면 삼부작 산시로, 그 후, 문과 마음이 있어요.'],[/브론테/,'브론테 자매','샬럿 브론테의 제인 에어는 곧은 자립의 이야기, 에밀리 브론테의 폭풍의 언덕은 거센 황야의 이야기예요. 분위기가 꽤 달라서 골라 읽는 재미가 있어요.'],[/오스틴/,'제인 오스틴','오스틴이라면 오만과 편견이 가장 밝고 재치 있어요. 응접실의 대화를 즐기는 기분으로 읽어요.']];
+var BK_REC=/책\s*(좀\s*)?(추천|골라)|읽을\s*(만한)?\s*(책|거)|뭐\s*읽|추천\s*(해\s*줘|해줘)?.{0,4}책/;
+function bkRandom(n){ var a=BK.slice(), o=[], i; while(o.length<n&&a.length){ i=Math.floor(Math.random()*a.length); o.push(a.splice(i,1)[0]); } return o; }
+function bookAsk(t){
+  var ASK=/소개|추천|어떤\s*책|어때|뭐야|알려|들려|얘기|이야기|읽|책/, LISTEN=/들려|듣고\s*싶|들을래|들어\s*볼|읽어\s*줘|틀어/, i;
+  if(!t||ST_CRISIS.test(t)||!ASK.test(t)) return null;
+  for(i=0;i<BK.length;i++) if(BK[i][0].test(t)){ var o=BK[i][4]; if(o&&o.story&&LISTEN.test(t)) return null; return {h:BK[i][1],b:BK[i][2],note:!o,story:o&&o.story}; }
+  for(i=0;i<BK_AUTH.length;i++) if(BK_AUTH[i][0].test(t)&&/책|추천|소개|작품|뭐|어떤/.test(t)&&!/들려|듣고\s*싶/.test(t)) return {h:'📚 '+BK_AUTH[i][1],b:BK_AUTH[i][2],note:false};
+  if(BK_REC.test(t)){ var pk=bkRandom(3); return {h:'📚 오늘의 책 세 권',b:pk.map(function(x){ return x[1].replace(/ · .*/,'')+' — '+x[3]; }).join('\n'),note:false,rec:true}; }
+  return null; }
+window.__bookAsk=bookAsk;
+window.stBookShow=function(t){ var r=bookAsk(t); if(!r) return false; clearInput();
+  var body=r.h+'\n\n'+r.b+(r.note?'\n\n'+BK_NOTE:'');
+  var btn='';
+  if(r.story) btn+='<button class="cfb" onclick="closeModal();setTimeout(function(){window.stRequest(\''+r.h.replace(/^\S+\s/,'').replace(/\s·.*/,'')+' 들려줘\');},200)">🌙 이야기로 듣기</button>';
+  cfShowTyped(bubble(body,'<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">'+btn+'<button class="cfb" onclick="closeModal();setTimeout(function(){dcOpen();},200)">💬 이 책 이야기 나누기</button><button class="cfb" onclick="closeModal()">닫기</button></div>')); return true; };
+
+/* "오늘 구운몽 얘기 듣고 싶어" 처럼 원하는 이야기를 말하면 바로 들려준다 (들은 곳 다음부터 / 멈춘 곳부터) */
+var ST_WANT=/듣고\s*싶|들려|들을래|들어\s*볼|얘기|이야기|읽어|틀어|해\s*줘|해\s*줄래|해줄래/;
+var ST_ALIAS=[[/겐지.*4\s*부|4\s*부.*겐지|우지\s*십첩|우지\s*이야기/,'sr_genji4'],[/하시히메|다리\s*공주/,'sr_genji4',0],[/시이가모토/,'sr_genji4',1],[/아게마키|향을?\s*겨루/,'sr_genji4',2],[/사와라비|고사리/,'sr_genji4',3],[/야도리기|겨우살이/,'sr_genji4',4],[/아즈마야/,'sr_genji4',5],[/우키후네|귤\s*섬/,'sr_genji4',6],[/가게로|하루살이/,'sr_genji4',7],[/데나라이|습자/,'sr_genji4',8],[/유메노우키하시|꿈의?\s*부교|꿈속의\s*다리/,'sr_genji4',9],[/가오루|니오우/,'sr_genji4'],[/풀베개|구사마쿠라/,'sr_kusamakura'],[/찻집|노파/,'sr_kusamakura',1],[/나고미|온천\s*마을/,'sr_kusamakura',2],[/달밤의\s*환영/,'sr_kusamakura',3],[/겐넨/,'sr_kusamakura',4],[/정거장의\s*이별/,'sr_kusamakura',6],[/나는\s*고양이로소이다|고양이로소이다|나는\s*고양이\s*(이야기|얘기|들려)|구샤미|메이테이|이름\s*없는\s*고양이/,'sr_neko'],[/메이테이의|미학자/,'sr_neko',2],[/카네다|코가\s*큰/,'sr_neko',3],[/구로\s*고양이|검은\s*고양이/,'sr_neko',4],[/간게쓰/,'sr_neko',5],[/도련님|봇짱/,'sr_botchan'],[/기요\s*(이야기|얘기|할머니)/,'sr_botchan',1],[/튀김국수|메뚜기/,'sr_botchan',4],[/우라나리|송별회/,'sr_botchan',5],[/계란\s*세\s*개/,'sr_botchan',6],[/『마음』|「마음」|소세키.{0,8}마음|소설\s*마음|마음\s*(이라는\s*)?(소설|책)|선생님과\s*나|^\s*마음\s*(이야기|얘기)?\s*(좀\s*)?(들려|듣고|들을|읽어)/,'sr_kokoro'],[/가마쿠라의?\s*바닷가/,'sr_kokoro',0],[/조시가야|묘지/,'sr_kokoro',2],[/선생님의?\s*편지|유서/,'sr_kokoro',6],[/마쿠라노\s*소시|베갯머리|베개머리|세이\s*쇼나곤|枕草子/,'sr_makura'],[/향로봉/,'sr_makura',4],[/봄은\s*동틀|사계절의?\s*좋은/,'sr_makura',0],[/가슴\s*뛰는/,'sr_makura',1],[/얄미운/,'sr_makura',3],[/열흘\s*밤|십야|夢十夜/,'sr_yume10'],[/소세키/,'sr_yume10'],[/첫째\s*밤|백\s*년.*(기다|꿈)|진주\s*조개/,'sr_yume10',0],[/둘째\s*밤|좌선/,'sr_yume10',1],[/셋째\s*밤|아이를?\s*업/,'sr_yume10',2],[/넷째\s*밤|수건.*뱀/,'sr_yume10',3],[/다섯째\s*밤|닭이\s*울/,'sr_yume10',4],[/여섯째\s*밤|운케이|인왕상/,'sr_yume10',5],[/일곱째\s*밤/,'sr_yume10',6],[/여덟째\s*밤|이발소/,'sr_yume10',7],[/아홉째\s*밤/,'sr_yume10',8],[/열째\s*밤|돼지\s*떼/,'sr_yume10',9],[/겐지.*3\s*부|3\s*부.*겐지|로쿠조인|봄의\s*저택/,'sr_genji3'],[/아사가오|눈\s*굴리기|눈\s*산/,'sr_genji3',1],[/오토메|구모이노카리|유기리/,'sr_genji3',2],[/다마카즈라/,'sr_genji3',3],[/하쓰네|새해\s*첫\s*자일/,'sr_genji3',4],[/뱃놀이|나비\s*(춤|이야기)/,'sr_genji3',5],[/가가리비|횃불/,'sr_genji3',6],[/등꽃|후지노우라바/,'sr_genji3',7],[/와카나|온나산노미야|어린\s*잎/,'sr_genji3',8],[/미노리|법화경/,'sr_genji3',9],[/마보로시|환영/,'sr_genji3',10],[/겐지.*2\s*부|2\s*부.*겐지|스마와\s*아카시/,'sr_genji2'],[/아카시노키미|아카시\s*입도|아카시의\s*(가을|달)/,'sr_genji2',4],[/스미요시/,'sr_genji2',6],[/솔바람|마쓰카제/,'sr_genji2',7],[/아카시/,'sr_genji2',3],[/기리쓰보/,'sr_genji1',0],[/하하키기|비\s*오는\s*밤의/,'sr_genji1',1],[/우쓰세미|매미\s*허물/,'sr_genji1',2],[/유가오|저녁\s*얼굴/,'sr_genji1',3],[/와카무라사키|어린\s*무라사키/,'sr_genji1',4],[/스에쓰무하나|붉은\s*코/,'sr_genji1',5],[/청해파|모미지노가/,'sr_genji1',6],[/하나노엔|벚꽃\s*잔치/,'sr_genji1',7],[/가모\s*축제|아오이/,'sr_genji1',8],[/노노미야|사카키/,'sr_genji1',9],[/하나치루사토|귤꽃/,'sr_genji1',10],[/스마/,'sr_genji1',11],[/겐지|히카루|무라사키|源氏/,'sr_genji1'],[/구운몽/,'sr_guunmong'],[/아라비안|천일야화|천\s*하룻밤/,'sr_arabian'],[/알라딘|램프의?\s*지니/,'sr_arabian',3],[/신드바드/,'sr_arabian',1],[/알리바바|열려라\s*참깨/,'sr_arabian',6],[/별\s*지도/,'sr_starmap'],[/밤\s*가게/,'sr_nightshop']];
+function stNorm(x){ return String(x||'').replace(/[^0-9A-Za-z가-힣]/g,''); }
+function stMatch(t){
+  if(!t||ST_CRISIS.test(t)) return null;
+  var nt=stNorm(t); if(!ST_WANT.test(t)&&nt.length>14) return null;
+  var i, hit=null, sr=null, aIdx=null;
+  for(i=0;i<ST_LIST.length&&!hit;i++){ var st0=ST_LIST[i], ws0=st0.t.replace(/^\S+\s/,'').split(/\s+/); for(var k0=0;k0<ws0.length;k0++){ var tn0=stNorm(ws0.slice(k0).join('')); if(tn0.length>=4&&nt.indexOf(tn0)>=0){ hit=st0; break; } } }
+  if(!hit) for(i=0;i<ST_ALIAS.length;i++) if(ST_ALIAS[i][0].test(t)){ sr=ST_ALIAS[i][1]; aIdx=ST_ALIAS[i][2]; break; }
+  if(!hit&&sr==='sr_genji1'&&aIdx==null&&!/1\s*부|처음/.test(t)){ var gp=S.stProg||{}; var go=['sr_genji1','sr_genji2','sr_genji3','sr_genji4']; sr='sr_genji1'; for(var gi=0;gi<go.length;gi++) if(gp[go[gi]]!==-1){ sr=go[gi]; break; } }
+  if(!hit&&sr==='sr_yume10'&&aIdx==null&&/소세키/.test(t)&&!/열흘|십야|夢/.test(t)&&!/처음/.test(t)){ var sp=S.stProg||{}, so=['sr_yume10','sr_kusamakura','sr_neko','sr_botchan','sr_kokoro']; for(var si=0;si<so.length;si++) if(sp[so[si]]!==-1){ sr=so[si]; break; } }
+  if(!hit&&sr){ var ser=null; for(i=0;i<ST_SER.length;i++) if(ST_SER[i].id===sr) ser=ST_SER[i]; if(!ser) return null;
+    var name=ser.t.replace(/^\S+\s/,''), pg=(S.stProg||{})[sr], rs=S.stResume, idx, pi=0, lead;
+    var m=t.match(/(\d+)\s*화/), fromStart=/처음부터|다시\s*(처음|듣|들|부터)|1\s*화부터/.test(t);
+    if(m&&+m[1]>=1&&+m[1]<=ser.eps.length){ idx=+m[1]-1; lead='「'+name+'」 '+(idx+1)+'화를 들려줄게요.'; }
+    else if(fromStart){ idx=0; lead='「'+name+'」를 처음부터 들려줄게요.'; }
+    else if(rs&&stById(rs.id)&&stById(rs.id).ser===sr&&(rs.i||0)>0){ var ep0=stById(rs.id); idx=ep0.idx; pi=rs.i; lead='「'+name+'」 '+(idx+1)+'화를 듣다가 멈췄었지요. 들었던 곳부터 이어서 들려줄게요.'; }
+    else if(pg==null&&S.stSer&&S.stSer.id===sr&&S.stSer.next>0){ idx=S.stSer.next; lead='「'+name+'」는 '+idx+'화까지 들었으니 '+(idx+1)+'화부터 이어서 들려줄게요.'; }
+    else if(pg>0){ idx=pg; lead='「'+name+'」는 '+idx+'화까지 들었으니 '+(idx+1)+'화부터 이어서 들려줄게요.'; }
+    else if(pg===-1){ idx=0; lead='「'+name+'」는 끝까지 들었던 이야기지요. 그래도 좋아요. 처음부터 다시 들려줄게요.'; }
+    else { idx=aIdx||0; lead=idx?('「'+name+'」에서 그 이야기는 '+(idx+1)+'화에 나와요. 거기서부터 들려줄게요.'):('「'+name+'」이군요. 처음부터 천천히 들려줄게요.'); }
+    return {s:stById(sr+':'+idx),i:pi,lead:lead}; }
+  for(i=0;i<ST_LIST.length&&!hit;i++){ if(0) break; var st=ST_LIST[i], ws=st.t.replace(/^\S+\s/,'').split(/\s+/); for(var k=0;k<ws.length;k++){ var tn=stNorm(ws.slice(k).join('')); if(tn.length>=4&&nt.indexOf(tn)>=0){ hit=st; break; } } }
+  if(hit){ var rr=S.stResume&&S.stResume.id===hit.id&&(S.stResume.i||0)>0;
+    return {s:hit,i:rr?S.stResume.i:0,lead:rr?'「'+hit.t.replace(/^\S+\s/,'')+'」를 듣다가 멈췄었지요. 들었던 곳부터 이어서 들려줄게요.':'「'+hit.t.replace(/^\S+\s/,'')+'」 이야기군요. 들려줄게요.'}; }
+  return null; }
+window.stRequest=function(t){
+  var r=null; try{ r=stMatch(t); }catch(e){ LQ.err(e); } if(!r||!r.s) return false;
+  window.__stText=t; window.__stEp=r.s; window.__stI=r.i||0; window.__stLead=r.lead; stStart(false); return true; };
+window.__stMatch=stMatch;
 
 /* 밀담실 보내기 가로채기: 자기 싫다는 말이면 이야기를 먼저 제안한다 */
 var _send=window.cfSend;
@@ -515,6 +728,8 @@ window.cfSend=function(){
   try{
     if(stOn()&&!window.__stSkip){
       var ta=document.getElementById('cfText'), bb=document.getElementById('cfBurnBtn'), t=ta?ta.value.trim():'';
+      if(t&&!(bb&&bb.classList.contains('on'))&&stBookShow(t)) return;
+      if(t&&!(bb&&bb.classList.contains('on'))&&stRequest(t)) return;
       if(t&&!(bb&&bb.classList.contains('on'))&&stIntent(t)){ stOffer(t); return; }
     }
   }catch(e){ LQ.err(e); }

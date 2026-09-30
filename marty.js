@@ -125,9 +125,4 @@ renderQuests=function(){
 var _ar=addRecipe2;
 addRecipe2=function(name){ var r=_ar.apply(this,arguments); try{ if(active('quests')){ if(qSnap) qSnap.rec=qM().rec; setTimeout(function(){ react('recipe'); },500); } }catch(e){ LQ.err(e); } return r; };
 
-/* 보상탭: 골드로 구매 */
-function tM(){
-  var own={}; S.rewards.forEach(function(r){ if(!r.redeemed&&(r.owned||!(r.price>0))) own[r.id]=1; });
-  return {gold:S.gold||0, own:own};
-}
 })();

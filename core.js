@@ -11,6 +11,13 @@ window.LQ=(function(){ var H={};
            on:function(ev,fn){ (H[ev]=H[ev]||[]).push(fn); },
            fire:function(ev,a){ (H[ev]||[]).forEach(function(f){ try{ f(a); }catch(e){ console.error('[LQ:'+ev+']',e); } }); } };
 })();
+/* 웰라의 웃음소리: 대사에는 "하하"로 적어 두고, 보여 줄 때 상황에 맞게 하하 / 하핫 / 캬핫으로 바꿔요.
+   자신만만하거나 신나는 말 뒤엔 캬핫, 실수하거나 놀란 말 뒤엔 하핫, 나머지는 주로 하하 */
+window.lqLaugh=function(t){ if(!t||typeof t!=='string'||t.indexOf('하하')<0) return t;
+  return t.replace(/하하(?!하)/g,function(m,off){ var c=t.slice(Math.max(0,off-45),off);
+    if(/성공|완벽|합격|신기록|최고|자신|해냈|출발|슝|도전|짜잔|짠|반짝|대박|멋져|우승/.test(c)&&Math.random()<.7) return '캬핫';
+    if(/앗|어라|어\?|어어|헉|떨어|부딪|깨졌|깨뜨|찌그러|실수|미끄|엉뚱|놀랐|놀라|에이|폭발|넘어/.test(c)&&Math.random()<.6) return '하핫';
+    var r=Math.random(); return r<.72?'하하':r<.88?'하핫':'캬핫'; }); };
 /* ===== 대사 창고 (LQD) =====
    모든 캐릭터 대사를 여기서 고르게 해요. 같은 대사가 연달아 나오지 않게 기억하고,
    시간대·계절·요일 태그와 희귀도(r:'u'/'r')를 지원하며, 마법스승 카메오를 소량 섞어요.
@@ -161,34 +168,6 @@ function mascotImg(size,mood){
   return `<span class="mascot ${mood?'m-'+mood:''}" style="width:${size}px;height:${size}px"><img src="${GIRL_AVATAR}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);display:block;box-shadow:0 3px 6px rgba(0,0,0,.4)">${fx}</span>`;
 }
 
-function foxSVG(mood,size){
-  size=size||48;
-  const eyes = mood==='sleepy'
-    ? `<path d="M43 36 q4 -4 8 0" stroke="#2b2115" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M61 36 q4 -4 8 0" stroke="#2b2115" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
-    : `<circle cx="46" cy="35" r="2.4" fill="#2b2115"/><circle cx="64" cy="35" r="2.4" fill="#2b2115"/>`;
-  const mouth = mood==='happy'
-    ? `<path d="M48 46 q7 7 14 0" stroke="#2b2115" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
-    : mood==='sleepy'
-    ? `<path d="M48 47 q7 -4 14 0" stroke="#2b2115" stroke-width="2" fill="none" stroke-linecap="round"/>`
-    : `<path d="M51 46 q4 3 8 0" stroke="#2b2115" stroke-width="2" fill="none" stroke-linecap="round"/>`;
-  return `<svg class="fx" width="${size}" height="${size}" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
-    <path d="M40 82 Q10 78 16 48 Q22 66 42 66 Z" fill="#d98a4e"/>
-    <path d="M18 52 Q26 58 34 56" fill="none" stroke="#fbf1df" stroke-width="4" stroke-linecap="round"/>
-    <path d="M55 50 C34 50 26 66 26 82 C26 96 40 100 55 100 C70 100 84 96 84 82 C84 66 76 50 55 50 Z" fill="#6b2e35"/>
-    <path d="M55 50 C42 50 34 62 34 74 L76 74 C76 62 68 50 55 50 Z" fill="#8d3d45"/>
-    <rect x="34" y="74" width="42" height="4" fill="#c9a24b"/>
-    <circle cx="55" cy="42" r="3.5" fill="#c9a24b"/>
-    <path d="M40 32 L32 12 L50 26 Z" fill="#d98a4e"/>
-    <path d="M70 32 L78 12 L60 26 Z" fill="#d98a4e"/>
-    <path d="M40 26 L36 16 L46 24 Z" fill="#4a2a18"/>
-    <path d="M70 26 L74 16 L64 24 Z" fill="#4a2a18"/>
-    <circle cx="55" cy="38" r="20" fill="#d98a4e"/>
-    <path d="M55 40 L47 54 L63 54 Z" fill="#fbf1df"/>
-    ${eyes}
-    <ellipse cx="55" cy="49" rx="2.2" ry="1.8" fill="#2b2115"/>
-    ${mouth}
-  </svg>`;
-}
 function bgNames(){ return {castle:'밤의 성',sky:'별이 총총한 하늘',candles:'떠다니는 촛불',circle:'큰 마법진'}; }
 function bgScene(k){
   bgScene.c=bgScene.c||{}; if(bgScene.c[k]) return bgScene.c[k];
@@ -759,7 +738,7 @@ function initAudio(){
     applyVol(); actx.resume(); return true;
   }catch(e){ return false; }
 }
-function applyVol(){ if(!master) return; const v=(S.settings.vol==null?60:S.settings.vol)/100; master.gain.value=v*v; bgmGain.gain.value=.8; sfxGain.gain.value=1; if(sfxOut){ const sv=(S.settings.sfxVol==null?(S.settings.vol==null?60:S.settings.vol):S.settings.sfxVol)/100; sfxOut.gain.value=sv*sv*.5; } }
+function applyVol(){ if(!master) return; const v=(S.settings.vol==null?60:S.settings.vol)/100; master.gain.value=v*v; bgmGain.gain.value=.8; sfxGain.gain.value=1; if(sfxOut){ const sv=(S.settings.sfxVol==null?(S.settings.vol==null?60:S.settings.vol):S.settings.sfxVol)/100; sfxOut.gain.value=sv*sv*.5*(window._roomOn?.1:1); } }
 function tone(f,t,d,type,vol,dest,slide,att){
   const o=actx.createOscillator(), g=actx.createGain(); o.type=type; o.frequency.setValueAtTime(f,t);
   if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+d);
@@ -825,7 +804,7 @@ function bgmDayTrack(){
 function bgmSched(){ while(bgmNext<actx.currentTime+.6){ const T=bgmTr()[bgmTrack||0]; bgmPlay(bgmStep,bgmNext); bgmNext+=60/T.bpm/2; bgmStep=(bgmStep+1)%(96*(T.P?T.P.length:1));
     if(bgmStep===0) bgmTrack=bgmDayTrack(); } }
 function startBgm(){
-  if(bgmTimer||window._sleepOn||!initAudio()) return;
+  if(bgmTimer||window._sleepOn||window._roomOn||!initAudio()) return;
   bgmGain.gain.cancelScheduledValues(actx.currentTime); bgmGain.gain.setTargetAtTime(.8,actx.currentTime,.05);
   { const nt=bgmDayTrack(); if(nt!==bgmTrack){ bgmTrack=nt; bgmStep=0; } }
   bgmNext=actx.currentTime+.1; bgmTimer=setInterval(bgmSched,250);
@@ -845,21 +824,34 @@ function renderSoundUI(){
   const sr=document.getElementById('sfxVolRange'); if(sr) sr.value=S.settings.sfxVol==null?(S.settings.vol==null?60:S.settings.vol):S.settings.sfxVol;
   const m=document.getElementById('musicBtn'); if(m) m.classList.toggle('on',!!bgmOn());
 }
-function unlockAudio(){ if(!(sfxOn()||bgmOn())) return; initAudio(); if(bgmOn()) startBgm(); }
+function unlockAudio(){ if(!(sfxOn()||bgmOn())) return; initAudio();
+  if(actx&&master&&!document.hidden&&master.gain.value<.001){ applyVol(); if(bgmGain&&bgmTimer) bgmGain.gain.setTargetAtTime(.8,actx.currentTime,.05); }
+  if(bgmOn()) startBgm(); }
 ['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,unlockAudio,{passive:true}));
 document.addEventListener('click',e=>{ if(e.target.closest&&e.target.closest('button,select')) sfx('tick'); });
-/* 앱을 내리거나 끌 때 '띡' 소리가 나던 원인: 소리가 나는 도중에 오디오를 그대로 멈춰서 파형이 뚝 끊겼어요.
-   먼저 0.05초 동안 볼륨을 0으로 부드럽게 내린 뒤에 멈추고, 돌아오면 볼륨을 다시 올려요. */
+/* 앱을 내리거나 끌 때 '띡' 소리가 나던 원인: 소리가 나는 도중에 오디오를 그대로 멈추거나, 열려 있는 오디오 장치를 iOS가 강제로 닫아서 파형이 뚝 끊겼어요.
+   그래서 (1) 앱이 내려가려는 순간 볼륨을 0.05초 동안 0으로 내리고, (2) 오디오 장치를 아예 닫아서 iOS의 소리 세션을 풀어 줘요.
+   앱으로 돌아오면 장치를 다시 열고 음악을 이어서 틀어요. */
 function audioHush(){ if(!actx) return; const t=actx.currentTime;
-  [master,sfxOut,bgmGain].forEach(g=>{ if(g){ try{ g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value,t); g.gain.linearRampToValueAtTime(0,t+.05); }catch(e){ LQ.err(e); } } }); }
+  [master,sfxOut,bgmGain].forEach(g=>{ if(g){ try{ g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value,t); g.gain.linearRampToValueAtTime(0,t+.04); }catch(e){ LQ.err(e); } } }); }
+function audioRelease(){ const c=actx; if(!c) return;
+  if(bgmTimer){ clearInterval(bgmTimer); bgmTimer=null; }
+  actx=null; master=null; sfxOut=null; sfxGain=null; bgmGain=null;
+  try{ c.close(); }catch(e){ LQ.err(e); }
+  try{ if(navigator.audioSession) navigator.audioSession.type='auto'; }catch(e){ LQ.err(e); } }
+function audioGoingAway(){ if(!actx||window._sleepOn) return;
+  if(bgmTimer){ clearInterval(bgmTimer); bgmTimer=null; }
+  audioHush(); setTimeout(()=>{ if(document.hidden||_awayFlag) audioRelease(); },70); }
+let _awayFlag=false;
 document.addEventListener('visibilitychange',()=>{
-  if(!actx) return;
-  if(document.hidden){ if(window._sleepOn) return;
-    if(bgmTimer){ clearInterval(bgmTimer); bgmTimer=null; }
-    audioHush(); setTimeout(()=>{ if(document.hidden&&actx&&!window._sleepOn) actx.suspend(); },120); }
-  else { actx.resume(); applyVol(); if(bgmOn()) startBgm(); }
+  if(document.hidden){ _awayFlag=true; audioGoingAway(); }
+  else { _awayFlag=false; if(bgmOn()||sfxOn()){ initAudio(); applyVol(); if(bgmOn()) startBgm(); } }
 });
-window.addEventListener('pagehide',()=>{ if(actx&&!window._sleepOn){ if(bgmTimer){ clearInterval(bgmTimer); bgmTimer=null; } audioHush(); } });
+window.addEventListener('pagehide',()=>{ _awayFlag=true; audioGoingAway(); });
+window.addEventListener('pageshow',()=>{ _awayFlag=false; });
+/* 앱 전환 화면(위로 살짝 올렸을 때)에서는 페이지가 아직 '보이는 상태'일 수 있어서, 앱이 비활성이 되는 순간에도 볼륨을 내려요 */
+window.addEventListener('blur',()=>{ if(actx&&!window._sleepOn) audioHush(); });
+window.addEventListener('focus',()=>{ if(!document.hidden&&actx){ applyVol(); if(bgmGain) bgmGain.gain.setTargetAtTime(.8,actx.currentTime,.05); } });
 
 const stampQ=[]; let stampBusy=false, stampTimer=null;
 function celebrate(kind,sub){ stampQ.push({kind,sub}); if(!stampBusy) nextStamp(); }
@@ -1497,8 +1489,8 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
 
   /* 낮은 배경음: 켜져 있는 배경음악은 작게, 장작 타는 소리를 아주 조용히 */
   var amb=null;
-  function ambStart(){ try{ if(!bgmOn()||!initAudio()||amb) return;
-    if(bgmGain) bgmGain.gain.setTargetAtTime(.28,actx.currentTime,.4);
+  function ambStart(){ try{ window._roomOn=true; if(!initAudio()) return; applyVol(); stopBgm();
+    if(!bgmOn()||amb) return;
     var n=actx.sampleRate*2, buf=actx.createBuffer(1,n,actx.sampleRate), d=buf.getChannelData(0), last=0;
     for(var i=0;i<n;i++){ var w=Math.random()*2-1; last=(last+.02*w)/1.02; d[i]=last*3.5; }
     var src=actx.createBufferSource(); src.buffer=buf; src.loop=true;
@@ -1507,9 +1499,9 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
     src.connect(lp); lp.connect(g); g.connect(master); src.start();
     amb={src:src,g:g,t:null};
   }catch(e){ LQ.err(e); } }
-  function ambStop(){ try{ if(!amb) return; var a=amb; amb=null; clearTimeout(a.t);
+  function ambStop(){ try{ window._roomOn=false; if(actx){ applyVol(); if(bgmOn()) startBgm(); }
+    if(!amb) return; var a=amb; amb=null; clearTimeout(a.t);
     a.g.gain.setTargetAtTime(0,actx.currentTime,.25); setTimeout(function(){ try{ a.src.stop(); }catch(e){ LQ.err(e); } },1200);
-    if(bgmGain&&bgmTimer) bgmGain.gain.setTargetAtTime(.8,actx.currentTime,.4);
   }catch(e){ LQ.err(e); } }
 
   window.openConfess=function(){ _cfChip=''; _burn=false; _burning=false; cfVisit();
@@ -1920,13 +1912,6 @@ function setProg(k,el){
   const apply=()=>{ tgt[k]=Math.round(n); save(); bodySync(); checkAchievements(); renderQuests(); renderMaster(); };
   if(k==='current'&&Math.round(n)===0&&old>0){ askOk('남은 금액을 0원으로 바꾸면 빚을 모두 청산한 것으로 기록돼요. 계속할까요?',apply,()=>{ el.value=old; }); return; }
   apply();
-}
-function addDailyQuest(){
-  const v=document.getElementById('newDqInput').value.trim();
-  if(!v) return;
-  S.dailyQuests.push({id:'d'+Date.now(),name:v,active:true});
-  document.getElementById('newDqInput').value='';
-  save(); renderMaster(); renderHome(); toast('NEW QUEST UNLOCKED');
 }
 function toggleActiveDQ(id){ const q=S.dailyQuests.find(d=>d.id===id); q.active=!q.active; save(); renderMaster(); renderHome(); }
 function deleteDQ(id){ askOk('이 데일리 퀘스트를 삭제할까요? (일시정지로 잠시 빼둘 수도 있어요)',()=>{ S.dailyQuests = S.dailyQuests.filter(d=>d.id!==id); save(); renderMaster(); renderHome(); }); }
