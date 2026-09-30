@@ -12,13 +12,13 @@ var MSG_S=[
 var last=-1;
 function pickMsg(a){ var i=Math.floor(Math.random()*a.length); if(i===last&&a.length>1) i=(i+1)%a.length; last=i; return a[i]; }
 function esc2(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-document.head.insertAdjacentHTML('beforeend','<style>#evGive{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:rgba(6,10,7,.86);opacity:0;transition:opacity .35s}#evGive.show{display:flex}#evGive.in{opacity:1}#evGive .eg-card{width:100%;max-width:440px;max-height:100%;overflow-y:auto;background:linear-gradient(#1a2a1d,#0f1a12);border:2px solid var(--gold-d);border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.6),0 0 30px rgba(233,190,90,.18);padding:12px 12px 14px;transform:scale(.94);transition:transform .35s}#evGive.in .eg-card{transform:scale(1)}#evGive .eg-t{font-family:"Press Start 2P",cursive;font-size:11px;color:var(--gold);text-align:center;margin:4px 0 10px;line-height:1.6}#evGive img{width:100%;height:auto;display:block;border-radius:5px;border:1px solid var(--gold-d);image-rendering:auto}#evGive .eg-m{white-space:pre-line;color:#efe3c2;font-size:14px;line-height:1.65;margin:12px 4px 8px}#evGive .eg-r{font-size:12px;color:var(--gold);margin:0 4px 12px}#evGive .eg-b{display:flex;gap:8px}#evGive .eg-b button{flex:1}</style>');
+
 document.body.insertAdjacentHTML('beforeend','<div id="evGive"></div>');
 window.evGiveClose=function(){ var o=document.getElementById('evGive'); if(!o) return; o.classList.remove('in'); setTimeout(function(){ o.classList.remove('show'); o.innerHTML=''; },350); };
-window.evGiveGo=function(){ evGiveClose(); try{ showScreen('treasure'); }catch(e){} };
+window.evGiveGo=function(){ evGiveClose(); try{ showScreen('treasure'); }catch(e){ LQ.err(e); } };
 function open(e,preview){
   var o=document.getElementById('evGive'); if(!o) return;
-  var img=''; try{ img=LW_FACES.give.s; }catch(x){}
+  var img=''; try{ img=LW_FACES.give.s; }catch(x){ LQ.err(x); }
   var sp=!!e.sp, gold=0; try{ gold=halfG(e.gold||50); }catch(x){ gold=e.gold||50; }
   o.innerHTML='<div class="eg-card" onclick="event.stopPropagation()"><div class="eg-t">'+(sp?'🎉 특별 이벤트 완료':'🌙 이번 달 이벤트 완료')+'</div>'+(img?'<img src="'+img+'" alt="">':'')+
     '<div class="eg-m">'+esc2(pickMsg(sp?MSG_S:MSG_M))+'</div>'+
@@ -26,19 +26,19 @@ function open(e,preview){
     '<div class="eg-b"><button class="ghost-btn" onclick="evGiveClose()">닫기</button><button class="gold-btn" onclick="evGiveGo()">보물함 보기</button></div></div>';
   o.onclick=function(){ evGiveClose(); };
   o.classList.add('show'); void o.offsetWidth; o.classList.add('in');
-  try{ sfx('ach'); }catch(x){}
+  try{ sfx('ach'); }catch(x){ LQ.err(x); }
 }
 window.evGivePop=function(e,preview){
   var n=0;
   (function go(){
-    var busy=false; try{ busy=!!stampBusy; }catch(x){}
+    var busy=false; try{ busy=!!stampBusy; }catch(x){ LQ.err(x); }
     if(busy&&!preview&&n++<40) return void setTimeout(go,500);
     open(e,preview);
   })();
 };
 /* 이벤트가 '방금' 완료 처리될 때만 */
 var _ec=evCheckClear;
-evCheckClear=function(e){ var was=!!e.cleared; var r=_ec.apply(this,arguments); try{ if(!was&&e.cleared) window.evGivePop(e,false); }catch(x){} return r; };
+evCheckClear=function(e){ var was=!!e.cleared; var r=_ec.apply(this,arguments); try{ if(!was&&e.cleared) window.evGivePop(e,false); }catch(x){ LQ.err(x); } return r; };
 /* 같은 순간에 마티 팝업이 겹쳐 뜨지 않게 */
 var _mm=martyMust;
 martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments); };
@@ -73,7 +73,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   function fill(t,n){ return t.replace('{n}',n||'보물'); }
   function unl(){ return (S.achievements||[]).filter(function(a){ return a.unlocked; }).length; }
   function say(t,g){ _say=t; if(g) _sc=scPick(g); }
-  document.head.insertAdjacentHTML('beforeend','<style>.als-mo{font-size:12px;color:#b9c9a8;text-align:center;margin:0 0 10px;line-height:1.5}.als-scene{position:relative;margin:0 0 10px;border:2px solid var(--gold-d);border-radius:3px;overflow:hidden;background:#0e0a06;box-shadow:0 0 0 3px #0e0a06,0 6px 18px rgba(0,0,0,.5);aspect-ratio:2400/1792;--b:1;--s:1;--se:0;--c:#fff;--g:0;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.als-scene img{display:block;width:100%;height:100%;object-fit:cover;filter:brightness(var(--b)) saturate(var(--s)) sepia(var(--se));-webkit-user-drag:none;pointer-events:none}.als-scene .als-tint{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;background-color:var(--c)}.als-scene .als-glow{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:var(--g);animation:alsFl 3.4s ease-in-out infinite;background:radial-gradient(circle at 29% 17%,rgba(255,214,120,.85),transparent 13%),radial-gradient(circle at 70.5% 16.5%,rgba(255,186,90,.8),transparent 10%)}.als-scene .als-glow.g2{animation-duration:4.7s;animation-delay:-1.3s;background:radial-gradient(circle at 75% 58.5%,rgba(150,190,255,.65),transparent 11%),radial-gradient(circle at 90.5% 38.5%,rgba(255,140,60,.6),transparent 8%),radial-gradient(circle at 82% 36.5%,rgba(120,190,255,.5),transparent 6%)}@keyframes alsFl{0%,100%{filter:brightness(1)}18%{filter:brightness(.8)}34%{filter:brightness(1.1)}52%{filter:brightness(.86)}71%{filter:brightness(1.06)}}.als-scene[data-light="dawn"]{--b:.86;--s:.9;--se:.08;--c:#d5cdf0;--g:.55}.als-scene[data-light="morning"]{--b:1;--s:1.02;--se:.04;--c:#f7f1e0;--g:.2}.als-scene[data-light="day"]{--b:1.08;--s:1.05;--se:0;--c:#f3f6ff;--g:.1}.als-scene[data-light="afternoon"]{--b:1;--s:1.1;--se:.12;--c:#ffe8c4;--g:.3}.als-scene[data-light="evening"]{--b:.8;--s:1.05;--se:.2;--c:#dcae7c;--g:.85}.als-scene[data-light="night"]{--b:.66;--s:.9;--se:0;--c:#8f9be0;--g:1}.als-head{display:flex;gap:10px;align-items:flex-end;margin-bottom:12px}.als-pt{width:74px;height:94px;flex:none;border:2px solid var(--gold-d);border-radius:3px;overflow:hidden;background:#0e0a06}.als-pt img{width:100%;height:100%;object-fit:cover;object-position:50% 10%;display:block}.als-bub{flex:1;background:var(--parch);color:var(--ink);border:1px solid var(--gold-d);border-radius:8px;padding:8px 11px;font-size:13px;line-height:1.55}.als-bub b{display:block;font-size:11px;color:var(--brown);margin-bottom:2px}#treasureList .ftabs button{font-size:11.5px;padding:6px 0}.als-sub{margin-top:-2px}.gf-s{font-size:12px;color:#c9bf9a;line-height:1.6;margin:0 0 10px;padding:8px 10px;border:1px dashed var(--gold-d);border-radius:4px}.gf-s b{color:var(--gold)}.gf-card{border:1px solid #33502f;background:linear-gradient(#16261a,#111e15);border-radius:4px;padding:11px 13px;margin-bottom:10px;opacity:.8}.gf-card.can{border-color:var(--gold);box-shadow:0 0 10px rgba(233,190,90,.25);opacity:1}.gf-card.got{opacity:.55}.gf-card .top{display:flex;justify-content:space-between;align-items:center;gap:8px}.gf-card .t{font-size:14px}.gf-card .d{font-size:12px;color:#a8b79e;margin-top:4px;line-height:1.5}.gf-card .need{font-size:11px;color:#8d9c83;margin-top:6px}.gf-bar{height:4px;background:rgba(0,0,0,.35);border-radius:2px;margin-top:4px;overflow:hidden}.gf-bar i{display:block;height:100%;background:var(--gold-d)}@media (prefers-reduced-motion:reduce){.als-scene .als-glow{animation:none}}.shelf-h{font-size:12px;letter-spacing:1px;color:var(--gold);margin:16px 0 6px}.als-pick{border:1px solid var(--gold-d);background:linear-gradient(#22321f,#16261a);border-radius:4px;padding:10px;margin-bottom:6px}.als-pick .k{font-size:11px;color:var(--gold);margin-bottom:4px}.als-pick .q{font-size:12px;color:#c9bf9a;margin:6px 0 8px;line-height:1.5}.als-lock{border:1px dashed var(--gold-d);border-radius:4px;padding:10px;font-size:12px;color:#b7a67c;line-height:1.55}.led{border:1px solid var(--gold-d);background:var(--parch);color:var(--ink);border-radius:3px;padding:10px 12px}.led .r{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px dashed rgba(90,64,30,.35)}.led .r i{font-style:normal;color:var(--brown);font-size:11px;flex:none}.led .s{font-size:12px;color:var(--brown);margin-bottom:6px}</style>');
+  
   var GIFTS=[
    {id:'gf_tea',need:3,name:'🍵 알레센도의 찻잔',desc:'따뜻한 차 한 잔과 함께하는 티타임 30분',line:'첫 선물이에요, 아멜리아. 차는 제가 직접 끓였어요. 천천히 드세요.'},
    {id:'gf_book',need:7,name:'📖 서기관의 추천서',desc:'읽고 싶던 책·웹소설을 1시간 마음껏 읽기',line:'이 책은 제가 직접 골랐어요. 아멜리아가 좋아할 것 같았어요.'},
@@ -92,7 +92,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   function head(tab){ var t=(_say&&_sayTab===tab)?_say:'';
     if(!t){ var kk=({shop:'greet',own:'own',used:'used',ledger:'ledger',gift:'gift'})[tab]||'greet'; t=(kk==='greet'&&visitLine())||rnd(LINES[kk],kk); _say=t; _sc=scPick(scFor(tab)); }
     _sayTab=tab; if(!_sc||!ALS_SC[_sc]) _sc=scPick(scFor(tab));
-    var L='day'; try{ L=document.getElementById('homeLowena').getAttribute('data-light')||'day'; }catch(e){}
+    var L='day'; try{ L=document.getElementById('homeLowena').getAttribute('data-light')||'day'; }catch(e){ LQ.err(e); }
     return '<div class="als-scene" data-light="'+L+'"><img src="'+ALS_SC[_sc]+'" alt="알레센도의 마법상점" draggable="false"><div class="als-tint"></div><div class="als-glow"></div><div class="als-glow g2"></div></div>'
       +'<div class="als-head"><div class="als-pt"><img src="'+(_sc==='smile'?ALS_IMG_SMILE:ALS_IMG)+'" alt="알레센도"></div><div class="als-bub"><b>알레센도 · 서기관</b>'+esc2(t)+'</div></div>'; }
   function tabs(){ var g=gfReady().length; return tabsHTML('tre',[['shop','진열대'],['own','보유'],['used','사용됨'],['gift','선물'+(g?' 🎁':'')],['ledger','장부']]); }
@@ -130,9 +130,9 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   function hash32(str){ var h=2166136261>>>0; for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h; }
   function pickMonth(ym){
     var m=+ym.slice(5,7), se=seasonOf(m), gold=S.gold||0, un=0, stage=0, done=0, body=0, yt=0;
-    try{ un=(S.achievements||[]).filter(function(a){ return a.unlocked; }).length; }catch(e){}
-    try{ var cf=S.mainQuests.find(function(q){ return q.id==='cafe'; }); stage=cf?cf.doneStages||0:0; var lab=S.subQuests.find(function(q){ return q.id==='cafelab'; }); done=lab?lab.recipes.filter(function(r){ return !r.archived&&r.status==='COMPLETE'; }).length:0; }catch(e){}
-    try{ body=Object.keys(S.bodyDays||{}).length; yt=S.mainQuests.filter(function(q){ return q.type==='youtube'; }).reduce(function(a,q){ return a+(q.videos||0); },0); }catch(e){}
+    try{ un=(S.achievements||[]).filter(function(a){ return a.unlocked; }).length; }catch(e){ LQ.err(e); }
+    try{ var cf=S.mainQuests.find(function(q){ return q.id==='cafe'; }); stage=cf?cf.doneStages||0:0; var lab=S.subQuests.find(function(q){ return q.id==='cafelab'; }); done=lab?lab.recipes.filter(function(r){ return !r.archived&&r.status==='COMPLETE'; }).length:0; }catch(e){ LQ.err(e); }
+    try{ body=Object.keys(S.bodyDays||{}).length; yt=S.mainQuests.filter(function(q){ return q.type==='youtube'; }).reduce(function(a,q){ return a+(q.videos||0); },0); }catch(e){ LQ.err(e); }
     var poor=gold<100, rich=gold>=1000;
     var cand=[];
     POOL.forEach(function(it){
@@ -152,7 +152,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     left.sort(function(a,b){ return b.key-a.key; }); while(out.length<50&&left.length) out.push(left.shift());
     return out.map(function(c){ return c.id; });
   }
-  function monthState(){ var ym=todayStr().slice(0,7); if(!S.moShelf||S.moShelf.ym!==ym||!S.moShelf.ids){ S.moShelf={ym:ym,ids:pickMonth(ym),bought:{}}; try{ save(); }catch(e){} } return S.moShelf; }
+  function monthState(){ var ym=todayStr().slice(0,7); if(!S.moShelf||S.moShelf.ym!==ym||!S.moShelf.ids){ S.moShelf={ym:ym,ids:pickMonth(ym),bought:{}}; try{ save(); }catch(e){ LQ.err(e); } } return S.moShelf; }
   function monthItems(){ var m=monthState(); return m.ids.filter(function(id){ return !m.bought[id]; }).map(function(id){ var p=POOLBY[id]; return p?{id:'mo_'+id,pid:id,name:p.n,price:p.p,mo:1,owned:false,redeemed:false,repeatable:false}:null; }).filter(Boolean); }
   function moFind(id){ return monthItems().find(function(x){ return x.id===id; }); }
   window.__moItems=monthItems;
@@ -186,17 +186,17 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   window.gfClaim=function(id){ var g=GIFTS.find(function(x){ return x.id===id; }); if(!g) return; S.giftGot=S.giftGot||{}; if(S.giftGot[id]) return;
     if(unl()<g.need){ toast('아직 업적이 모자라요'); return; }
     S.giftGot[id]=todayStr(); S.rewards.push({id:g.id,name:g.name,price:0,owned:true,redeemed:false,repeatable:false,gift:true,note:g.desc});
-    save(); say(g.line,'joy'); renderTreasure(); try{ lwFaceTemp('give',60000); }catch(e){} toast('🎁 선물 획득! (보유 탭에서 사용해요)'); };
+    save(); say(g.line,'joy'); renderTreasure(); try{ lwFaceTemp('give',60000); }catch(e){ LQ.err(e); } toast('🎁 선물 획득! (보유 탭에서 사용해요)'); };
   function gfNotify(){ var fresh=gfReady().filter(function(g){ return !(S.giftSeen||{})[g.id]; }); if(!fresh.length) return;
     S.giftSeen=S.giftSeen||{}; fresh.forEach(function(g){ S.giftSeen[g.id]=1; }); save(); toast('🎁 알레센도의 선물이 준비됐어요! (TREASURE › 선물)'); }
-  var _caG=checkAchievements; checkAchievements=function(){ var r=_caG.apply(this,arguments); try{ gfNotify(); }catch(e){} return r; };
+  var _caG=checkAchievements; checkAchievements=function(){ var r=_caG.apply(this,arguments); try{ gfNotify(); }catch(e){ LQ.err(e); } return r; };
   function logBuy(n,p){ (S.ledger=S.ledger||[]).push({ts:Date.now(),d:todayStr(),n:n,p:p}); }
   window.buyReward=function(id){ var r=S.rewards.find(function(x){ return x.id===id; })||moFind(id); if(!r) return;
     if((S.gold||0)<r.price){ say(rnd(LINES.poor,'poor'),'poor'); toast('골드가 부족해요'); renderTreasure(); return; }
     askOk(r.name+' 을(를) '+r.price+'골드에 구매할까요?',function(){ S.gold-=r.price;
       if(r.mo){ S.rewards.push({id:'r'+Date.now(),name:r.name,price:r.price,owned:true,redeemed:false,repeatable:false}); monthState().bought[r.pid]=1; }
       else if(r.repeatable) S.rewards.push({id:'r'+Date.now(),name:r.name,price:r.price,owned:true,redeemed:false,repeatable:false}); else r.owned=true;
-      logBuy(r.name,r.price); save(); say(buyLine(r.name,r.price),'buy'); renderTreasure(); renderHome(); try{ lwFaceTemp('give',60000); }catch(e){} toast('보물 획득!'); }); };
+      logBuy(r.name,r.price); save(); say(buyLine(r.name,r.price),'buy'); renderTreasure(); renderHome(); try{ lwFaceTemp('give',60000); }catch(e){ LQ.err(e); } toast('보물 획득!'); }); };
   window.hsBuy=function(id){ var x=HID.find(function(h){ return h.id===id; }); if(!x||S.rewards.some(function(r){ return r.id===id; })) return;
     if((S.gold||0)<x.price){ say(rnd(LINES.poor,'poor'),'poor'); toast('골드가 부족해요'); renderTreasure(); return; }
     askOk(x.name+' 을(를) '+x.price+'골드에 구매할까요?',function(){ S.gold-=x.price; S.rewards.push({id:x.id,name:x.name,price:x.price,owned:true,redeemed:false,repeatable:true,hidden:true});
@@ -206,7 +206,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
       var h=HID.find(function(x){ return x.id===r.id; }); say(h?h.line:fill(rnd(LINES.use,'use'),r.name),'use'); renderTreasure(); toast('TREASURE USED'); }); };
   /* 보물 탭에서는 마티는 쉬고, 서기관이 반응한다 */
   var _ms=window.martyShow; window.martyShow=function(){ var sc=document.getElementById('screen-treasure'); if(sc&&sc.classList.contains('active')) return; return _ms.apply(this,arguments); };
-  document.head.insertAdjacentHTML('beforeend','<style>#cfTop .cfb{flex:0 1 auto;min-width:0;max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}</style>');
+  
   window.recToggle=function(){ var b=document.getElementById('recBox'), t=document.getElementById('recBtn'); if(!b) return; var o=b.style.display==='none'; b.style.display=o?'block':'none'; if(t) t.textContent='📒 기록 '+(o?'▴':'▾'); };
   LQ.on('screen:before',function(sn){ if(sn==='treasure'){ _say=''; } });
 })();
@@ -235,7 +235,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     return true; }
   function announce(day){
     var t=LQD.pick('marty.dessert',LINES,{who:'marty'}); shown=true;
-    if(!forced()){ try{ localStorage.setItem(NK,day); }catch(e){} }
+    if(!forced()){ try{ localStorage.setItem(NK,day); }catch(e){ LQ.err(e); } }
     if(S.settings.martyPop===false){ toast('마티: '+t); return; }
     martyShow('dessert',t);
     var all=document.querySelector('#martyPop .mp-all'); if(all){ all.classList.add('bk'); var mi=all.querySelector('.mp-in'); if(mi) mi.insertAdjacentHTML('beforeend','<i class="mp-bk">🍰</i>'); } }
@@ -246,8 +246,8 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
       if(ok>=3){ waiting=false; announce(day); return; }
       setTimeout(tick,1200); })(); }
   function check(){ try{ if(!S||!S.settings||!window.isDessertDay()) return; var day=todayStr();
-    if(forced()){ if(shown) return; } else { try{ if(localStorage.getItem(NK)===day) return; }catch(e){} }
-    queue(day); }catch(e){} }
+    if(forced()){ if(shown) return; } else { try{ if(localStorage.getItem(NK)===day) return; }catch(e){ LQ.err(e); } }
+    queue(day); }catch(e){ LQ.err(e); } }
   setTimeout(check,3200);
   document.addEventListener('visibilitychange',function(){ if(!document.hidden) setTimeout(check,1800); });
   setInterval(check,30*60*1000);
@@ -294,14 +294,14 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     if(/디저트|dessert/i.test(c)) return 'dessert';
     return 'any'; }
 
-  document.head.insertAdjacentHTML('beforeend','<style>#wlPop{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:rgba(6,10,7,.86);opacity:0;transition:opacity .35s}#wlPop.show{display:flex}#wlPop.in{opacity:1}#wlPop .wl-card{width:100%;max-width:440px;max-height:100%;overflow-y:auto;background:linear-gradient(#241a2c,#150f1c);border:2px solid #8e6bb8;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.6),0 0 30px rgba(142,107,184,.25);padding:12px 12px 14px;transform:scale(.94);transition:transform .35s}#wlPop.in .wl-card{transform:scale(1)}#wlPop .wl-t{font-family:"Press Start 2P",cursive;font-size:11px;color:#e9c977;text-align:center;margin:4px 0 10px;line-height:1.6}#wlPop img{width:100%;height:auto;display:block;border-radius:5px;border:1px solid #8e6bb8;image-rendering:pixelated}#wlPop .wl-fx{text-align:center;font-size:12px;color:#8fe3f0;margin:8px 0 0}#wlPop .wl-b{background:#2b2036;border:1px solid #5b4780;border-radius:8px;padding:9px 12px;margin:10px 2px 0;font-size:13.5px;line-height:1.65;color:#eee4f7}#wlPop .wl-b b{display:block;font-size:11px;margin-bottom:2px}#wlPop .wl-b.w b{color:#e9a6d6}#wlPop .wl-b.s{background:#1b2634;border-color:#3c6f86;color:#dcf0f7}#wlPop .wl-b.s b{color:#7fd6e8}#wlPop .wl-b.a{background:#d9c9a2;border-color:#9a7530;color:#2b2115}#wlPop .wl-b.a b{color:#7a5a20}#wlPop .wl-btn{display:flex;margin-top:12px}#wlPop .wl-btn button{flex:1}</style>');
+  
   document.body.insertAdjacentHTML('beforeend','<div id="wlPop"></div>');
   window.wlDone=function(){ var nx=window._wlNext; window._wlNext=null; wlClose(); if(nx) setTimeout(function(){ window.wlPop(nx); },450); };
   window.wlClose=function(){ var o=document.getElementById('wlPop'); if(!o) return; o.classList.remove('in'); setTimeout(function(){ o.classList.remove('show'); o.innerHTML=''; },350); };
   function open(o){
     var el=document.getElementById('wlPop'); if(!el) return;
     var src=(o.img==='smile'&&window.__als)?window.__als.smile:(IMG[o.img]||(window.WL_IMG2||{})[o.img]||IMG.potion);
-    window._wlNext=o.next||null; try{ if(!o.noLog) lqNote('웰라·시나',(o.title||'')+' – '+(o.w||'')); }catch(e){}
+    window._wlNext=o.next||null; try{ if(!o.noLog) lqNote('웰라·시나',(o.title||'')+' – '+(o.w||'')); }catch(e){ LQ.err(e); }
     el.innerHTML='<div class="wl-card" onclick="event.stopPropagation()"><div class="wl-t">'+esc3(o.title)+'</div><img src="'+src+'" alt="">'
       +(o.fx?'<div class="wl-fx">'+esc3(o.fx)+'</div>':'')
       +(o.a?'<div class="wl-b a"><b>알레센도</b>'+esc3(o.a)+'</div>':'')
@@ -309,11 +309,11 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
       +'<div class="wl-btn"><button class="gold-btn" onclick="wlDone()">'+esc3(o.btn||'좋아요!')+'</button></div></div>';
     el.onclick=function(){ wlDone(); };
     el.classList.add('show'); void el.offsetWidth; el.classList.add('in');
-    try{ sfx(o.big?'ach':'check'); }catch(e){}
+    try{ sfx(o.big?'ach':'check'); }catch(e){ LQ.err(e); }
   }
   window.wlPop=function(o){
     var n=0;
-    (function go(){ var busy=false; try{ busy=!!stampBusy; }catch(e){}
+    (function go(){ var busy=false; try{ busy=!!stampBusy; }catch(e){ LQ.err(e); }
       if(busy&&n++<40) return void setTimeout(go,500);
       open(o); })();
   };
@@ -321,29 +321,29 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   /* 다음 단계 완료 */
   var _adv=window.advanceStage;
   window.advanceStage=function(id){
-    var q=null, before=0; try{ q=S.mainQuests.find(function(m){ return m.id===id; }); before=q?q.doneStages:0; }catch(e){}
+    var q=null, before=0; try{ q=S.mainQuests.find(function(m){ return m.id===id; }); before=q?q.doneStages:0; }catch(e){ LQ.err(e); }
     var r=_adv.apply(this,arguments);
     try{ if(on()&&q&&q.type==='stages'&&q.doneStages>before){
       var n=q.doneStages, d=(n<=ST.length&&q.stages.length===ST.length)?ST[n-1]:GEN, nm=q.stages[n-1]||'';
       wlPop({title:(d.big?'🌙 ':'☕ ')+'404 DRINK BAR · '+n+'/'+q.stages.length+' 단계 완료',img:d.i,w:d.w,s:d.s,fx:d.fx||'',big:!!d.big,btn:d.big?'문 열러 가요!':'좋아요!',next:d.big?OPEN2:null});
-    } }catch(e){}
+    } }catch(e){ LQ.err(e); }
     return r; };
 
   /* 레시피를 COMPLETE로 바꿀 때 시음 */
   var _srf=window.saveRecipeField;
   window.saveRecipeField=function(id,field,val){
-    var prev=null, rc=null; try{ rc=findRecipe(id); prev=rc?rc.status:null; }catch(e){}
+    var prev=null, rc=null; try{ rc=findRecipe(id); prev=rc?rc.status:null; }catch(e){ LQ.err(e); }
     var r=_srf.apply(this,arguments);
     try{ if(on()&&field==='status'&&val==='COMPLETE'&&prev!=='COMPLETE'&&rc){
       var lab=S.subQuests.find(function(x){ return x.id==='cafelab'; }), cnt=lab.recipes.filter(function(x){ return !x.archived&&x.status==='COMPLETE'; }).length;
       var t=TA[catOf(rc.cat)], magic=(cnt>0&&cnt%5===0), nm=(rc.name||'이 메뉴');
       wlPop({title:'☕ 시음 타임 · '+nm,img:magic?'magic':t.i,w:pick(t.w,'wella.taste.'+catOf(rc.cat),'wella'),s:pick(t.s,'sina.taste.'+catOf(rc.cat),'sina'),fx:magic?'✨ COMPLETE '+cnt+'개! 시나의 마법이 깨어났어요':'',big:magic,btn:'잘 먹었어요!'});
-    } }catch(e){}
+    } }catch(e){ LQ.err(e); }
     return r; };
 
   /* 설정: 켜기/끄기 */
   window.setWella=function(v){ S.settings.wellaPop=!!v; save(); toast(v?'웰라와 시나가 놀러 올 거예요 🐈‍⬛':'웰라와 시나는 조용히 있을게요'); };
-  var _rmW=window.renderMaster; window.renderMaster=function(){ if(_rmW) _rmW.apply(this,arguments); try{ var e=document.getElementById('wlSel'); if(e) e.value=on()?'1':'0'; }catch(x){} };
+  LQ.on('master:after',function(){ try{ var e=document.getElementById('wlSel'); if(e) e.value=on()?'1':'0'; }catch(x){ LQ.err(x); } });
 })();
 
 /* ===== 알레센도 상점의 카페 재료 코너: 웰라가 재료 상자를 정리해요 ===== */
@@ -354,7 +354,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   function dayHash(){ var d=(typeof todayStr==='function'?todayStr():String(Date.now())), x=0; for(var i=0;i<d.length;i++) x=(x*31+d.charCodeAt(i))>>>0; return x; }
   function lines(){
     var n=(S.pantry||[]).length, lab=null, rc=0;
-    try{ lab=S.subQuests.find(function(q){ return q.id==='cafelab'; }); rc=lab?lab.recipes.filter(function(r){ return !r.archived; }).length:0; }catch(e){}
+    try{ lab=S.subQuests.find(function(q){ return q.id==='cafelab'; }); rc=lab?lab.recipes.filter(function(r){ return !r.archived; }).length:0; }catch(e){ LQ.err(e); }
     var pool=[];
     if(!n) pool.push(
       ['재료 창고가 텅 비었어요! 재료 단가를 한 번만 등록해 두면 원가 계산이 훨씬 쉬워져요. 상자 나르는 건 제가 도울게요!','알레센도: "상자 뒤쪽 자리는 비워 두었어요. 웰라가 쓸 수 있게요."'],
@@ -365,7 +365,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     if(rc) pool.push(['메뉴 연구 중인 레시피가 '+rc+'개나 있네요! 저도 시음하러 갈 준비 됐어요. 빗자루 시동 걸어 둘게요!','시나: "…시음은 냄새만 맡겠다냥."']);
     else pool.push(['아직 레시피가 없어요! 첫 레시피 만들면 제가 제일 먼저 시음할 거예요. 약속이에요, 약속!','알레센도: "그 약속은 저도 기억하고 있어요. 웰라가 시음할 날을 기다려요."']);
     return pool.concat(LQD.get('wella.shop')); }
-  document.head.insertAdjacentHTML('beforeend','<style>.wl-shop{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:10px;border:1px solid #5b4780;border-radius:6px;background:linear-gradient(#241a2c,#170f1e)}.wl-shop .pt{width:56px;height:56px;flex:none;border:2px solid #8e6bb8;border-radius:3px;overflow:hidden;background:#0e0a06}.wl-shop .pt img{width:100%;height:100%;display:block;image-rendering:pixelated}.wl-shop .k{font-size:11px;color:#e9a6d6;margin-bottom:3px}.wl-shop .t{font-size:13px;line-height:1.55;color:#eee4f7}.wl-shop .s{font-size:11.5px;line-height:1.5;color:#b9a9d0;margin-top:5px}</style>');
+  
   LQ.on('treasure:rendered',function(){
     if(!on()||FIL.tre!=='shop'||(FIL.shelf||'all')!=='all'||PG.tre!==0) return;
     var box=document.getElementById('treasureList'), hd=box&&box.querySelector('.als-head'); if(!hd||box.querySelector('.wl-shop')) return;
@@ -399,11 +399,11 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
       if(!force&&mm!==10) return;
       S.hwDay=S.hwDay||{}; if(!force&&S.hwDay[t]) return;
       var big=(dd===31), g=big?30:5, d=big?HW31:pk(HW,'wella.halloween');
-      S.hwDay[t]=1; S.gold=(S.gold||0)+g; save(); try{ renderHome(); }catch(e){} try{ renderTreasure(); }catch(e){}
+      S.hwDay[t]=1; S.gold=(S.gold||0)+g; save(); try{ renderHome(); }catch(e){ LQ.err(e); } try{ renderTreasure(); }catch(e){ LQ.err(e); }
       wlPop({title:'🎃 10월 이벤트 · 웰라의 호박 배달',img:'pump',w:d.w,s:d.s,fx:'🎃 호박 사탕 ◈ +'+g+' 골드',big:big,btn:'고마워요!'});
-    }catch(e){}
+    }catch(e){ LQ.err(e); }
   };
-  setTimeout(function(){ try{ window.wlHalloween(false); }catch(e){} },4500);
+  setTimeout(function(){ try{ window.wlHalloween(false); }catch(e){ LQ.err(e); } },4500);
 
   /* 2) 쉬는 날 버튼: 방에서 책 읽는 웰라 */
   var REST=[
@@ -413,7 +413,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   var _toast=window.toast;
   window.toast=function(m){
     var r=_toast.apply(this,arguments);
-    try{ if(on()&&m==='☾ 푹 쉬어요'){ var d=pk(REST,'wella.rest'); wlPop({title:'☾ 쉬는 날 · 웰라의 방',img:'room',w:d.w,s:d.s,btn:'고마워요'}); } }catch(e){}
+    try{ if(on()&&m==='☾ 푹 쉬어요'){ var d=pk(REST,'wella.rest'); wlPop({title:'☾ 쉬는 날 · 웰라의 방',img:'room',w:d.w,s:d.s,btn:'고마워요'}); } }catch(e){ LQ.err(e); }
     return r; };
 
   /* 3) 접속 종료 인사: 세로 비행 사진 */
@@ -421,14 +421,14 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
    {w:'오늘도 수고했어요! 저는 빗자루 타고 하늘 한 바퀴 돌고 잘 거예요. 내일 또 만나요!',s:'…잘 자라냥.'},
    {w:'달이 떴어요! 별똥별 하나 보이면 소원 빌어 봐요. 저는 벌써 세 개 빌었어요, 헤헤!',s:'…소원은 한 번에 하나만이다냥.'},
    {w:'푹 자고 내일도 씩씩하게 만나요! 제가 꿈속 숲에서 기다릴게요!',s:'…이불 잘 덮어라. 감기 걸리지 말고.'}];
-  document.head.insertAdjacentHTML('beforeend','<style>#byeScreen .by-w{display:flex;gap:12px;align-items:center;margin-top:14px;padding:10px;border:1px solid #5b4780;border-radius:8px;background:rgba(36,26,44,.85);max-width:min(440px,calc(100vw - 32px))}#byeScreen .by-w img{height:150px;width:auto;flex:none;border-radius:4px;border:1px solid #8e6bb8;image-rendering:pixelated}#byeScreen .by-w div{font-size:13px;line-height:1.6;color:#eee4f7}#byeScreen .by-w b{display:block;font-size:11px;color:#e9a6d6;margin-bottom:2px}#byeScreen .by-w .sn{margin-top:6px;color:#dcf0f7}#byeScreen .by-w .sn b{color:#7fd6e8}</style>');
+  
   var _bye=window.lowenaBye;
   if(typeof _bye==='function') window.lowenaBye=function(){
     var r=_bye.apply(this,arguments);
     try{ if(on()){ var o=document.getElementById('byeScreen'), f=o&&o.querySelector('.by-f'), d=pk(BYE,'wella.bye');
       if(o&&f&&!o.querySelector('.by-w')){ var el=document.createElement('div'); el.className='by-w';
         el.innerHTML='<img src="'+IM.tall+'" alt=""><div><b>웰라</b>'+esc4(d.w)+'<div class="sn"><b>시나</b>'+esc4(d.s)+'</div></div>';
-        o.insertBefore(el,f); } } }catch(e){}
+        o.insertBefore(el,f); } } }catch(e){ LQ.err(e); }
     return r; };
 })();
 
@@ -445,25 +445,25 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   function close(){ var e=document.getElementById('trChat'); if(e) e.remove(); }
   function show(){
     try{
-      if(!on()||!active()) return;
+      if(!on()||!active()||document.getElementById('bnCard')) return;
       if(document.getElementById('askOv')&&document.getElementById('askOv').classList.contains('show')) return;
       var wp=document.getElementById('wlPop'); if(wp&&wp.classList.contains('show')) return;
       close();
       var t=LQD.pick('wella.chat',T,{cameo:false}), magic=t[0]==='magic';
-      try{ lqNote(magic?'마법냥이':'웰라',t[1]+' – '+(t[2]||t[3])); }catch(e){}
+      try{ lqNote(magic?'마법냥이':'웰라',t[1]+' – '+(t[2]||t[3])); }catch(e){ LQ.err(e); }
       var el=document.createElement('div'); el.id='trChat'; if(magic) el.className='tc-magic';
       el.innerHTML='<img src="'+imgSrc(t[0])+'" alt=""><div class="tc-b"><div class="tc-k">'+(magic?'✨ 마법냥이 모드 · ':'')+h(t[1])+'</div>'+(t[2]?'<div class="tc-w"><b>웰라</b>'+h(t[2])+'</div>':'')+(t[3]?'<div class="tc-s"><b>'+(magic?'마법냥이':'시나')+'</b>'+h(t[3])+'</div>':'')+'</div><button class="tc-x" aria-label="닫기">×</button>';
       el.querySelector('.tc-x').onclick=close;
       document.body.appendChild(el);
       clearTimeout(tmr2); tmr2=setTimeout(close,14000);
-    }catch(e){}
+    }catch(e){ LQ.err(e); }
   }
   window.trChatNow=show;
   function loop(){ clearTimeout(timer); timer=setTimeout(function(){ if(active()) show(); loop(); },(45+Math.random()*60)*1000); }
   LQ.on('screen:after',function(sn){
     if(sn==='treasure'){ loop(); clearTimeout(window._trFirst); window._trFirst=setTimeout(function(){ if(Math.random()<.6) show(); },(8+Math.random()*10)*1000); } else { close(); clearTimeout(timer); }
   });
-  document.head.insertAdjacentHTML('beforeend','<style>#trChat{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:60;display:flex;gap:10px;align-items:flex-start;width:min(440px,calc(100vw - 24px));padding:10px 30px 10px 10px;border:1px solid #5b4780;border-radius:10px;background:rgba(30,22,40,.96);box-shadow:0 6px 24px rgba(0,0,0,.5);animation:trIn .35s ease}#trChat.tc-magic{border-color:#a78bfa;box-shadow:0 0 18px rgba(167,139,250,.55)}#trChat img{width:112px;height:88px;object-fit:cover;flex:none;border-radius:6px;image-rendering:pixelated}#trChat .tc-b{font-size:12.5px;line-height:1.5;color:#e9e0f5}#trChat .tc-k{font-size:11px;color:#c9b6f5;margin-bottom:3px}#trChat .tc-w b,#trChat .tc-s b{margin-right:5px;color:#f3d88a}#trChat .tc-s{margin-top:4px;color:#c9b6f5}#trChat .tc-x{position:absolute;top:2px;right:6px;background:none;border:0;color:#c9b6f5;font-size:20px;cursor:pointer}@keyframes trIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}</style>');
+  
 })();
 
 /* ===== 업적 마일스톤: 90개를 넘기면 마법냥이가, 이후 1개씩 달성할 때마다 넷이 번갈아 알려줘요 ===== */
@@ -483,7 +483,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
      alesendo:['장부에 기록했습니다. 업적 {n}개 달성이군요. 남은 것은 {left}개입니다.','축하드립니다. {n}번째 업적을 정리해 두었습니다. 이제 {left}개가 남았습니다.']};
     return LQD.pick('ach.'+who,T[who]||[],{cameo:false,vars:{n:n,left:left}}); }
   function free(){ var a=document.getElementById('askOv'), m=document.getElementById('modalOverlay'), w=document.getElementById('wlPop');
-    var busy=false; try{ busy=!!stampBusy; }catch(e){}
+    var busy=false; try{ busy=!!stampBusy; }catch(e){ LQ.err(e); }
     return !busy&&!(a&&a.classList.contains('show'))&&!(m&&m.classList.contains('show'))&&!(w&&w.classList.contains('show')); }
   function close(){ var e=document.getElementById('achMile'); if(e) e.remove(); }
   function show(n){
@@ -504,5 +504,5 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     if(S.achMile==null) S.achMile=89;
     if(n>S.achMile&&n>=90){ S.achMile=n; save(); show(n); } else if(n>S.achMile){ S.achMile=Math.min(n,89); }
   };
-  document.head.insertAdjacentHTML('beforeend','<style>#achMile{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(8,5,16,.72);animation:amIn .3s ease}#achMile .am-box{width:min(340px,calc(100vw - 40px));padding:16px;border:1px solid #d1a856;border-radius:12px;background:#1e1628;text-align:center;color:#f0e6d0;box-shadow:0 8px 30px rgba(0,0,0,.6)}#achMile.am-magic .am-box{border-color:#a78bfa;box-shadow:0 0 26px rgba(167,139,250,.6)}#achMile img{width:150px;max-width:70%;height:auto;border-radius:8px;image-rendering:pixelated;margin-bottom:8px}#achMile .am-t{font-size:14px;color:#f3d88a;margin-bottom:8px}#achMile .am-w{font-size:13px;line-height:1.6;margin-bottom:12px;text-align:left}#achMile .am-w b{margin-right:6px;color:#c9b6f5}@keyframes amIn{from{opacity:0}to{opacity:1}}</style>');
+  
 })();

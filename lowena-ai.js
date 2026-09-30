@@ -86,22 +86,22 @@ function lsSet(k,v){ try{ if(v) localStorage.setItem(k,v); else localStorage.rem
 function key(){ return lsGet(KEYN); }
 function saveOn(){ return !(S.settings&&S.settings.dcSave===false); }
 function sysPrompt(){ var d=new Date(Date.now()+9*36e5), ds=d.getUTCFullYear()+'년 '+(d.getUTCMonth()+1)+'월 '+d.getUTCDate()+'일 '+['일','월','화','수','목','금','토'][d.getUTCDay()]+'요일 '+d.getUTCHours()+'시';
-  var mt='', cx=''; try{ mt=memText(); }catch(e){} try{ cx=ctxText(); }catch(e){}
-  var an=''; try{ var A=LQD.arcNow(); if(A.note) an='이번 주 이웃 소식(참고용): '+A.note+' 사용자가 이웃 이야기를 꺼내거나 자연스러울 때만 가볍게 언급하고, 여기 적힌 것 이상은 지어내지 마.'; }catch(e){}
-  var dl=''; try{ dl=window.lqDayText(); }catch(e){}
+  var mt='', cx=''; try{ mt=memText(); }catch(e){ LQ.err(e); } try{ cx=ctxText(); }catch(e){ LQ.err(e); }
+  var an=''; try{ var A=LQD.arcNow(); if(A.note) an='이번 주 이웃 소식(참고용): '+A.note+' 사용자가 이웃 이야기를 꺼내거나 자연스러울 때만 가볍게 언급하고, 여기 적힌 것 이상은 지어내지 마.'; }catch(e){ LQ.err(e); }
+  var dl=''; try{ dl=window.lqDayText(); }catch(e){ LQ.err(e); }
   return window.lowenaSystemPrompt('현재 시각: '+ds+' (한국 시간).'+(cx?'\n\n'+cx:'')+(mt?'\n\n'+mt:'')+(an?'\n\n'+an:'')+(dl?'\n\n'+dl:'')); }
 function migrate(){ try{
   if(!key()){ var o=lsGet(OLDKEY); if(o) lsSet(KEYN,o); }
   if(lsGet(OLDKEY)){ lsSet(OLDKEY,''); }
   if(lsGet(OLDMOD)){ lsSet(OLDMOD,''); }
   var raw=lsGet(OLDHIST);
-  if(raw){ var a=[]; try{ a=JSON.parse(raw)||[]; }catch(e){}
+  if(raw){ var a=[]; try{ a=JSON.parse(raw)||[]; }catch(e){ LQ.err(e); }
     if(a.length){ var L=(S.deepChats=S.deepChats||[]), m=[]; a.forEach(function(x){ if(x&&x.content) m.push({r:x.role==='user'?'me':'lw',t:String(x.content)}); });
       if(m.length){ L.push({id:'dc'+Date.now(),ts:Date.now(),d:todayStr(),m:m}); while(L.length>60) L.shift(); } }
     lsSet(OLDHIST,''); save(); }
   var L2=S.deepChats||[], ch=false; L2.forEach(function(c){ (c.m||[]).forEach(function(x){ if(x.r==='rw'){ x.r='lw'; ch=true; } }); }); if(ch) save();
   if(S.settings&&'deepChat' in S.settings){ delete S.settings.deepChat; save(); }
-}catch(e){} }
+}catch(e){ LQ.err(e); } }
 
 /* --- API 호출 --- */
 async function call(msgs,max,sysOverride){
@@ -110,7 +110,7 @@ async function call(msgs,max,sysOverride){
   try{ r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:ctl.signal,headers:{'content-type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:max||600,system:sysOverride||sysPrompt(),messages:msgs})}); }
   catch(e){ clearTimeout(to); throw new Error(e&&e.name==='AbortError'?'응답이 너무 오래 걸려요. 잠시 뒤에 다시 해 봐요.':'연결에 실패했어요. 네트워크를 확인해 주세요.'); }
   clearTimeout(to);
-  if(!r.ok){ var em=''; try{ em=(await r.json()).error.message; }catch(e){}
+  if(!r.ok){ var em=''; try{ em=(await r.json()).error.message; }catch(e){ LQ.err(e); }
     throw new Error(r.status===401?'API 키가 올바르지 않아요. 설정에서 다시 넣어 주세요.':r.status===429?'요청이 너무 많거나 사용 한도에 걸렸어요. 잠시 뒤에 다시 해 봐요.':(r.status+' '+em)); }
   var d=await r.json(); return (d.content||[]).filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; }).join('').trim();
 }
@@ -162,7 +162,7 @@ function ctxText(){
     var t=todayStr(), L=[], dow=new Date(t+'T00:00:00Z').getUTCDay();
     L.push('- 골드: '+(S.gold||0));
     var act=(S.dailyQuests||[]).filter(function(q){ return q.active&&!(q.off||[]).includes(dow); }), day=(S.history&&S.history[t])||{done:{}}, dd=day.done||{};
-    var dn=act.filter(function(q){ return dd[q.id]; }), rest=act.filter(function(q){ return !dd[q.id]; }), need=Math.ceil(act.length*((S.settings&&S.settings.clearPercent)||75)/100-1e-9), st=0; try{ st=curStreak(); }catch(e){}
+    var dn=act.filter(function(q){ return dd[q.id]; }), rest=act.filter(function(q){ return !dd[q.id]; }), need=Math.ceil(act.length*((S.settings&&S.settings.clearPercent)||75)/100-1e-9), st=0; try{ st=curStreak(); }catch(e){ LQ.err(e); }
     L.push('- 오늘의 데일리 퀘스트: '+dn.length+'/'+act.length+' 완료 (클리어 기준 '+need+'개)'+(st?' · 연속 클리어 '+st+'일':'')+(dn.length?' · 완료: '+nm(dn):'')+(rest.length?' · 남음: '+nm(rest):''));
     (S.mainQuests||[]).forEach(function(q){ var nmq=clip(q.name,24), x='';
       if(q.type==='debt'){ x=(q.original>0?Math.max(0,Math.min(100,Math.round((1-q.current/q.original)*100))):0)+'% 상환'; }
@@ -212,8 +212,8 @@ async function summarize(c,why){
       m.items.push({id:'lm'+Date.now()+Math.floor(Math.random()*1000),ts:Date.now(),d:todayStr(),k:o.k,imp:o.imp,t:o.t}); });
     var sm=clip(j.summary,160); if(sm) m.eps.push({id:'le'+Date.now(),ts:Date.now(),d:c.d||todayStr(),t:sm});
     c.su=upto; save(); ok=true; await compactIf();
-  }catch(e){}
-  sumBusy=false; note(); try{ if(DC.view==='mem') dcMem(); }catch(e){} return ok; }
+  }catch(e){ LQ.err(e); }
+  sumBusy=false; note(); try{ if(DC.view==='mem') dcMem(); }catch(e){ LQ.err(e); } return ok; }
 async function compactIf(){ var m=mem(); if(m.items.length<=40&&m.eps.length<=14) return;
   try{ var older=m.eps.slice(0,Math.max(0,m.eps.length-6));
     var pl='[기억 목록]\n'+m.items.map(function(x){ return x.k+'|'+x.imp+'|'+x.t; }).join('\n')+'\n\n[오래된 대화 요약]\n'+(older.map(function(e){ return e.d+' '+e.t; }).join('\n')||'(없음)');
@@ -258,13 +258,13 @@ window.dcSaveToggle=function(v){ S.settings.dcSave=!!v; save(); note(); toast(v?
 window.dcWipe=function(){ askOk('저장된 로웨나 대화를 모두 삭제할까요? (장기 기억은 밀담실의 🧠 기억에서 따로 지워요. 되돌릴 수 없어요)',function(){ S.deepChats=[]; DC.cur=null; save(); toast('삭제했어요'); }); };
 window.dcSync=function(){ var ss=document.getElementById('dcSaveSel'); if(ss) ss.value=saveOn()?'1':'0'; var st=document.getElementById('lwStateSel'); if(st) st.value=stateOn()?'1':'0';
   var k=key(), ki=document.getElementById('dcKey'); if(ki){ ki.value=''; ki.placeholder=k?(k==='demo'?'demo 모드':'저장됨 (•••• '+k.slice(-4)+')'):'sk-ant-...'; } };
-var _rm=window.renderMaster; window.renderMaster=function(){ if(_rm) _rm.apply(this,arguments); try{ dcSync(); }catch(e){} };
+LQ.on('master:after',function(){ try{ dcSync(); }catch(e){ LQ.err(e); } });
 
 /* --- 밀담실에 버튼 하나 (기존 기능은 그대로 두고 아래에 덧붙임) --- */
 var _oc=window.openConfess; window.openConfess=function(){ var r=_oc.apply(this,arguments);
-  try{ if(!document.getElementById('dcBtn')){ var sb=document.getElementById('cfSendBtn'); if(sb){ var b=document.createElement('button'); b.className='cfb'; b.id='dcBtn'; b.style.width='100%'; b.textContent='💬 로웨나와 대화'; b.onclick=window.dcOpen; sb.insertAdjacentElement('afterend',b); } } }catch(e){}
+  try{ if(!document.getElementById('dcBtn')){ var sb=document.getElementById('cfSendBtn'); if(sb){ var b=document.createElement('button'); b.className='cfb'; b.id='dcBtn'; b.style.width='100%'; b.textContent='💬 로웨나와 대화'; b.onclick=window.dcOpen; sb.insertAdjacentElement('afterend',b); } } }catch(e){ LQ.err(e); }
   return r; };
 migrate();
-setTimeout(function(){ try{ var L=(S.deepChats||[]).slice().reverse().filter(function(c){ return uns(c).length>=8; }); if(L.length&&L[0]!==DC.cur) summarize(L[0],'close'); }catch(e){} },6000);
-document.head.insertAdjacentHTML('beforeend','<style>#dcOv{position:fixed;inset:0;z-index:90;display:none;flex-direction:column;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 14px);background:radial-gradient(ellipse at 50% 90%,rgba(255,170,70,.25),transparent 60%),linear-gradient(#1a0f08,#0f0805 85%);color:#f3e6c4}#dcOv>*{width:min(440px,100%);box-sizing:border-box;flex:none}#dcOv .dc-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;width:auto;background:rgba(30,18,10,.6);border:1px solid rgba(209,168,86,.5);color:#e8d7a8;border-radius:14px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;z-index:2}#dcOv .dc-face{width:84px;height:84px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;box-shadow:0 0 22px rgba(255,180,80,.35)}#dcOv .dc-face img{width:100%;height:100%;object-fit:cover;display:block}#dcLog{flex:1 1 auto!important;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px}.dc-b{max-width:86%;padding:9px 12px;border-radius:10px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:keep-all}.dc-b.lw{align-self:flex-start;background:var(--parch);color:var(--ink);border:1px solid var(--gold-d)}.dc-b.me{align-self:flex-end;background:rgba(40,25,14,.85);border:1px solid rgba(209,168,86,.6);color:#f6ecd2}.dc-b.wait{opacity:.6}.dc-b.err{font-size:12px;opacity:.85}.dc-b.small{font-size:11px;opacity:.6}.dc-b.care{align-self:stretch;max-width:100%;background:rgba(181,83,60,.2);border:1px solid #b5533c;color:#f6ecd2;font-size:13px}.dc-note{font-size:11px;color:#a99a76;text-align:center}#dcIn{background:rgba(40,25,14,.78);color:#f6ecd2;border:1px solid rgba(209,168,86,.6);border-radius:3px;padding:8px;font-size:16px;font-family:inherit;resize:none;margin:0}.dc-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(209,168,86,.4);border-radius:6px;font-size:13px;flex:none}.dc-row span{flex:1;cursor:pointer}.dc-row small{opacity:.6}</style>');
+setTimeout(function(){ try{ var L=(S.deepChats||[]).slice().reverse().filter(function(c){ return uns(c).length>=8; }); if(L.length&&L[0]!==DC.cur) summarize(L[0],'close'); }catch(e){ LQ.err(e); } },6000);
+
 })();

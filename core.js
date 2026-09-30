@@ -3,9 +3,12 @@
    LQ.on('screen:before', fn(화면))  화면을 바꾸기 직전
    LQ.on('screen:after',  fn(화면))  화면을 바꾼 직후
    LQ.on('screen:done',   fn(화면))  오류가 나도 반드시 실행 (마무리용)
-   LQ.on('treasure:rendered', fn())   트레저 탭을 다 그린 직후 */
+   LQ.on('treasure:rendered', fn())   트레저 탭을 다 그린 직후
+   LQ.on('master:after', fn())        설정 화면(QUEST MASTER)을 다 그린 직후
+   LQ.err(e)                          조용히 넘긴 오류를 남겨요. 콘솔에서 localStorage.setItem('lq_debug','1') 하면 보여요 */
 window.LQ=(function(){ var H={};
-  return { on:function(ev,fn){ (H[ev]=H[ev]||[]).push(fn); },
+  return { err:function(e){ try{ if(localStorage.getItem('lq_debug')) console.warn('[LQ]',e); }catch(x){} },
+           on:function(ev,fn){ (H[ev]=H[ev]||[]).push(fn); },
            fire:function(ev,a){ (H[ev]||[]).forEach(function(f){ try{ f(a); }catch(e){ console.error('[LQ:'+ev+']',e); } }); } };
 })();
 /* ===== 대사 창고 (LQD) =====
@@ -22,7 +25,7 @@ window.LQD=(function(){
   function h(s){ var x=5381; s=String(s); for(var i=0;i<s.length;i++) x=((x<<5)+x+s.charCodeAt(i))>>>0; return x.toString(36); }
   function isO(e){ return e&&typeof e==='object'&&!Array.isArray(e); }
   function txt(e){ return typeof e==='string'?e:Array.isArray(e)?e.slice(0,3).join('|'):(isO(e)&&e.t!=null?String(e.t):JSON.stringify(e)); }
-  function ctx(){ var hr=12,mo=1,dow=0; try{ hr=kstNow().getUTCHours(); var d=todayStr(); mo=+d.slice(5,7); dow=new Date(d+'T00:00:00Z').getUTCDay(); }catch(e){}
+  function ctx(){ var hr=12,mo=1,dow=0; try{ hr=kstNow().getUTCHours(); var d=todayStr(); mo=+d.slice(5,7); dow=new Date(d+'T00:00:00Z').getUTCDay(); }catch(e){ LQ.err(e); }
     var a=arcNow();
     return {tod:(hr>=22||hr<5)?'night':hr<11?'morn':hr<17?'day':'eve', season:(mo>=3&&mo<=5)?'sp':(mo>=6&&mo<=8)?'su':(mo>=9&&mo<=11)?'au':'wi', month:mo, dow:dow, arc:a.id, beat:a.beat}; }
   /* 이번 주 이야기: 월요일에 시작해 한 주 동안 이어져요. beat a(월·화) b(수·목) c(금·토) d(일) */
@@ -122,17 +125,17 @@ function defaultData(){
 let S;
 try{ S = JSON.parse(localStorage.getItem(KEY)) || defaultData(); }catch(e){ S = defaultData(); }
 let _saveWarned=false;
-try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){ LQ.err(e); }
 ensureAchievements();
 ensureMisc();
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); _saveWarned=false; }catch(e){ if(!_saveWarned){ _saveWarned=true; try{ toast('⚠ 저장 실패! 백업 코드를 만들어 두세요'); }catch(_){} } } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); _saveWarned=false; }catch(e){ if(!_saveWarned){ _saveWarned=true; try{ toast('⚠ 저장 실패! 백업 코드를 만들어 두세요'); }catch(_){ LQ.err(_); } } } }
 let calOffset=0;
 let lastDay=todayStr();
 function dayChanged(){ return todayStr()!==lastDay; }
 function rolloverDay(){
   lastDay=todayStr(); calOffset=0;
-  try{ ensureMisc(); computeToday(); save(); }catch(e){}
-  setTimeout(()=>{ try{ monthlyAutoCheck(); }catch(e){} },300);
+  try{ ensureMisc(); computeToday(); save(); }catch(e){ LQ.err(e); }
+  setTimeout(()=>{ try{ monthlyAutoCheck(); }catch(e){ LQ.err(e); } },300);
   const a=document.querySelector('.screen.active'); showScreen(a?a.id.replace('screen-',''):'home');
 }
 function checkRollover(){ if(dayChanged()) rolloverDay(); }
@@ -246,7 +249,7 @@ function updateHomeMascot(active,doneCount,cleared){
   else if(doneCount>0){ const need=Math.max(1,Math.ceil(active.length*S.settings.clearPercent/100-1e-9)-doneCount); mood='cheer'; msg=pick([`클리어까지 ${need}개 남았어요. 조금만 더!`,`좋아요, 잘 하고 있어요! ${need}개만 더 하면 클리어예요.`,'한 걸음씩, 그거면 충분해요.','이 페이스 좋아요. 계속 가봐요.']); }
   else{ mood='idle'; msg=pick(['오늘의 모험, 지금부터 시작해볼까요?','책장을 넘기듯 하나씩 해봐요.','첫 퀘스트부터 가볍게 시작해요.','오늘의 기록장이 펼쳐졌어요.']); }
   if(_say&&S.settings.lowenaReact!==false&&Date.now()-_say.t<(_say.ttl||90000)){ msg=esc(_say.text); mood=_say.mood||mood; }
-  try{ lwFaceBase((_say&&_say.face&&S.settings.lowenaReact!==false&&Date.now()-_say.t<(_say.ttl||90000))?_say.face:(LW_MOOD_FACE[mood]||'greet')); }catch(e){}
+  try{ lwFaceBase((_say&&_say.face&&S.settings.lowenaReact!==false&&Date.now()-_say.t<(_say.ttl||90000))?_say.face:(LW_MOOD_FACE[mood]||'greet')); }catch(e){ LQ.err(e); }
   el.innerHTML=`<div class="mascot-row">${mascotImg(56,mood)}<div class="speech-bubble">${msg}</div></div>`;
 }
 function emptyMascot(msg){ return `<div class="mascot-row">${mascotImg(44)}<div class="speech-bubble">${msg}</div></div>`; }
@@ -318,7 +321,7 @@ function checkAchievements(){
     if(ok){ S.gold=(S.gold||0)+halfG(a.gold||20); a.unlocked=true; a.unlockedAt=todayStr(); celebrate('ach',a.name); }
   });
   save();
-  try{ achMilestone(); }catch(e){}
+  try{ achMilestone(); }catch(e){ LQ.err(e); }
 }
 
 function renderHome(){
@@ -340,7 +343,7 @@ function renderHome(){
   if(active.length===0){ w.textContent=''; }
   else if(cleared){ w.textContent='QUEST CLEAR'; w.className='status-word clear'; }
   else{ w.textContent='QUEST NOT CLEARED'; w.className='status-word notclear'; }
-  updateHomeMascot(active,doneCount,cleared); renderEvents(); renderNightBtn(); try{ renderPantryWarn(); }catch(e){}
+  updateHomeMascot(active,doneCount,cleared); renderEvents(); renderNightBtn(); try{ renderPantryWarn(); }catch(e){ LQ.err(e); }
   const unlocked = S.achievements.filter(a=>a.unlocked);
   const hp=document.getElementById('homeAchievePreview'); hp.className='';
   hp.innerHTML = unlocked.length
@@ -469,7 +472,7 @@ function renderQuests(){
         ${q.recipes.map(r=>`<div class="pl-row" onclick="event.stopPropagation();openRecipeModal('${r.id}')" style="${r.archived?'opacity:.45':''}"><span>${esc(r.name)}</span><span class="cnt">${esc(r.status)}</span></div>`).join('')}</div>`;
     }
   }).join('');
-  try{ lwWatch(); }catch(e){}
+  try{ lwWatch(); }catch(e){ LQ.err(e); }
 }
 
 function payDebt(id){
@@ -608,7 +611,7 @@ function openRecipeModal(id){
 }
 
 
-function buyReward(id){ const r=S.rewards.find(x=>x.id===id); if((S.gold||0)<r.price){ toast('골드가 부족해요'); return; } askOk(r.name+' 을(를) '+r.price+'골드에 구매할까요?',()=>{ S.gold-=r.price; if(r.repeatable) S.rewards.push({id:'r'+Date.now(),name:r.name,price:r.price,owned:true,redeemed:false,repeatable:false}); else r.owned=true; save(); renderTreasure(); renderHome(); try{ lwFaceTemp('give',60000); }catch(e){} toast('보물 획득!'); }); }
+function buyReward(id){ const r=S.rewards.find(x=>x.id===id); if((S.gold||0)<r.price){ toast('골드가 부족해요'); return; } askOk(r.name+' 을(를) '+r.price+'골드에 구매할까요?',()=>{ S.gold-=r.price; if(r.repeatable) S.rewards.push({id:'r'+Date.now(),name:r.name,price:r.price,owned:true,redeemed:false,repeatable:false}); else r.owned=true; save(); renderTreasure(); renderHome(); try{ lwFaceTemp('give',60000); }catch(e){ LQ.err(e); } toast('보물 획득!'); }); }
 function redeem(id){ const r=S.rewards.find(x=>x.id===id); askOk(r.name+' 을(를) 사용할까요?'+(r.repeatable?'':' (되돌릴 수 없어요)'),()=>{ if(r.repeatable) r.uses=(r.uses||0)+1; else r.redeemed=true; save(); checkAchievements(); renderTreasure(); toast('TREASURE USED'); }); }
 /* ===== 마티의 보상 추천·안내 ===== */
 const MARTY_IDEAS=[['🍓 제철 과일 한 접시',20,1],['🧃 편의점 신상 간식',15,1],['📷 인생네컷 찍기',25,1],['🍪 쿠키 구워 먹기',25,1],['🧦 예쁜 양말 한 켤레',30,1],['🪴 작은 화분 하나',40],
@@ -653,7 +656,7 @@ function mgAdd(){ const pv=parseInt(document.getElementById('mgPrice').value,10)
   const r={id:'r'+Date.now(),name:MG.name,redeemed:false,price,owned:price<=0}; if(MG.rep) r.repeatable=true;
   S.rewards.push(r); save(); mgClose(); renderTreasure(); toast('마법냥이: …등록했다냥. ✨'); }
 function addReward(){ martyRewardGuide(); }
-document.head.insertAdjacentHTML('beforeend','<style>.cf-bn{display:block;width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin:0 0 8px;image-rendering:pixelated}.mg-black{display:flex;align-items:center;justify-content:center;font-size:34px;height:58px;background:#1b1426;border:1px solid #5b4780;border-radius:8px}.mg-magic{width:104px!important;border-radius:6px;filter:drop-shadow(0 0 8px rgba(160,120,255,.7))!important}.mg-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}.mg-img{width:58px;height:auto;flex:none;image-rendering:pixelated;filter:drop-shadow(0 0 6px rgba(243,216,138,.5))}.mg-box .speech-bubble{white-space:pre-line;font-size:13px;line-height:1.55}.mg-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;background:#d6c7a0;border:1px solid var(--gold-d);border-radius:5px;padding:9px 11px;margin-bottom:7px;color:var(--ink);font-family:inherit;font-size:13px;cursor:pointer}.mg-opt span{font-size:11px;color:var(--ink-soft)}.mg-foot{display:flex;gap:8px;margin-top:10px}.mg-box input{width:100%;box-sizing:border-box}</style>');
+
 
 function updateBackupInfo(){
   const el=document.getElementById('backupInfo'); if(!el) return;
@@ -670,14 +673,14 @@ function exportBackup(){
 function copyBackup(){
   const ta=document.getElementById('backupText');
   if(!ta.value){ exportBackup(); }
-  ta.focus(); ta.select(); try{ ta.setSelectionRange(0,ta.value.length); }catch(e){}
+  ta.focus(); ta.select(); try{ ta.setSelectionRange(0,ta.value.length); }catch(e){ LQ.err(e); }
   let ok=false;
-  try{ ok=document.execCommand('copy'); }catch(e){}
+  try{ ok=document.execCommand('copy'); }catch(e){ LQ.err(e); }
   if(!ok && navigator.clipboard){ navigator.clipboard.writeText(ta.value).then(()=>toast('COPIED')).catch(()=>toast('길게 눌러 복사하세요')); return; }
   toast(ok?'COPIED':'길게 눌러 복사하세요');
 }
 const PREV_KEY=KEY+'_prev';
-function stashPrevData(){ try{ localStorage.setItem(PREV_KEY, JSON.stringify({t:Date.now(), d:S})); }catch(e){} }
+function stashPrevData(){ try{ localStorage.setItem(PREV_KEY, JSON.stringify({t:Date.now(), d:S})); }catch(e){ LQ.err(e); } }
 function getPrevData(){ try{ const p=JSON.parse(localStorage.getItem(PREV_KEY)); return (p&&p.d&&Array.isArray(p.d.dailyQuests)&&p.d.settings&&p.d.history)?p:null; }catch(e){ return null; } }
 function updateUndoBtn(){ const btn=document.getElementById('undoRestoreBtn'); if(!btn) return; const p=getPrevData(); btn.style.display=p?'':'none';
   if(p) btn.textContent='↩ 복원 전 기록으로 되돌리기 ('+new Date(p.t).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})+' 기준)'; }
@@ -725,7 +728,7 @@ function downloadBackup(){
         return;
       }
     }
-  }catch(e){}
+  }catch(e){ LQ.err(e); }
   saveBackupViaLink(json,fname,done);
 }
 function importBackupFile(inp){
@@ -747,7 +750,7 @@ function initAudio(){
   if(actx){ if(actx.state==='suspended') actx.resume(); return true; }
   try{
     const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false;
-    try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+    try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){ LQ.err(e); }
     actx=new AC(); master=actx.createGain(); sfxGain=actx.createGain(); bgmGain=actx.createGain();
     sfxOut=actx.createGain(); sfxGain.connect(sfxOut); sfxOut.connect(actx.destination); bgmGain.connect(master); master.connect(actx.destination);
     const n=Math.floor(actx.sampleRate*2.4), buf=actx.createBuffer(2,n,actx.sampleRate);
@@ -845,11 +848,18 @@ function renderSoundUI(){
 function unlockAudio(){ if(!(sfxOn()||bgmOn())) return; initAudio(); if(bgmOn()) startBgm(); }
 ['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,unlockAudio,{passive:true}));
 document.addEventListener('click',e=>{ if(e.target.closest&&e.target.closest('button,select')) sfx('tick'); });
+/* 앱을 내리거나 끌 때 '띡' 소리가 나던 원인: 소리가 나는 도중에 오디오를 그대로 멈춰서 파형이 뚝 끊겼어요.
+   먼저 0.05초 동안 볼륨을 0으로 부드럽게 내린 뒤에 멈추고, 돌아오면 볼륨을 다시 올려요. */
+function audioHush(){ if(!actx) return; const t=actx.currentTime;
+  [master,sfxOut,bgmGain].forEach(g=>{ if(g){ try{ g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value,t); g.gain.linearRampToValueAtTime(0,t+.05); }catch(e){ LQ.err(e); } } }); }
 document.addEventListener('visibilitychange',()=>{
   if(!actx) return;
-  if(document.hidden){ if(window._sleepOn) return; stopBgm(); actx.suspend(); }
-  else if(bgmOn()){ actx.resume(); startBgm(); }
+  if(document.hidden){ if(window._sleepOn) return;
+    if(bgmTimer){ clearInterval(bgmTimer); bgmTimer=null; }
+    audioHush(); setTimeout(()=>{ if(document.hidden&&actx&&!window._sleepOn) actx.suspend(); },120); }
+  else { actx.resume(); applyVol(); if(bgmOn()) startBgm(); }
 });
+window.addEventListener('pagehide',()=>{ if(actx&&!window._sleepOn){ if(bgmTimer){ clearInterval(bgmTimer); bgmTimer=null; } audioHush(); } });
 
 const stampQ=[]; let stampBusy=false, stampTimer=null;
 function celebrate(kind,sub){ stampQ.push({kind,sub}); if(!stampBusy) nextStamp(); }
@@ -1048,7 +1058,7 @@ function lwSay(kind,ctx,opt){
   let t=(kind==='streak'&&ctx&&window.LW_MILE&&window.LW_MILE[ctx.n])||P[Math.floor(Math.random()*P.length)]; if(t===_lastSay&&P.length>1) t=P[(P.indexOf(t)+1)%P.length]; _lastSay=t;
   t=t.replace(/\{(\w+)\}/g,(m,k)=>(ctx&&ctx[k]!=null)?ctx[k]:'');
   _say={text:t,t:Date.now(),mood:(opt&&opt.mood)||'cheer',face:LW_KIND_FACE[kind]||((opt&&opt.mood)==='clear'?'smile':'proud')}; if(opt&&opt.toast) setTimeout(()=>toast('로웨나: '+t),1700);
-  try{ lwFaceTemp(_say.face,45000); }catch(e){}
+  try{ lwFaceTemp(_say.face,45000); }catch(e){ LQ.err(e); }
 }
 function lwCat(name){ return /걷|산책/.test(name)?'walk':/근력|웨이트|근육/.test(name)?'str':/운동|헬스|러닝/.test(name)?'ex':/저녁|식사|밥/.test(name)?'dinner':/취침|수면|잠/.test(name)?'sleep':/스트레칭|요가/.test(name)?'stretch':/물|수분/.test(name)?'water':/디저트|간식/.test(name)?'dessert':'generic'; }
 function lwMetrics(){ const d=debtQ(), cf=S.mainQuests.find(q=>q.type==='stages'), cl=S.subQuests.find(q=>q.id==='cafelab');
@@ -1061,7 +1071,7 @@ function lwWatch(){ const m=lwMetrics(), o=_snap; _snap=m; if(!o||_inTQ) return;
 function lwGreetInit(){ try{ if(S.settings.lowenaReact===false) return; const t=todayStr(), H=S.history;
   if(H[t]&&Object.values(H[t].done||{}).some(Boolean)) return;
   const ks=Object.keys(H).filter(k=>k<t&&Object.values(H[k].done||{}).some(Boolean)).sort(); if(!ks.length) return;
-  if(Math.round((Date.parse(t)-Date.parse(ks[ks.length-1]))/864e5)>=4){ lwSay('comeback',{}); _say.ttl=300000; } }catch(e){} }
+  if(Math.round((Date.parse(t)-Date.parse(ks[ks.length-1]))/864e5)>=4){ lwSay('comeback',{}); _say.ttl=300000; } }catch(e){ LQ.err(e); } }
 const MT={
  walk:['걸었어요? 다리 대신 제가 박수 쳐 드릴게요! 👏','한 걸음, 두 걸음… 세다가 저도 신나서 날아왔어요!'],
  str:['우와, 근육이 반짝반짝! 💪 오늘도 멋졌어요.','무거운 거 들었죠? 저는 이슬 한 방울도 무거운데, 대단해요!'],
@@ -1109,7 +1119,7 @@ function martyPick(P,n,key){ return LQD.pick(key||null,P,{who:'marty',vars:{n:n=
 function martyBand(h){ return h>=22||h<5?'night':h<9?'morn':h<12?'fore':h<14?'lunch':h<18?'aft':'eve'; }
 function martyChatLine(){ const b=martyBand(kstNow().getUTCHours()); let c=null,left=0;
   try{ const act=computeToday().active, day=S.history[todayStr()]||{}, dn=act.filter(q=>(day.done||{})[q.id]).length; left=act.length-dn;
-    c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){}
+    c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){ LQ.err(e); }
   const r=Math.random(); let PP=MT_T[b], kk='marty.time.'+b; if(r<.2){ PP=MT_J; kk='marty.time.joke'; } else if(c&&r<.6){ PP=MT_C[c]; kk='marty.state.'+c; } return martyPick(PP,left,kk); }
 function martyShow(kind,txt){ const el=document.getElementById('martyPop'); if(!el) return;
   const t=txt||(kind&&MT[kind]?martyPick(MT[kind]):martyChatLine()), ms=Math.min(9000,Math.max(3400,1800+t.length*130));
@@ -1124,7 +1134,7 @@ function martyIdle(){ try{ if(S.settings.martyPop===false||S.settings.martyChat=
   if(document.getElementById('modalOverlay').classList.contains('show')||document.querySelector('.mg-box')||document.getElementById('martyPop').className==='show') return;
   const h=kstNow().getUTCHours(); if(h>=1&&h<7) return;
   const m=martyDay(), b=martyBand(h); if(m.b.includes(b)||Date.now()-(m.t||0)<20*6e4) return;
-  m.b.push(b); m.t=Date.now(); save(); martyShow(); }catch(e){} }
+  m.b.push(b); m.t=Date.now(); save(); martyShow(); }catch(e){ LQ.err(e); } }
 setInterval(martyIdle,45000); setTimeout(martyIdle,6000);
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(martyIdle,2500); });
 function setLw(k,v){ S.settings[k]=v; save(); toast(v?'켰어요':'껐어요'); }
@@ -1136,16 +1146,16 @@ function setLw(k,v){ S.settings[k]=v; save(); toast(v?'켰어요':'껐어요'); 
       const act=computeToday().active, dn=act.filter(q=>day.done[q.id]).length, need=Math.ceil(act.length*S.settings.clearPercent/100-1e-9)-dn, q=S.dailyQuests.find(x=>x.id===id), hr=kstNow().getUTCHours();
       if(day.cleared&&!bc){ const st=curStreak(); if([3,7,14,21,30,50,54,100].includes(st)) lwSay('streak',{n:st},{mood:'clear'}); else lwSay('clear',{},{mood:'clear'}); }
       else{ const k=need===1?'almost':dn===1?(hr<8?'early':'first'):lwCat(q?q.name:''); lwSay(k); martyMaybe(.2,k); }
-      renderHome(); }catch(e){}
+      renderHome(); }catch(e){ LQ.err(e); }
   };
-  const _cel=celebrate; celebrate=function(kind,sub){ _cel(kind,sub); try{ if(kind==='event'){ lwSay('event',{},{mood:'clear'}); setTimeout(renderHome,60); } else if(kind!=='clear'){ lwFaceTemp('proud2',60000); } martyMust(kind); }catch(e){} };
-  const _ca2=checkAchievements; checkAchievements=function(){ _ca2(); try{ lwWatch(); }catch(e){} };
+  const _cel=celebrate; celebrate=function(kind,sub){ _cel(kind,sub); try{ if(kind==='event'){ lwSay('event',{},{mood:'clear'}); setTimeout(renderHome,60); } else if(kind!=='clear'){ lwFaceTemp('proud2',60000); } martyMust(kind); }catch(e){ LQ.err(e); } };
+  const _ca2=checkAchievements; checkAchievements=function(){ _ca2(); try{ lwWatch(); }catch(e){ LQ.err(e); } };
 }
 document.body.insertAdjacentHTML('beforeend','<div id="martyPop"></div>');
 lwGreetInit();
 
 /* ===== 고해성사: 로웨나에게 털어놓기 ===== */
-document.head.insertAdjacentHTML('beforeend','<style>.cfb{background:transparent;border:1px solid var(--gold-d);color:var(--gold-d);border-radius:4px;padding:8px 12px;font-size:13px;cursor:pointer;font-family:inherit}.cfb.on{background:var(--gold-d);color:var(--parch)}.cf-ta{width:100%;box-sizing:border-box;background:var(--parch);color:var(--ink);border:1px solid var(--gold-d);border-radius:3px;padding:8px;font-size:16px;font-family:inherit;resize:vertical}.cf-ent{border-top:1px dashed var(--gold-d);padding:10px 0}.cf-ent .m{font-size:11px;color:var(--ink-soft)}.cf-ent .t{white-space:pre-wrap;font-size:14px;margin:4px 0}.cf-ent .r{font-size:13px;color:var(--ink-soft);font-style:italic}.cf-star{background:none;border:none;cursor:pointer;font-size:13px;margin-left:6px;padding:0;vertical-align:middle}</style>');
+
 var CF_LINES={
  sad:['말해 줘서 고마워요. 오늘은 그 마음이 조금 무거웠겠어요.','슬픈 날은 슬픈 채로 있어도 돼요. 정리하지 않아도 괜찮아요.','그런 일이 있었군요. 여기서 다 듣고 있을게요.','애쓰지 않아도 돼요. 오늘은 쉬어 가는 페이지로 두어요.','쓰는 동안 조금은 덜어졌길 바라요. 무거운 건 이 노트에 두고 가도 돼요.','속상했겠어요. 그 마음이 틀린 게 아니에요.','오늘 하루 잘 버텼어요. 따뜻한 걸 마시고 천천히 쉬어요.','혼자 안고 있지 않아도 돼요. 말이 안 돼도 다시 와서 적어도 좋아요.'],
  lonely:['혼자 있다고 해서 정말 아무도 없는 건 아니에요. 저는 여기 있어요.','오늘 그 허전함, 이유 없이 찾아온 게 아니었을 거예요.','곁에 아무도 없다고 느껴지는 밤도 있죠. 그럴 땐 여기 와도 돼요.','외로움을 말로 꺼내는 것도 꽤 용기가 필요한 일이에요.','조용한 시간이 유독 힘들 때가 있죠. 오늘은 제가 옆에 있을게요.','혼자라는 느낌과 실제로 혼자인 건 다를 때가 많아요. 당신을 아는 사람들이 있어요.','이런 마음도 지나가요. 지금은 그냥 흘려보내도 괜찮아요.','털어놔 줘서 고마워요. 다음에 또 이런 밤이 오면 다시 와요.'],
@@ -1307,7 +1317,7 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
     neu:['그 뒤 얘기, 들려줘서 고마워요.','궁금했는데 알려 줘서 고마워요.']
   };
   var FU_KIND={sad:'속상했던 얘기',lonely:'외롭다던 얘기',angry:'화났던 얘기',anxious:'걱정되던 얘기'};
-  document.head.insertAdjacentHTML('beforeend','<style>.cf-fu{font-size:12.5px;color:var(--ink);border:1px solid var(--gold-d);border-radius:6px;padding:8px 10px;margin-bottom:10px;cursor:pointer;background:rgba(243,216,138,.08);line-height:1.5}.cf-fu:hover{background:rgba(243,216,138,.16)}</style>');
+  
 
   window.cfTone=tone; window.cfPk=pk; window.cfPickQuote=pickQuote; window.cfTopicOf=function(t){ var tp=topic(String(t||'')); return tp?tp.ti:-1; };
   window.cfMeta=function(k,t){ var tn=tone(k,t), tp=topic(t); return {tn:tn, tw: tp?(tp.d?tp.d:tp.w):'', ti: tp?tp.ti:-1}; };
@@ -1460,11 +1470,11 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
       var c=ch[i++]; b.textContent+=c; if(i>=ch.length){ fin(); return; }
       setTimeout(step, /[.!?…~]/.test(c)?(fast?110:190):c==='\n'?(fast?150:260):/[,]/.test(c)?(fast?60:110):(fast?22:38)); }
     setTimeout(step,260);
-  }catch(e){} };
+  }catch(e){ LQ.err(e); } };
   window.cfShowTyped=function(h){ showModal(h); cfTypeIn(); };
 
   /* --- 4) 밀담실 전용 화면: 촛불 · 낮은 배경음 · 표정 변화 --- */
-  document.head.insertAdjacentHTML('beforeend','<style>.cf-room{position:fixed;inset:0;z-index:70;display:none;flex-direction:column;align-items:center;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 24px);background:radial-gradient(ellipse at 50% 92%,rgba(255,170,70,.30),transparent 58%),radial-gradient(ellipse at 50% 28%,rgba(120,70,30,.30),transparent 65%),linear-gradient(#1a0f08,#0f0805 82%);color:#f3e6c4}.cf-room.show{display:flex;animation:cfRoomIn .7s ease both}@keyframes cfRoomIn{from{opacity:0}to{opacity:1}}.cf-glow{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 100%,rgba(255,190,90,.24),transparent 55%);animation:cfFlick 3.4s ease-in-out infinite}@keyframes cfFlick{0%,100%{opacity:.85}12%{opacity:1}23%{opacity:.7}41%{opacity:.98}58%{opacity:.78}77%{opacity:1}90%{opacity:.82}}.cf-candles{position:fixed;left:0;right:0;bottom:0;height:0;pointer-events:none}.cf-candle{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:14px;height:46px;border-radius:3px 3px 2px 2px;background:linear-gradient(90deg,#d8c9a4,#f2e6c4 50%,#c7b58a)}.cf-candle:before{content:"";position:absolute;left:50%;top:-22px;width:11px;height:19px;margin-left:-5.5px;border-radius:50% 50% 50% 50%/62% 62% 38% 38%;background:radial-gradient(ellipse at 50% 70%,#fff6c8 0%,#ffcf6b 45%,rgba(255,140,40,0) 78%);box-shadow:0 0 18px 8px rgba(255,170,70,.45);animation:cfFlame 1.3s ease-in-out infinite;transform-origin:50% 100%}.cf-candle:after{content:"";position:absolute;left:50%;top:-4px;width:2px;height:6px;margin-left:-1px;background:#3a2a1a}@keyframes cfFlame{0%,100%{transform:scale(1,1) rotate(-1deg)}25%{transform:scale(.94,1.08) rotate(2deg)}50%{transform:scale(1.04,.95) rotate(-2deg)}75%{transform:scale(.96,1.06) rotate(1deg)}}.cf-inner{position:relative;z-index:1;width:min(440px,100%);margin:auto 0;display:flex;flex-direction:column;align-items:center;gap:12px;padding:34px 0 76px}.cf-face{width:112px;height:112px;border-radius:50%;border:2px solid var(--gold);box-shadow:0 0 26px rgba(255,180,80,.35),0 4px 14px rgba(0,0,0,.6);overflow:hidden;flex:none;background:#2a1a0e}.cf-face img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .25s}.cf-hi{font-size:13.5px;line-height:1.6;text-align:center;min-height:44px;color:#f3e6c4;white-space:pre-line}.cf-room .cf-ta{background:rgba(40,25,14,.78);color:#f6ecd2;border-color:rgba(209,168,86,.6);width:100%}.cf-room .cfb{color:#e8d7a8;border-color:rgba(209,168,86,.6)}.cf-room .cfb.on{background:var(--gold-d);color:var(--parch)}.cf-x{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;z-index:2;background:rgba(30,18,10,.6);border:1px solid rgba(209,168,86,.5);color:#e8d7a8;border-radius:14px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit}body.cf-room-on .modal-overlay{background:rgba(8,4,2,.42)}body.cf-room-on #lowenaPop{display:none!important}body.cf-room-on:not(.cf-cele) #martyPop{display:none!important}@media (prefers-reduced-motion:reduce){.cf-glow,.cf-candle:before{animation:none}.cf-room.show{animation:none}}</style>');
+  
   var FACE_HI={greet:'어서 와요. 여긴 우리 둘뿐이에요.\n하고 싶은 이야기를 편하게 적어 줘요.',proud:'듣고 있어요. 천천히 적어요.',sad:'괜찮아요. 천천히, 조용히 기다릴게요.',angry:'속에 있는 거, 여기다 다 내려놓아요.',worry2:'숨을 천천히 쉬면서 적어 봐요.',worry:'많이 지쳐 보여요. 편하게 적어요.',smile:'좋은 일이에요? 어서 들려줘요!',laugh:'수다 좋죠! 아무 얘기나 편하게 들려줘요.',listen:'응, 듣고 있어요.\n하고 싶은 말, 천천히 다 해도 돼요.',proud2:'듣고 있어요. 천천히 적어요.'};
   /* 표정은 그대로 두고, 먹는 것과 관련된 칩은 문구만 따로 (다이어트 중인 마음에 맞게) */
   var KIND_HI={crave:'당기는 마음, 여기선 솔직해도 괜찮아요.\n뭐가 먹고 싶은지 편하게 적어 줘요.',dessert:'먹었어도 괜찮아요. 여기선 벌점 없어요.\n오늘 어땠는지 편하게 적어 줘요.',hungry:'배고픔은 몸이 보내는 신호예요.\n어떤 하루였는지 편하게 적어 줘요.'};
@@ -1483,7 +1493,7 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
   window.cfRoomAfterSend=function(k){ var r=document.getElementById('cfRoom'); if(!r) return;
     var ta=document.getElementById('cfText'); if(ta) ta.value=''; _cfChip='';
     document.querySelectorAll('#cfChips .cfb').forEach(function(e){ e.classList.remove('on'); });
-    try{ cfMoodLabel(); }catch(e){} cfRoomFace(kindFace(k,'neu'),k); };
+    try{ cfMoodLabel(); }catch(e){ LQ.err(e); } cfRoomFace(kindFace(k,'neu'),k); };
 
   /* 낮은 배경음: 켜져 있는 배경음악은 작게, 장작 타는 소리를 아주 조용히 */
   var amb=null;
@@ -1496,11 +1506,11 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
     var g=actx.createGain(); g.gain.value=0; g.gain.setTargetAtTime(.10,actx.currentTime,.8);
     src.connect(lp); lp.connect(g); g.connect(master); src.start();
     amb={src:src,g:g,t:null};
-  }catch(e){} }
+  }catch(e){ LQ.err(e); } }
   function ambStop(){ try{ if(!amb) return; var a=amb; amb=null; clearTimeout(a.t);
-    a.g.gain.setTargetAtTime(0,actx.currentTime,.25); setTimeout(function(){ try{ a.src.stop(); }catch(e){} },1200);
+    a.g.gain.setTargetAtTime(0,actx.currentTime,.25); setTimeout(function(){ try{ a.src.stop(); }catch(e){ LQ.err(e); } },1200);
     if(bgmGain&&bgmTimer) bgmGain.gain.setTargetAtTime(.8,actx.currentTime,.4);
-  }catch(e){} }
+  }catch(e){ LQ.err(e); } }
 
   window.openConfess=function(){ _cfChip=''; _burn=false; _burning=false; cfVisit();
     var mo=document.getElementById('modalOverlay'); if(mo) mo.classList.remove('show');
@@ -1517,18 +1527,18 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
       +'<button class="cfb" id="cfSendBtn" style="width:100%" onclick="cfSend()">전할게요</button>'
       +'<button class="cfb" style="width:100%" onclick="openConfessLog()">고해 노트 보기</button></div>';
     r.classList.add('show'); document.body.classList.add('cf-room-on'); ambStart(); };
-  window.cfRoomClose=function(){ try{ cfSitStop(true); }catch(e){} try{ cfBreathStop(); }catch(e){} _burn=false; _burning=false; document.querySelectorAll('.cf-fire,.cf-embers').forEach(function(e){ e.remove(); }); var r=document.getElementById('cfRoom'); if(r){ r.classList.remove('show'); r.innerHTML=''; }
+  window.cfRoomClose=function(){ try{ cfSitStop(true); }catch(e){ LQ.err(e); } try{ cfBreathStop(); }catch(e){ LQ.err(e); } _burn=false; _burning=false; document.querySelectorAll('.cf-fire,.cf-embers').forEach(function(e){ e.remove(); }); var r=document.getElementById('cfRoom'); if(r){ r.classList.remove('show'); r.innerHTML=''; }
     document.body.classList.remove('cf-room-on','cf-cele'); _cfChip=''; ambStop(); };
 
   /* ===== C) 밀담실 연출: 촛불 · 쓰고 태우기 · 숨 고르기 · 말없이 곁에 ===== */
   CF_KIND.sit='곁에 있기';
-  document.head.insertAdjacentHTML('beforeend','<style>.cf-tools{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.cf-tools .cfb{font-size:12px;padding:6px 10px}.cf-tools .cfb.on{background:#b5533c;border-color:#b5533c;color:#fff3e0}.cf-pulse{animation:cfPulse 1.6s ease-in-out infinite}@keyframes cfPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,190,90,0)}50%{box-shadow:0 0 12px 3px rgba(255,190,90,.55)}}.cf-note{font-size:11px;color:#a99a76;text-align:center;line-height:1.5;margin-top:-6px}.cf-fire{position:fixed;z-index:4;pointer-events:none;overflow:hidden;border-radius:3px;mix-blend-mode:screen;background:linear-gradient(to top,rgba(255,110,20,.95),rgba(255,190,80,.75) 45%,rgba(255,220,140,0));animation:cfFireUp 2.3s ease-in forwards}@keyframes cfFireUp{0%{clip-path:inset(100% 0 0 0);opacity:.95}60%{clip-path:inset(0 0 0 0);opacity:.95}100%{clip-path:inset(0 0 0 0);opacity:0}}.cf-embers{position:fixed;z-index:4;pointer-events:none}.cf-ember{position:absolute;bottom:0;width:4px;height:4px;border-radius:50%;background:#ffc46b;box-shadow:0 0 8px 2px rgba(255,150,50,.8);opacity:0;animation:cfEmber var(--d,1.8s) ease-out var(--w,0s) forwards}@keyframes cfEmber{0%{opacity:0;transform:translate(0,0)}15%{opacity:1}100%{opacity:0;transform:translate(var(--x,0px),-170px)}}.cf-ta.cf-burning{animation:cfBurnTxt 2.3s ease-in forwards}@keyframes cfBurnTxt{0%{opacity:1;filter:none}40%{opacity:.85;filter:brightness(1.6) sepia(1)}100%{opacity:0;filter:blur(4px) brightness(.3);transform:translateY(-16px)}}@keyframes cfBurnFade{to{opacity:0}}.cf-breath{position:fixed;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:rgba(12,6,3,.92);animation:cfRoomIn .5s ease both}.cf-b-ring{width:230px;height:230px;display:flex;align-items:center;justify-content:center}.cf-b-c{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#ffe6a8,#f0b45a 60%,rgba(240,150,60,.25));box-shadow:0 0 40px 10px rgba(255,170,70,.35);transform:scale(1)}.cf-b-t{font-size:20px;color:#f6e6bd;min-height:30px;text-align:center}.cf-b-s{font-size:13px;color:#b7a67c;min-height:18px;text-align:center}.cf-hi{transition:opacity .8s}.cf-room.cf-sit .cf-inner>*:not(.cf-face):not(.cf-hi):not(#cfSitBox){display:none!important}.cf-room.cf-sit .cf-face{width:150px;height:150px}#cfSitBox{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:8px}.cf-sit-t{font-size:12px;color:#b7a67c;min-height:16px}@media (prefers-reduced-motion:reduce){.cf-fire,.cf-embers{display:none}.cf-ta.cf-burning{animation:cfBurnFade 1s forwards}.cf-b-c{transition:none!important}}</style>');
+  
   var g=function(id){ return document.getElementById(id); };
   var _burn=false, _burning=false, _br=null, _sit=null;
   var reduced=function(){ return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches); };
 
   /* --- 촛불: 이번 주 찾아온 날 수만큼 늘어난다 --- */
-  window.cfVisit=function(){ try{ var t=todayStr(), V=S.cfVisits=S.cfVisits||[]; if(V.indexOf(t)<0){ V.push(t); if(V.length>60) V.splice(0,V.length-60); save(); } }catch(e){} };
+  window.cfVisit=function(){ try{ var t=todayStr(), V=S.cfVisits=S.cfVisits||[]; if(V.indexOf(t)<0){ V.push(t); if(V.length>60) V.splice(0,V.length-60); save(); } }catch(e){ LQ.err(e); } };
   function visitDays(){ var t0=Date.parse(todayStr()); return (S.cfVisits||[]).filter(function(d){ var q=t0-Date.parse(d); return q>=0&&q<7*864e5; }).length; }
   window.cfCandlesHtml=function(){ var n=Math.min(7,Math.max(1,visitDays())), P=[[-150,46],[-126,32],[134,58],[-176,40],[158,36],[-100,50],[110,42],[-72,34],[84,44]], c=Math.min(P.length,2+n), h='<div class="cf-candles">';
     for(var i=0;i<c;i++){ var x=P[i][0]; h+='<i class="cf-candle" style="left:calc(50% '+(x<0?'- '+(-x):'+ '+x)+'px);height:'+P[i][1]+'px"></i>'; }
@@ -1546,10 +1556,10 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
   const k=cfKind(t,_cfChip); let r, full, by='로웨나', img=mascotImg(56,'cheer'), useMarty=false;
   if(cfMartyChance()&&cfTone(k,t)==='neu'&&k!=='tired'&&k!=='joy'){ useMarty=true; by='마티'; img=martyMascotImg(56); r=MT_CONFESS[Math.floor(Math.random()*MT_CONFESS.length)]; full=r; }
   else { r=cfReplyFor(k,t); full=r+cfWeekAware(k); }
-  const eid='cf'+Date.now(); let meta=null, fq=''; try{ if(!useMarty){ meta=cfMeta(k,t); fq=cfFollowQ(k,meta); } }catch(e){}
+  const eid='cf'+Date.now(); let meta=null, fq=''; try{ if(!useMarty){ meta=cfMeta(k,t); fq=cfFollowQ(k,meta); } }catch(e){ LQ.err(e); }
   let cele=false, hard=false; if(!useMarty){ if(k==='joy'||((k==='free'||k==='chat')&&meta&&meta.tn==='pos')){ cele=true; fq=''; } else if(meta&&(meta.tn==='neg'||k==='tired')) hard=true; }
-  (S.confess=S.confess||[]).push({id:eid,ts:Date.now(),d:todayStr(),k:k,text:t,reply:full,by:by,fq:fq||undefined,tn:meta?meta.tn:undefined,tw:(meta&&meta.tw)||undefined,ti:(meta&&meta.ti>=0)?meta.ti:undefined}); save(); try{ cfRoomAfterSend(k); }catch(e){}
-  if(!useMarty){ try{ lwFaceTemp(({sad:'sad',lonely:'sad',angry:'angry',anxious:'worry2',joy:'smile',dessert:'smile',crave:'smile',hungry:'smile',tired:'worry'}[k]||'proud'),120000); }catch(e){} } if(!useMarty) _say={text:r,t:Date.now(),mood:'cheer',ttl:120000}; if(!useMarty&&k!=='sad'&&!cele) setTimeout(()=>martyMaybe(.35,'confess'),700);
+  (S.confess=S.confess||[]).push({id:eid,ts:Date.now(),d:todayStr(),k:k,text:t,reply:full,by:by,fq:fq||undefined,tn:meta?meta.tn:undefined,tw:(meta&&meta.tw)||undefined,ti:(meta&&meta.ti>=0)?meta.ti:undefined}); save(); try{ cfRoomAfterSend(k); }catch(e){ LQ.err(e); }
+  if(!useMarty){ try{ lwFaceTemp(({sad:'sad',lonely:'sad',angry:'angry',anxious:'worry2',joy:'smile',dessert:'smile',crave:'smile',hungry:'smile',tired:'worry'}[k]||'proud'),120000); }catch(e){ LQ.err(e); } } if(!useMarty) _say={text:r,t:Date.now(),mood:'cheer',ttl:120000}; if(!useMarty&&k!=='sad'&&!cele) setTimeout(()=>martyMaybe(.35,'confess'),700);
   cfShowTyped('<div class="mascot-row">'+img+'<div class="speech-bubble" style="white-space:pre-line">'+esc(full)+(fq?'\n\n'+esc(fq):'')+(cele?'\n\n마티를 불러서 같이 축하해도 될까요? 🎉':'')+'</div></div>'+(fq?cfFqBox(eid):'')+(cele?cfCeleBox(eid):'')+(k==='anxious'&&!useMarty?cfBreathBox():'')+'<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:1" onclick="openConfessLog()">고해 노트 보기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>'); };
   function cfBurnSend(){ if(_burning) return; var ta=g('cfText'), t=((ta&&ta.value)||'').trim(); if(!t){ toast('한 줄만 적어 주세요'); return; }
     
@@ -1597,7 +1607,7 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
     var h=g('cfHi'); if(h){ h.style.opacity=1; h.textContent=FACE_HI.greet; } cfRoomFace('greet');
     if(el<60000){ if(silent!==true) toast('언제든 다시 와요'); return; }
     var line=cfPk(SITEND,'sitend')+'\n'+m+'분 동안 함께 있었어요.';
-    (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(말없이 곁에 앉아 있었어요 · '+m+'분)',reply:line}); save(); try{ renderConfess(); }catch(e){}
+    (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(말없이 곁에 앉아 있었어요 · '+m+'분)',reply:line}); save(); try{ renderConfess(); }catch(e){ LQ.err(e); }
     if(silent===true) return;
     cfShowTyped('<div class="mascot-row">'+mascotImg(56,'cheer')+'<div class="speech-bubble" style="white-space:pre-line">'+esc(line)+'</div></div><div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:1" onclick="openConfessLog()">고해 노트 보기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>'); };
 
@@ -1619,7 +1629,7 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
   var FEEL=[[/뿌듯/,'뿌듯함이 가득했던 날'],[/행복/,'행복이 번진 날'],[/기쁘|기뻐/,'기쁨이 가득했던 날'],[/설레/,'설렘이 찾아온 날'],[/신나|신났/,'신나게 웃은 날'],[/다행|안도|놓였|놓이/,'마음이 놓인 날'],[/감사|고마/,'고마움을 느낀 날'],[/재밌|재미있|즐거/,'즐겁게 보낸 날'],[/웃었|웃음/,'크게 웃은 날']];
   var CAT=['🏠 가족과 따뜻했던 날','🤝 좋은 사람들과 함께한 날','💗 설렘이 찾아온 날','💼 일터에서 빛난 날','📚 노력이 결실을 맺은 날','🧭 앞길이 열리는 날','🌿 몸이 가벼웠던 날','🌙 푹 잔 개운한 날','💰 마음이 든든해진 날','🐾 작은 친구와 웃은 날','🎨 좋아하는 걸 즐긴 날','🌤️ 날씨까지 좋았던 날','🪞 내 모습이 마음에 든 날','🤝 마음이 풀린 날','🌱 돌아보고 한 걸음 나아간 날'];
   function achIdeas(e){ var t=String(e.text||'').trim(), d=todayStr(), q=null;
-    try{ q=window.cfPickQuote?cfPickQuote(t):null; }catch(x){}
+    try{ q=window.cfPickQuote?cfPickQuote(t):null; }catch(x){ LQ.err(x); }
     if(!q){ var f=t.split(/[.!?\n~…]/)[0].trim(); q=(f.length>=4&&f.length<=24)?f:null; }
     var qs=q&&q.length>24?q.slice(0,24)+'…':q, ds=d+' · 밀담실에서 나눈 기쁜 순간'+(qs?' · “'+qs+'”':''), L=[], seen={};
     function add(n,desc){ if(!n||seen[n]) return; seen[n]=1; L.push([n,desc||ds]); }
@@ -1644,13 +1654,13 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
     if(S.achievements.some(function(a){ return a.name===name&&a.unlockedAt===t; })){ toast('이미 남긴 업적이에요'); mgClose(); window.__cfAch=null; return; }
     S.achievements.push({id:'a'+Date.now(),name:name,desc:desc,cond:{type:'manual'},gold:2,unlocked:true,unlockedAt:t});
     S.gold=(S.gold||0)+halfG(2); save(); mgClose(); window.__cfAch=null;
-    try{ celebrate('ach',name); }catch(e){} try{ renderAchievements(); renderHome(); }catch(e){} };
+    try{ celebrate('ach',name); }catch(e){ LQ.err(e); } try{ renderAchievements(); renderHome(); }catch(e){ LQ.err(e); } };
   window.cfAchPick=function(i){ var A=window.__cfAch; if(!A||!A.list[i]) return; cfAchAdd(A.list[i][0],A.list[i][1]); };
   window.cfAchCustom=function(){ var A=window.__cfAch||{}, el=document.getElementById('cfAchName'), n=((el&&el.value)||'').trim();
     if(!n){ toast('이름을 한 줄만 적어 주세요'); return; } cfAchAdd('🏅 '+n.replace(/^🏅\s*/,''),A.ds||todayStr()+' · 밀담실에서 나눈 기쁜 순간'); };
-  window.cfCele=function(id){ closeModal(); document.body.classList.add('cf-cele'); try{ sfx('ach'); }catch(e){}
+  window.cfCele=function(id){ closeModal(); document.body.classList.add('cf-cele'); try{ sfx('ach'); }catch(e){ LQ.err(e); }
     var e=(S.confess||[]).find(function(x){ return x.id===id; }), q=null;
-    try{ q=(e&&window.cfPickQuote)?cfPickQuote(e.text):null; }catch(x){}
+    try{ q=(e&&window.cfPickQuote)?cfPickQuote(e.text):null; }catch(x){ LQ.err(x); }
     var t=(q&&q.length<=24&&Math.random()<.85)?cfPk(CELEQ,'celeq').replace('{q}',q):cfPk(CELE,'cele');
     var go=function(){ document.body.classList.remove('cf-cele'); cfAchDialog(id); };
     if(S.settings.martyPop===false){ toast('마티: '+t); setTimeout(go,1300); return; }
@@ -1693,7 +1703,7 @@ function openQotd(){ const ex=qotdEntryToday();
 function qotdSend(){ const t=(document.getElementById('qotdInput').value||'').trim(); if(!t){ toast('한 줄만 적어 주세요'); return; }
   const r=cfReplyFor('qotd',t);
   (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'qotd',q:qotdText(),text:t,reply:r}); save();
-  try{ lwFaceTemp('proud',120000); }catch(e){}
+  try{ lwFaceTemp('proud',120000); }catch(e){ LQ.err(e); }
   _say={text:r,t:Date.now(),mood:'cheer',ttl:120000}; setTimeout(()=>martyMaybe(.3,'confess'),700);
   cfShowTyped('<div class="mascot-row">'+mascotImg(56,'cheer')+'<div class="speech-bubble" style="white-space:pre-line">'+esc(r)+'</div></div>'+'<div style="margin-top:12px"><button class="cfb" style="width:100%" onclick="closeModal()">닫기</button></div>'); }
 
@@ -1701,14 +1711,14 @@ function qotdSend(){ const t=(document.getElementById('qotdInput').value||'').tr
 var HUG_LINES=['꼭 안아줄게요. 아무 말 안 해도 괜찮아요.','토닥토닥, 오늘 하루도 잘 견뎠어요.','괜찮아요, 잠깐 이렇게 있어도 돼요.','당신은 혼자가 아니에요. 여기 제가 있어요.','힘들었죠. 오늘은 그냥 이렇게 쉬어가요.','아무 이유 없이 안아주고 싶은 날이에요.','말이 필요 없을 때도 있죠. 그냥 이렇게 있을게요.','잘하고 있어요, 오늘도 수고했어요.'];
 function hugMe(){ const r=LQD.pick('lowena.hug',HUG_LINES,{who:'lowena'});
   (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'hug',text:'(말없이 안아달라고 했어요)',reply:r}); save();
-  _say={text:r,t:Date.now(),mood:'cheer',ttl:90000}; try{ lwFaceTemp('proud',90000); }catch(e){}
+  _say={text:r,t:Date.now(),mood:'cheer',ttl:90000}; try{ lwFaceTemp('proud',90000); }catch(e){ LQ.err(e); }
   cfShowTyped('<div class="mascot-row">'+mascotImg(56,'cheer')+'<div class="speech-bubble">'+esc(r)+'</div></div><div style="margin-top:12px"><button class="cfb" style="width:100%" onclick="closeModal()">닫기</button></div>'); }
 var MOOD_EMOJI={happy:'😊',okay:'🙂',meh:'😐',sad:'😢',angry:'😠',anxious:'😰'};
 var MOOD_LINES={happy:['좋은 기분이네요! 그 느낌 오래가길 바라요.','오늘 컨디션이 좋아 보여요, 다행이에요.'],okay:['무난한 하루였나 봐요. 그것도 좋아요.','평온한 하루, 그 자체로 좋은 거예요.'],meh:['그럭저럭인 날도 있는 법이죠.','애매한 기분, 그대로 인정해 줘도 돼요.'],sad:['오늘 마음이 가라앉았군요. 무리하지 말아요.','속상한 하루였나 봐요, 잘 버텼어요.'],angry:['오늘 좀 답답했나 봐요. 그 마음 인정해요.','화가 났던 하루, 잠시 내려놓고 가요.'],anxious:['불안한 하루를 보냈군요. 지금은 안전해요.','걱정이 많았던 날이네요, 천천히 가요.']};
 function openMoodCheck(){ showModal('<h3 style="margin-bottom:6px">오늘 기분은 어때요?</h3><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px">'+Object.keys(MOOD_EMOJI).map(m=>'<button class="cfb" style="font-size:22px;padding:10px 14px" onclick="moodCheck(\''+m+'\')">'+MOOD_EMOJI[m]+'</button>').join('')+'</div>'); }
 function moodCheck(m){ const P=MOOD_LINES[m]||['알려줘서 고마워요.']; const r=LQD.pick('lowena.mood.'+m,P,{who:'lowena'});
   (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'mood',text:(MOOD_EMOJI[m]||'')+' 기분 체크인',reply:r}); save();
-  try{ lwFaceTemp({happy:'smile',okay:'proud',meh:'worry',sad:'sad',angry:'angry',anxious:'worry2'}[m]||'greet',90000); }catch(e){}
+  try{ lwFaceTemp({happy:'smile',okay:'proud',meh:'worry',sad:'sad',angry:'angry',anxious:'worry2'}[m]||'greet',90000); }catch(e){ LQ.err(e); }
   toast('로웨나: '+r); closeModal(); }
 
 /* ===== 회상: 예전 고해 노트 다시 꺼내기 ===== */
@@ -1724,30 +1734,30 @@ function weekLetterText(){ const t0=Date.parse(todayStr()); const recent=(S.conf
   const mood=neg>pos?'이번 주엔 마음이 무거운 날이 좀 더 많았던 것 같아요.':pos>neg?'이번 주엔 좋은 순간도 꽤 있었네요.':'이번 주는 이런저런 마음이 고루 섞인 한 주였어요.';
   const detail=[]; if(cnt.sad) detail.push('속상한 얘기 '+cnt.sad+'번'); if(cnt.lonely) detail.push('외로운 얘기 '+cnt.lonely+'번'); if(cnt.angry) detail.push('화났던 얘기 '+cnt.angry+'번'); if(cnt.anxious) detail.push('불안했던 얘기 '+cnt.anxious+'번'); if(cnt.joy) detail.push('기뻤던 얘기 '+cnt.joy+'번');
   const detailText=detail.length?'\n\n'+detail.join(', ')+' 들려줬어요.':'';
-  let topText=''; try{ const tc={}; recent.forEach(e=>{ if(e.tw){ var _w=String(e.tw).replace(/[“”]/g,''); tc[_w]=(tc[_w]||0)+1; } }); const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a])[0]; if(tk&&tc[tk]>=2) topText='\n\n'+tk+' 얘기가 '+tc[tk]+'번 나왔어요. 요즘 마음에 자주 머무는 주제인가 봐요.'; }catch(e){}
+  let topText=''; try{ const tc={}; recent.forEach(e=>{ if(e.tw){ var _w=String(e.tw).replace(/[“”]/g,''); tc[_w]=(tc[_w]||0)+1; } }); const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a])[0]; if(tk&&tc[tk]>=2) topText='\n\n'+tk+' 얘기가 '+tc[tk]+'번 나왔어요. 요즘 마음에 자주 머무는 주제인가 봐요.'; }catch(e){ LQ.err(e); }
   return '이번 주에 저한테 '+recent.length+'번 이야기해 줬네요.\n\n'+mood+detailText+topText+'\n\n어떤 하루였든, 여기까지 온 당신에게 잘했다고 말해주고 싶어요.'; }
 function openWeekLetter(){ showModal('<h3 style="margin-bottom:6px">로웨나의 주간 편지</h3><div class="mascot-row" style="margin-top:6px">'+mascotImg(56,'cheer')+'<div class="speech-bubble" style="white-space:pre-line">'+esc(weekLetterText())+'</div></div><button class="cfb" style="width:100%;margin-top:12px" onclick="closeModal()">닫기</button>'); }
 
-document.head.insertAdjacentHTML('beforeend','<style>.cf-recall{font-size:12px;color:var(--ink-soft);font-style:italic;border:1px dashed var(--gold-d);border-radius:6px;padding:6px 10px;margin-bottom:10px;cursor:pointer}.cf-recall:hover{background:rgba(243,216,138,.08)}</style>');
+
 
 function renderConfess(){ const el=document.getElementById('homeConfess'); if(!el) return; if(S.settings.confess===false){ el.innerHTML=''; return; }
   let recallHtml='';
   try{ if(dateHashDay()%3===0){ const e=recallEntry(); if(e){ const label=CF_KIND[e.k]||''; const snip=e.text.length>36?e.text.slice(0,36)+'…':e.text;
-    recallHtml='<div class="cf-recall" onclick="openConfessLog()">💭 '+esc(e.d)+' · '+esc(label)+' — "'+esc(snip)+'" 그때 이런 얘기 했었죠.</div>'; } } }catch(err){}
+    recallHtml='<div class="cf-recall" onclick="openConfessLog()">💭 '+esc(e.d)+' · '+esc(label)+' — "'+esc(snip)+'" 그때 이런 얘기 했었죠.</div>'; } } }catch(err){ LQ.err(err); }
   const qDone=!!qotdEntryToday();
   el.innerHTML=(cfFuCard()||recallHtml)
     +'<div class="inline" style="margin-bottom:8px"><button class="ghost-btn" style="flex:1" onclick="openConfess()">로웨나의 밀담실</button><button class="ghost-btn" style="flex:1" onclick="openConfessLog()">고해 노트 ('+(S.confess||[]).length+')</button></div>'
     +'<div class="inline" style="margin-bottom:8px"><button class="ghost-btn" style="flex:1" onclick="openQotd()">'+(qDone?'오늘의 질문 ✓':'오늘의 질문')+'</button><button class="ghost-btn" style="flex:1" onclick="openMoodCheck()">기분 체크인</button></div>'
     +'<div class="inline" style="margin-bottom:14px"><button class="ghost-btn" style="flex:1" onclick="hugMe()">그냥 안아주세요</button>'+((S.confess||[]).length>=3?'<button class="ghost-btn" style="flex:1" onclick="openWeekLetter()">주간 편지</button>':'')+'</div>'; }
-{ const _rh=renderHome; renderHome=function(){ _rh(); try{ renderConfess(); }catch(e){} };
-  const _rm=renderMaster; renderMaster=function(){ _rm(); try{ const e=document.getElementById('cfSel'); if(e) e.value=S.settings.confess===false?'0':'1'; }catch(e){} }; }
-try{ renderConfess(); }catch(e){}
-document.head.insertAdjacentHTML('beforeend','<style>#martyPop{z-index:1000;top:25%;bottom:auto;transform:translateY(-50%)}.mp-all{display:flex;flex-direction:column;align-items:flex-start;transform-origin:bottom left;animation:mpIn 3s ease both}.mp-in{animation:none!important}.mp-bub{max-width:min(250px,calc(100vw - 32px));background:var(--parch);color:var(--ink);border:1px solid var(--gold-d);border-radius:10px;padding:8px 12px;font-size:12.5px;line-height:1.45;position:relative;margin:0 0 10px 6px;box-shadow:0 4px 14px rgba(0,0,0,.4);pointer-events:auto;word-break:keep-all}.mp-bub b{display:block;font-size:11px;color:var(--gold-d);margin-bottom:2px}.mp-bub:after{content:\'\';position:absolute;left:34px;bottom:-8px;border:8px solid transparent;border-bottom:0;border-top-color:var(--parch)}</style>');
+{ const _rh=renderHome; renderHome=function(){ _rh(); try{ renderConfess(); }catch(e){ LQ.err(e); } };
+  LQ.on('master:after',function(){ try{ const e=document.getElementById('cfSel'); if(e) e.value=S.settings.confess===false?'0':'1'; }catch(e){ LQ.err(e); } }); }
+try{ renderConfess(); }catch(e){ LQ.err(e); }
+
 
 function resetAllData(){
   askOk('모든 기록(퀘스트 체크, 업적, 고해 노트, 설정 등)이 이 기기에서 지워져요. 계속할까요?',()=>{
     askOk('정말 지울까요? 되돌릴 수 없어요. 필요하면 먼저 백업해 두세요.',()=>{
-      try{ S=defaultData(); S.firstSeen=Date.now(); localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){}
+      try{ S=defaultData(); S.firstSeen=Date.now(); localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ LQ.err(e); }
       location.reload();
     });
   });
@@ -1823,7 +1833,7 @@ function condLabel(c){
   c=c||{type:'manual'}; const n=c.value||1;
   return ({manual:'직접 달성 처리',totalClear:`데일리 퀘스트 누적 ${n}일 클리어`,streak:`${n}일 연속 클리어`,recipes:`레시피 ${n}개 만들기`,videos:`유튜브 영상 ${n}개 완성`,debtZero:'빚 전액 상환',cafeOpen:'404 DRINK BAR 오픈',debtPct:`빚 ${n}% 상환`,bodyDays:`BODY ${n}일 실천`,recipeDone:`COMPLETE 레시피 ${n}개`,nightCount:`하루 마무리 ${n}회`,flag:'히든 조건',rewardsUsed:`보상 ${n}개 사용`,stages:`404 준비 ${n}단계 완료`,earlySleep:`23시 전 마무리 ${n}회`,bodyLogs:`몸 기록 ${n}회`,journal:`밤 한 줄 일기 ${n}회`,buyCount:`보물 ${n}회 구매`,goldTotal:`누적 획득 골드 ${n}`,achCount:`업적 ${n}개 해금`,eventClear:`이벤트 ${n}개 클리어`,pantry:`재료 ${n}개 등록`,giftGot:`선물 ${n}개 받기`,chatTurns:`로웨나 대화 ${n}회`})[c.type]||'직접 달성 처리';
 }
-function manualUnlock(id){ const a=S.achievements.find(x=>x.id===id); if(!a) return; S.gold=(S.gold||0)+halfG(a.gold||20); a.unlocked=true; a.unlockedAt=todayStr(); save(); celebrate('ach',a.name); renderAchievements(); renderHome(); try{ achMilestone(); }catch(e){} }
+function manualUnlock(id){ const a=S.achievements.find(x=>x.id===id); if(!a) return; S.gold=(S.gold||0)+halfG(a.gold||20); a.unlocked=true; a.unlockedAt=todayStr(); save(); celebrate('ach',a.name); renderAchievements(); renderHome(); try{ achMilestone(); }catch(e){ LQ.err(e); } }
 function renderAchEditList(){
   const el=document.getElementById('achEditList'); if(!el) return;
   el.innerHTML = pgSlice('ed',S.achievements).map(a=>`<div class="quest-row"><div class="label">${esc(a.name)}${a.unlocked?' ✦':''}<div class="qdesc2">${condLabel(a.cond)}</div></div>
@@ -1900,6 +1910,8 @@ function renderMaster(){
     <div class="field-row"><label>DEBT 남은 금액</label><input type="number" min="0" value="${dq.current}" onchange="setProg('current',this)"></div>`:'')+(bq?`
     <div class="field-row"><label>BODY 프로젝트 총 일수</label><input type="number" min="1" value="${bq.total}" onchange="setProg('total',this)"></div>`:''); }
 }
+/* 설정 화면을 다 그린 뒤 다른 기능이 붙는 자리: LQ.on('master:after', fn) */
+{ const _rmBase=renderMaster; renderMaster=function(){ _rmBase(); LQ.fire('master:after'); }; }
 function setProg(k,el){
   const tgt=(k==='total')?bodyQ():debtQ(); if(!tgt){ toast('퀘스트를 찾을 수 없어요'); return; }
   const raw=String(el.value).trim(), n=Number(raw), old=tgt[k];
@@ -2002,7 +2014,7 @@ function openNight(replay){
   NT={replay:!!replay,step:0,note:'',line,recap:`LV ${lvInfo().n} ${lvInfo().title} · `+recap,quote:QUOTES[(dn*5+c.doneCount)%QUOTES.length],breath:pickBy(BREATH,3)};
   nightRender(); document.getElementById('night').classList.add('show');
 }
-setInterval(()=>{ try{ renderNightBtn(); }catch(e){} },60000);
+setInterval(()=>{ try{ renderNightBtn(); }catch(e){ LQ.err(e); } },60000);
 function nightGo(n){ const ta=document.getElementById('nightNote'); if(ta) NT.note=ta.value.trim(); NT.step=n; nightRender(); }
 function nightRender(){
   const n=NT, st=['top:8%;left:12%','top:14%;right:16%;animation-delay:1s','bottom:18%;left:20%;animation-delay:.5s','bottom:10%;right:12%;animation-delay:1.6s'].map(x=>`<span class="nstar" style="${x}">✦</span>`).join('');
@@ -2186,7 +2198,7 @@ function checkLevel(){ const L=lvInfo(); if(S.lastLv==null){ S.lastLv=L.n; retur
 const _origCA=checkAchievements; checkAchievements=function(){ _origCA(); checkLevel(); save(); };
 
 /* ===== 레벨 곡선 이전(1회, 레벨업 보상 중복 방지) + 연말 회고 ===== */
-try{ if(!S.lvMig){ S.lvMig=1; S.lastLv=lvInfo().n; save(); } }catch(e){}
+try{ if(!S.lvMig){ S.lvMig=1; S.lastLv=lvInfo().n; save(); } }catch(e){ LQ.err(e); }
 function openYear(y){
   const cy=+todayStr().slice(0,4); y=+y||cy; const Y=String(y), H=S.history, ks=Object.keys(H).filter(d=>d.slice(0,4)===Y);
   const cl=ks.filter(d=>H[d].cleared).length, perf=ks.filter(d=>(H[d].percent||0)>=100).length, done=ks.reduce((t,d)=>t+Object.values(H[d].done||{}).filter(Boolean).length,0);
@@ -2326,7 +2338,7 @@ function _showScreenBase(s){
   document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.toggle('active', b.dataset.s===s));
   if(s==='home'){ renderHome(); renderCalendar(); }
   if(s==='quests') renderQuests();
-  if(s==='achieve'){ try{ checkAchievements(); }catch(e){} renderAchievements(); }
+  if(s==='achieve'){ try{ checkAchievements(); }catch(e){ LQ.err(e); } renderAchievements(); }
   if(s==='treasure') renderTreasure();
   if(s==='master') renderMaster();
 }
@@ -2353,7 +2365,7 @@ document.getElementById('splashImg').src=LIB_FULL;
   sp.addEventListener('click',hide);
 })();
 renderHeaderFox();
-setTimeout(()=>{ try{ monthlyAutoCheck(); }catch(e){} },600);
+setTimeout(()=>{ try{ monthlyAutoCheck(); }catch(e){ LQ.err(e); } },600);
 renderHome();
 renderCalendar();
 renderSoundUI();

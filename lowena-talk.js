@@ -34,7 +34,7 @@ window.lwTasteLine=function(b){ const m=S.settings.lowenaTaste||'some', p=m==='o
   hist.push(x[0]); if(hist.length>3) hist.shift(); return {t:x[1],mood:''}; };
 window.LW_MILE={3:'사흘째예요. 처음 우린 차보다 두 번째 잔이 더 향기롭죠.',7:'일곱 번째 페이지예요. 보이차도 며칠 두어야 맛이 트이는 법이에요.',14:'2주째예요. 우롱차는 몇 번 우릴 때쯤 향이 열려요. 지금이 그때 같아요.',21:'21일째예요. 반복이 결이 되기 시작했어요.',30:'한 달이에요. 서가에 당신의 계절이 하나 쌓였어요.',50:'쉰 번째 페이지예요. 꾸준함이 향처럼 배었어요.',54:'오늘로 쉰네 번째 페이지예요. 겐지 이야기의 쉰네 장을 다 넘긴 셈이에요.',100:'백 일이에요. 오래 우린 차는 이제 당신의 취향이 되었어요.'};
 window.setLwTaste=v=>{ S.settings.lowenaTaste=v; save(); toast(v==='off'?'취향 대사를 껐어요':v==='often'?'취향 대사가 자주 나와요':'취향 대사가 가끔 나와요'); };
-const _rm2=window.renderMaster; window.renderMaster=function(){ _rm2(); const e=$('lwTasteSel'); if(e) e.value=S.settings.lowenaTaste||'some'; };
+LQ.on('master:after',function(){ const e=$('lwTasteSel'); if(e) e.value=S.settings.lowenaTaste||'some'; });
 if($('screen-master')&&$('screen-master').classList.contains('active')) window.renderMaster();
 })();
 
@@ -277,8 +277,8 @@ window.lwChatAnswer=lwChatAnswer;
 const _cr2=window.cfReplyFor;
 window.cfReplyFor=function(k,t,short){
   let ans='', lines=[];
-  try{ ans=lwChatAnswer(t); }catch(e){}
-  if(!ans){ try{ if((S.settings.lowenaTaste||'some')!=='off') lines=lwKwLines(t,short?1:2); }catch(e){} }
+  try{ ans=lwChatAnswer(t); }catch(e){ LQ.err(e); }
+  if(!ans){ try{ if((S.settings.lowenaTaste||'some')!=='off') lines=lwKwLines(t,short?1:2); }catch(e){ LQ.err(e); } }
   window._lwKwHit=!!(ans||lines.length);
   let r; try{ r=_cr2.apply(this,arguments); } finally{ window._lwKwHit=false; }
   if(ans) return NEG.test(k||'')?(r+'\n'+ans):ans;
@@ -475,8 +475,8 @@ function stPick(){
   if(!pool.length) pool=ST_LIST; var s=stRnd(pool); rec.push(s.id); if(rec.length>ST_LIST.length) rec.splice(0,rec.length-ST_LIST.length); return s; }
 var cur=null;
 function bubble(txt,extra){ return '<div class="mascot-row">'+mascotImg(56,'cheer')+'<div class="speech-bubble" style="white-space:pre-line">'+esc(txt)+'</div></div>'+(extra||''); }
-function roomHush(msg){ try{ cfRoomFace('proud'); var h=document.getElementById('cfHi'); if(h&&msg) h.textContent=msg; }catch(e){} }
-function clearInput(){ try{ var ta=document.getElementById('cfText'); if(ta) ta.value=''; cfRoomAfterSend('free'); }catch(e){} }
+function roomHush(msg){ try{ cfRoomFace('proud'); var h=document.getElementById('cfHi'); if(h&&msg) h.textContent=msg; }catch(e){ LQ.err(e); } }
+function clearInput(){ try{ var ta=document.getElementById('cfText'); if(ta) ta.value=''; cfRoomAfterSend('free'); }catch(e){ LQ.err(e); } }
 
 window.stOffer=function(t){
   window.__stText=t||'';
@@ -489,24 +489,24 @@ window.stStart=function(resume){
   var s=null, i=0; if(resume&&S.stResume){ s=stById(S.stResume.id); i=S.stResume.i||0; }
   if(!s){ s=stPick(); i=0; }
   stChain=0; cur={s:s,i:Math.min(i,s.p.length-1)};
-  try{ var t=window.__stText||''; (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(잠들기 전 이야기를 들었어요 · '+s.t.replace(/^\S+\s/,'')+')',reply:'🌙 '+s.t.replace(/^\S+\s/,'')+' 이야기를 들려줬어요'}); save(); }catch(e){}
+  try{ var t=window.__stText||''; (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(잠들기 전 이야기를 들었어요 · '+s.t.replace(/^\S+\s/,'')+')',reply:'🌙 '+s.t.replace(/^\S+\s/,'')+' 이야기를 들려줬어요'}); save(); }catch(e){ LQ.err(e); }
   clearInput(); roomHush('이야기를 들려주는 중이에요.\n눈은 감고 들어도 좋아요.'); stShow(); };
 function stShow(){
   var s=cur.s, n=s.p.length, i=cur.i, last=(i>=n-1);
-  S.stResume={id:s.id,i:i}; try{ save(); }catch(e){}
+  S.stResume={id:s.id,i:i}; try{ save(); }catch(e){ LQ.err(e); }
   var head='<div style="font-size:12px;color:var(--ink-soft);margin:0 0 8px">'+esc(s.t)+' · '+(i+1)+' / '+n+'</div>';
   var btns='<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:2" onclick="stNext()">'+(last?'끝까지 들었어요':'다음')+'</button><button class="cfb" style="flex:1" onclick="stQuit()">그만 들을래요</button></div>';
   var txt=s.p[i]; if(i===0&&!cur.intro){ cur.intro=1; txt=(cur.lead||stRnd(ST_INTRO))+'\n\n'+txt; }
   cfShowTyped(head+bubble(txt,btns)); }
 window.stNext=function(){ if(!cur) return; cur.i++; if(cur.i>=cur.s.p.length) stEnd(); else stShow(); };
-function stEnd(){ S.stResume=null; try{ save(); }catch(e){}
+function stEnd(){ S.stResume=null; try{ save(); }catch(e){ LQ.err(e); }
   roomHush('이야기가 끝났어요.\n이제 눈을 감아도 좋아요.');
   var more=(stChain<2), line=more?stRnd(ST_END):ST_LAST;
   cfShowTyped(bubble(line,'<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">'+(more?'<button class="cfb" onclick="stMore()">📖 하나만 더 들려주세요</button>':'')+'<button class="cfb" onclick="stBye()">🌙 접속 종료 · 인사하고 잘래요</button><button class="cfb" onclick="closeModal()">밀담실에 더 있을래요</button></div>')); }
 window.stMore=function(){ stChain++; var s=stPick(); cur={s:s,i:0,lead:stRnd(ST_MORE)};
-  try{ (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(잠들기 전 이야기를 한 편 더 들었어요 · '+s.t.replace(/^\S+\s/,'')+')',reply:'🌙 '+s.t.replace(/^\S+\s/,'')+' 이야기를 들려줬어요'}); save(); }catch(e){}
+  try{ (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(잠들기 전 이야기를 한 편 더 들었어요 · '+s.t.replace(/^\S+\s/,'')+')',reply:'🌙 '+s.t.replace(/^\S+\s/,'')+' 이야기를 들려줬어요'}); save(); }catch(e){ LQ.err(e); }
   roomHush('이야기를 들려주는 중이에요.\n눈은 감고 들어도 좋아요.'); stShow(); };
-window.stBye=function(){ closeModal(); try{ cfRoomClose(); }catch(e){} setTimeout(function(){ try{ lowenaBye(); }catch(e){} },300); };
+window.stBye=function(){ closeModal(); try{ cfRoomClose(); }catch(e){ LQ.err(e); } setTimeout(function(){ try{ lowenaBye(); }catch(e){ LQ.err(e); } },300); };
 window.stQuit=function(){ cfShowTyped(bubble(stRnd(ST_QUIT),'<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>')); };
 
 /* 밀담실 보내기 가로채기: 자기 싫다는 말이면 이야기를 먼저 제안한다 */
@@ -517,7 +517,7 @@ window.cfSend=function(){
       var ta=document.getElementById('cfText'), bb=document.getElementById('cfBurnBtn'), t=ta?ta.value.trim():'';
       if(t&&!(bb&&bb.classList.contains('on'))&&stIntent(t)){ stOffer(t); return; }
     }
-  }catch(e){}
+  }catch(e){ LQ.err(e); }
   window.__stSkip=false;
   return _send.apply(this,arguments); };
 
@@ -525,10 +525,10 @@ window.cfSend=function(){
 var _oc=window.openConfess;
 window.openConfess=function(){ var r=_oc.apply(this,arguments);
   try{ var tl=document.querySelector('#cfRoom .cf-tools');
-    if(tl&&stOn()&&!document.getElementById('stBtn')){ var b=document.createElement('button'); b.className='cfb'; b.id='stBtn'; b.textContent='🌙 잠들기 전 이야기'; b.onclick=function(){ window.__stText=''; stOffer(''); }; tl.appendChild(b); } }catch(e){}
+    if(tl&&stOn()&&!document.getElementById('stBtn')){ var b=document.createElement('button'); b.className='cfb'; b.id='stBtn'; b.textContent='🌙 잠들기 전 이야기'; b.onclick=function(){ window.__stText=''; stOffer(''); }; tl.appendChild(b); } }catch(e){ LQ.err(e); }
   return r; };
 
 /* 설정 동기화 */
-var _rm=window.renderMaster; window.renderMaster=function(){ if(_rm) _rm.apply(this,arguments); var e=document.getElementById('lwStorySel'); if(e) e.value=(S.settings&&S.settings.sleepStory===false)?'0':'1'; };
+LQ.on('master:after',function(){ var e=document.getElementById('lwStorySel'); if(e) e.value=(S.settings&&S.settings.sleepStory===false)?'0':'1'; });
 window.__stTest={list:ST_LIST,intent:stIntent};
 })();

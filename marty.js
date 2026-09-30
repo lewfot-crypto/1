@@ -15,10 +15,10 @@ function render(){
 }
 function close(){ var o=document.getElementById('askOv'); if(o){ o.classList.remove('show'); o.innerHTML=''; } }
 window.mqNext=function(){ if(st>=QG_STEPS.length-1){ close(); } else { st++; render(); } };
-window.mqSkip=function(){ close(); try{ toast('마티: 필요하면 설정에서 다시 불러 주세요!'); }catch(e){} };
+window.mqSkip=function(){ close(); try{ toast('마티: 필요하면 설정에서 다시 불러 주세요!'); }catch(e){ LQ.err(e); } };
 window.martyQuestGuide=function(force){
-  try{ S.flags=S.flags||{}; if(!force){ if(S.flags.questGuide) return; S.flags.questGuide=1; save(); } }catch(e){}
-  if(force){ try{ closeModal(); }catch(e){} try{ showScreen('quests'); }catch(e){} }
+  try{ S.flags=S.flags||{}; if(!force){ if(S.flags.questGuide) return; S.flags.questGuide=1; save(); } }catch(e){ LQ.err(e); }
+  if(force){ try{ closeModal(); }catch(e){ LQ.err(e); } try{ showScreen('quests'); }catch(e){ LQ.err(e); } }
   st=0; render();
 };
 /* 퀘스트 탭을 처음 열 때 한 번만 */
@@ -117,13 +117,13 @@ renderQuests=function(){
       else if(m.body>o.body) react('body');
       else if(m.rec>o.rec) react('recipe');
     }
-  }catch(e){}
+  }catch(e){ LQ.err(e); }
   return r;
 };
 
 /* 레시피 추가는 화면을 다시 그리지 않고 모달을 열기 때문에 따로 감지 */
 var _ar=addRecipe2;
-addRecipe2=function(name){ var r=_ar.apply(this,arguments); try{ if(active('quests')){ if(qSnap) qSnap.rec=qM().rec; setTimeout(function(){ react('recipe'); },500); } }catch(e){} return r; };
+addRecipe2=function(name){ var r=_ar.apply(this,arguments); try{ if(active('quests')){ if(qSnap) qSnap.rec=qM().rec; setTimeout(function(){ react('recipe'); },500); } }catch(e){ LQ.err(e); } return r; };
 
 /* 보상탭: 골드로 구매 */
 function tM(){

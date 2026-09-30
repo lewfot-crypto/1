@@ -31,7 +31,7 @@
   const OTHER=['짜잔! 자동 백업 완료! 기록을 마티가 꼭 안아 뒀어요 🤗💾','3일 만에 자동 백업했어요! 이제 안심이에요 ✨','마티가 몰래 백업해 놨어요! 비밀이에요, 쉿 🤫💾'];
   function announce(day){
     const h=kstNow().getUTCHours(), L=(h>=5&&h<12)?MORNING:OTHER, text=L[Math.floor(Math.random()*L.length)];
-    try{ localStorage.setItem(NK,day); }catch(e){}
+    try{ localStorage.setItem(NK,day); }catch(e){ LQ.err(e); }
     if(S.settings.martyPop===false){ window.__mtAutoUntil=0; toast('마티: '+text); return; }
     window.__mtAutoUntil=Date.now()+Math.min(9000,Math.max(3400,1800+text.length*130))+800;
     martyShow('autoBackup',text);
@@ -53,7 +53,7 @@
     const cur=rd()[0];
     if(cur&&cur.day===today&&localStorage.getItem(NK)!==today) queue(today);
     refreshUI();
-  }catch(e){} }
+  }catch(e){ LQ.err(e); } }
   window.autoBackupCheck=check;
   setTimeout(check,2500);
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(check,1500); });
@@ -136,11 +136,11 @@
     var k=S.settings.bgPattern==null?'castle':S.settings.bgPattern, sel=document.getElementById('bgPxSel'); if(sel) sel.value=on()?'1':'0';
     if(k==='none'||!on()){ stop(); return; }
     var b=bgLayer().style; b.backgroundImage='linear-gradient(rgba(23,14,8,.90),rgba(20,12,7,.94)), url('+BG_TEXTURE+')'; b.backgroundSize='cover, cover'; b.backgroundRepeat='no-repeat, no-repeat';
-    start(k); }catch(e){} };
+    start(k); }catch(e){ LQ.err(e); } };
   window.setBgPixel=function(v){ S.settings.bgPixel=!!v; save(); applyBg(); toast(v?'도트 애니메이션을 켰어요':'부드러운 그림으로 되돌렸어요'); };
   document.addEventListener('visibilitychange',function(){ if(!document.hidden&&cv&&cv.style.display!=='none'&&!timer) frame(); });
   var rz=null; window.addEventListener('resize',function(){ clearTimeout(rz); rz=setTimeout(function(){ if(cv&&cv.style.display!=='none'){ var d=dims(); if(d[0]===W&&d[1]===H) return; size(); build(kind); if(!timer) frame(); } },200); });
-  try{ applyBg(); }catch(e){}
+  try{ applyBg(); }catch(e){ LQ.err(e); }
 })();
 
 /* ===== 로웨나 서재 픽셀 모션 (촛불·먼지·마법 반짝임) — 배경 픽셀 효과와 같은 방식 ===== */
@@ -195,6 +195,6 @@
 
 /* (예전 '자유 대화'는 아래 '로웨나 AI 대화 (통합)' 모듈로 합쳐졌어요. 여기엔 잠들기 버튼 위치 정리만 남겨요.) */
 (function(){
-  function inject(){ try{ var st=document.getElementById('stBtn'), mo=document.getElementById('cfMore'); if(st&&mo&&st.parentNode!==mo) mo.appendChild(st); }catch(e){} }
+  function inject(){ try{ var st=document.getElementById('stBtn'), mo=document.getElementById('cfMore'); if(st&&mo&&st.parentNode!==mo) mo.appendChild(st); }catch(e){ LQ.err(e); } }
   new MutationObserver(inject).observe(document.body,{childList:true,subtree:true});
 })();

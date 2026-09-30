@@ -2,7 +2,7 @@
 const $=id=>document.getElementById(id);
 const inM=()=>{const e=$('screen-master');return !!(e&&e.classList.contains('active'));};
 const pop=t=>{ if(S.settings.martyPop===false) toast('마티: '+t); else martyShow(null,t); };
-document.head.insertAdjacentHTML('beforeend','<style>.mt-qb{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.mt-qb button{background:#d6c7a0;border:1px solid var(--gold-d);border-radius:12px;color:var(--ink);padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit}#mtGuide{margin-bottom:14px}#mtGuide .speech-bubble b{font-size:11px;color:var(--gold-d)}.mg-box .mg-foot .gold-btn,.mg-box .mg-foot .ghost-btn{flex:1}</style>');
+
 function dlg(say,body,btns){ const o=$('askOv'); window._mtB=btns;
   o.innerHTML='<div class="ask-box mg-box"><div class="mg-row"><img class="mg-img" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble">'+say+'</div></div>'+(body||'')+'<div class="mg-foot">'+btns.map((b,i)=>'<button class="'+(b[2]||'ghost-btn')+'" onclick="_mtBtn('+i+')">'+b[0]+'</button>').join('')+'</div></div>';
   o.classList.add('show'); const inp=o.querySelector('input[type=text],input:not([type])'); if(inp) setTimeout(()=>inp.focus(),60); }
@@ -23,14 +23,14 @@ function rd(){
 }
 /* 규칙 변경: 설명 후 확인 */
 window.mtRule=function(k,el){ const old=k==='clear'?S.settings.clearPercent:dayStartH(), v=+el.value; if(v===old) return;
-  let n=0; try{ n=computeToday().active.length; }catch(e){}
+  let n=0; try{ n=computeToday().active.length; }catch(e){ LQ.err(e); }
   const say=k==='clear'?'CLEAR 기준을 '+old+'% → '+v+'%로 바꿀까요?\n지금 퀘스트가 '+n+'개라면 '+Math.ceil(n*v/100-1e-9)+'개를 해야 클리어예요. '+(v>old?'조금 더 도전적이에요!':'조금 더 여유로워져요.'):'하루 시작을 '+old+'시 → '+v+'시로 바꿀까요?\n한국시간 '+v+'시 전의 밤은 전날로 계산돼요. 캘린더의 날짜 구분이 달라질 수 있어요.';
   dlg(say,'',[['그대로 둘래요',()=>{ el.value=old; }],['바꿀게요',()=>{ (k==='clear'?setClearPercent:setDayStart)(v); pop(k==='clear'?'기준을 '+v+'%로 맞췄어요. 오늘 계산부터 적용돼요!':'하루 시작을 '+v+'시로 맞췄어요!'); },'gold-btn']]); };
 /* 삭제/일시정지/초기화 */
 window.deleteDQ=function(id){ const q=S.dailyQuests.find(d=>d.id===id); if(!q) return;
   dlg("'"+esc(q.name)+"' 퀘스트를 삭제할까요?\n삭제하면 목록에서 사라져요. 잠깐만 쉬게 하려면 ⏸(일시정지)가 더 안전해요!",'',[['⏸ 일시정지',()=>{ if(q.active) toggleActiveDQ(id); }],['삭제할게요',()=>{ S.dailyQuests=S.dailyQuests.filter(d=>d.id!==id); save(); renderMaster(); renderHome(); pop('삭제했어요. 필요하면 언제든 새로 만들어요!'); },'gold-btn'],['취소',null]]); };
 const _tg=window.toggleActiveDQ; window.toggleActiveDQ=function(id){ _tg(id); const q=S.dailyQuests.find(d=>d.id===id); if(q) pop(q.active?"'"+q.name+"' 다시 시작해요! 💪":"'"+q.name+"'는 잠깐 쉬어요. ▶로 언제든 깨워 줘요 🌙"); };
-window.resetAllData=function(){ dlg('모든 기록을 지우려는 거예요? 😢\n퀘스트 체크, 업적, 고해 노트, 설정이 이 기기에서 전부 사라져요. 먼저 백업해 두면 안전해요!','',[['💾 백업부터',()=>{ exportBackup(); const t=$('backupText'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'center'}); }],['그래도 지울게요',()=>{ dlg('정말 정말 지울까요?\n되돌릴 수 없어요. 마지막 확인이에요!','',[['아니에요',null],['지울게요',()=>{ try{ S=defaultData(); S.firstSeen=Date.now(); localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} location.reload(); },'gold-btn']]); }],['취소',null]]); };
+window.resetAllData=function(){ dlg('모든 기록을 지우려는 거예요? 😢\n퀘스트 체크, 업적, 고해 노트, 설정이 이 기기에서 전부 사라져요. 먼저 백업해 두면 안전해요!','',[['💾 백업부터',()=>{ exportBackup(); const t=$('backupText'); if(t&&t.scrollIntoView) t.scrollIntoView({block:'center'}); }],['그래도 지울게요',()=>{ dlg('정말 정말 지울까요?\n되돌릴 수 없어요. 마지막 확인이에요!','',[['아니에요',null],['지울게요',()=>{ try{ S=defaultData(); S.firstSeen=Date.now(); localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ LQ.err(e); } location.reload(); },'gold-btn']]); }],['취소',null]]); };
 /* 모달 안내 + 저장 후 반응 */
 function tip(t){ const h=$('modalBox').querySelector('h2'); if(!h) return; const d=document.createElement('div'); d.className='mg-row'; d.innerHTML='<img class="mg-img" style="width:44px" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble" style="white-space:pre-line">'+t+'</div>'; h.insertAdjacentElement('afterend',d); }
 [['openDqModal',()=>'이름은 그대로 두고 완료 조건만 적어도 좋아요.\n쉬는 요일을 체크하면 그날은 이 퀘스트가 빠져요!'],
@@ -47,7 +47,7 @@ function guide(){ let b=$('mtGuide'); if(!b){ b=document.createElement('div'); b
   const old=!S.lastBackup||Date.now()-S.lastBackup>7*864e5, noEv=!S.events.some(e=>!evExpired(e));
   const tip=!S.dailyQuests.length?'데일리 퀘스트가 아직 없어요. 같이 하나 만들어 볼까요? 🌱':old?'백업한 지 좀 됐어요. 기록이 사라지지 않게 코드를 만들어 둘까요? 💾':noEv?'이번 달 이벤트가 아직 없어요. 한정 퀘스트를 만들어 볼까요? 🎊':'바꾸고 싶은 게 있어요? 제가 옆에서 안내할게요! ✨';
   b.innerHTML='<div class="mg-row" style="margin:0"><img class="mg-img" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble"><b>마티의 설정 안내</b><br>'+tip+'<div class="mt-qb"><button onclick="mtNewDQ()">🌱 새 퀘스트</button><button onclick="openAchModal()">🏆 새 업적</button><button onclick="openEvModal()">🎊 이벤트</button><button onclick="exportBackup()">💾 백업</button></div></div></div>'; }
-const _rm=window.renderMaster; window.renderMaster=function(){ _rm(); guide(); };
+LQ.on('master:after',function(){ guide(); });
 if(inM()) window.renderMaster();
 })();
 
@@ -77,7 +77,7 @@ let vt=null; const _sv=window.setVol; window.setVol=function(v){ _sv(v); clearTi
 /* 3) 업적·이벤트 편집창: 마티의 추천 */
 const bub=()=>$('modalBox').querySelector('.mg-row .speech-bubble');
 const say=t=>{ const b=bub(); if(b) b.textContent=t; };
-const streakNext=()=>{ let c=0; try{ c=curStreak(); }catch(e){} return [3,5,7,10,14,21,30,50,100].find(x=>x>c)||100; };
+const streakNext=()=>{ let c=0; try{ c=curStreak(); }catch(e){ LQ.err(e); } return [3,5,7,10,14,21,30,50,100].find(x=>x>c)||100; };
 function achIdeas(){ const A=[['🔥 다음 불꽃','연속 '+streakNext()+'일 클리어','streak',streakNext()],['📅 한 달의 모험가','누적 30일 클리어','totalClear',30],['🎁 보상 애호가','보상을 5번 사용하기','rewardsUsed',5],['🌙 일찍 자는 사람','일찍 자기 7번','earlySleep',7],['💰 빚 절반 돌파','빚 50% 상환','debtPct',50],['🏅 나만의 훈장','내가 직접 달성 처리','manual',1]];
   return A.filter(a=>COND_TYPES.some(t=>t[0]===a[2])).sort(()=>Math.random()-.5).slice(0,4); }
 const mon=()=>kstNow().getUTCMonth()+1;
@@ -133,13 +133,13 @@ RT.aft.push('우롱차를 세 번째 우렸어요. 처음보다 지금이 더 �
 RT.eve.push('서가에 백단 향을 피웠어요. 하루가 저무는 냄새예요.','보이차를 우렸어요. 묵은 차일수록 깊은 맛이 나듯, 오늘 하루도 어딘가에 깊이 쌓였을 거예요.','저녁에 피는 꽃이라 유가오라는 이름이 붙었대요. 하루가 저물 때 열리는 것도 있으니까요.','반딧불을 풀어 사람의 얼굴을 비추던 장면이 있어요. 작은 빛 하나면 충분한 저녁도 있죠.','벽난로 곁의 찻잔이 생각나는 저녁이에요. 제인 에어가 그토록 바랐던 따뜻한 자리 같은 시간이죠.');
 RT.night.push('이 시간의 커피는 내일 아침으로 미뤄 둘게요. 대신 향을 하나 피울까요.','오늘은 달이 참 밝네요. …그냥 그렇다는 얘기예요.','침향을 조금 태웠어요. 연기가 곧게 올라가는 걸 보고 있으면 생각이 가라앉아요.','헤이안의 사람들은 달이 뜨면 시부터 떠올렸대요. 당신은 오늘 어떤 한 줄이었나요.','비 오는 밤에 벗들이 밤새 이야기를 나누던 장면이 겐지 이야기에 있어요. 오늘은 조용히 오늘을 정리해 봐요.');
 RM.push('마티가 또 콜드브루 병 주변을 맴돌고 있어요. 요정에게 카페인은 위험한데요.','마티가 향로에 코를 들이밀었다가 재채기를 했어요. 그래도 표정은 뿌듯해 보여요.');
-document.head.insertAdjacentHTML('beforeend','<style>#lowenaPop{position:fixed;left:max(10px,calc((100vw - 480px)/2 + 10px));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:1000;pointer-events:none;display:none;max-width:calc(100vw - 20px)}#lowenaPop.show{display:block}.rp-all{display:flex;align-items:flex-end;gap:8px;animation:rpIn 8s ease both}.rp-all .mascot{flex:none;pointer-events:auto}.rp-bub{max-width:min(230px,calc(100vw - 100px));background:var(--parch);color:var(--ink);border:1px solid var(--gold-d);border-radius:10px;padding:8px 12px;font-size:12.5px;line-height:1.5;position:relative;margin-bottom:8px;box-shadow:0 4px 14px rgba(0,0,0,.4);pointer-events:auto;word-break:keep-all}.rp-bub b{display:block;font-size:11px;color:var(--gold-d);margin-bottom:2px}.rp-bub:before{content:"";position:absolute;left:-7px;bottom:14px;border:7px solid transparent;border-left:0;border-right-color:var(--gold-d)}.rp-bub:after{content:"";position:absolute;left:-5px;bottom:15px;border:6px solid transparent;border-left:0;border-right-color:var(--parch)}@keyframes rpIn{0%{opacity:0;transform:translateY(10px)}9%{opacity:1;transform:none}90%{opacity:1}100%{opacity:0}}.rp-bub .rp-reply{display:block;margin-top:6px;background:transparent;border:1px solid var(--gold-d);color:var(--gold-d);border-radius:10px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:inherit}</style>');
+
 document.body.insertAdjacentHTML('beforeend','<div id="lowenaPop"></div>');
 let _rT=null, visUntil=0, _lastR='';
 const pick=(P,f,key)=>{ let t=LQD.pick(key||null,P,{who:'lowena'}); return f?f(t):t; };
 function lowenaLine(){ const b=martyBand(kstNow().getUTCHours()); let c=null,left=0,dn=0;
   try{ const act=computeToday().active, day=S.history[todayStr()]||{}; dn=act.filter(q=>(day.done||{})[q.id]).length; left=act.length-dn;
-    c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){}
+    c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){ LQ.err(e); }
   const fill=t=>t.replace('{n}',left).replace('{d}',dn), r=Math.random();
   const tl=window.lwTasteLine&&window.lwTasteLine(b); if(tl) return tl;
   if(r<.18) return {t:pick(RM,null,'lowena.home.misc'),mood:''};
@@ -176,12 +176,12 @@ function lowenaIdle(){ try{
   m.b.push(b); if(Math.random()>.45){ save(); return; }
   m.t=Date.now(); save(); const ms=lowenaShow();
   if(S.settings.martyPop!==false&&Math.random()<.4) setTimeout(()=>{ if($('martyPop').className!=='show') martyShow(null,LQD.pick('marty.greet',MTA,{who:'marty'})); },ms+1300);
-}catch(e){} }
+}catch(e){ LQ.err(e); } }
 setInterval(lowenaIdle,50000); setTimeout(lowenaIdle,9000);
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(lowenaIdle,3500); });
 /* 설정 연동 */
 const _lw=window.setLw; window.setLw=function(k,v){ _lw(k,v); if(k==='lowenaChat'){ if(v) lowenaShow('다시 때때로 찾아올게요. 우리 함께 천천히 가요.'); else toast('로웨나: 필요할 때 불러 줘요. 언제든 여기 있어요.'); } };
-const _rm=window.renderMaster; window.renderMaster=function(){ _rm(); const e=$('lowenaChatSel'); if(e) e.value=S.settings.lowenaChat===false?'0':'1'; };
+LQ.on('master:after',function(){ const e=$('lowenaChatSel'); if(e) e.value=S.settings.lowenaChat===false?'0':'1'; });
 if($('screen-master')&&$('screen-master').classList.contains('active')) window.renderMaster();
 })();
 
@@ -189,10 +189,10 @@ if($('screen-master')&&$('screen-master').classList.contains('active')) window.r
 const $=id=>document.getElementById(id);
 const pick=P=>P[Math.floor(Math.random()*P.length)];
 let byeOpen=false;
-document.head.insertAdjacentHTML('beforeend','<style>.rp-bub{white-space:pre-line}#byeScreen{position:fixed;inset:0;z-index:350;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;background:radial-gradient(ellipse at 50% 30%,rgba(120,80,45,.38),transparent 62%),linear-gradient(#1f130b,#170e08 78%);opacity:0;transition:opacity .6s}#byeScreen.show{display:flex}#byeScreen.in{opacity:1}#byeScreen .by-b{width:min(320px,100%);background:var(--parch);color:var(--ink);border:1px solid var(--gold-d);border-radius:10px;padding:14px 16px;font-size:14px;line-height:1.7;white-space:pre-line;box-shadow:0 6px 20px rgba(0,0,0,.5);position:relative;text-align:center}#byeScreen .by-b b{display:block;font-size:11px;color:var(--gold-d);margin-bottom:4px}#byeScreen .by-m{display:flex;align-items:center;gap:8px;width:min(320px,100%);font-size:12.5px;color:var(--parch)}#byeScreen .by-m img{width:44px;image-rendering:pixelated;filter:drop-shadow(0 0 6px rgba(243,216,138,.5));flex:none}#byeScreen .by-h{font-size:11.5px;color:#a99a76;text-align:center;line-height:1.5;min-height:17px}#byeScreen .by-f{display:flex;gap:8px;width:min(320px,100%)}#byeScreen .by-f button{flex:1;margin:0}</style>');
+
 document.body.insertAdjacentHTML('beforeend','<div id="byeScreen"></div>');
 /* 상황 파악 */
-function ctx(){ let c=null,left=0,dn=0; try{ const act=computeToday().active, day=S.history[todayStr()]||{}; dn=act.filter(q=>(day.done||{})[q.id]).length; left=act.length-dn; c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){} let st=0; try{ st=curStreak(); }catch(e){} return {c,left,dn,st}; }
+function ctx(){ let c=null,left=0,dn=0; try{ const act=computeToday().active, day=S.history[todayStr()]||{}; dn=act.filter(q=>(day.done||{})[q.id]).length; left=act.length-dn; c=day.cleared?'cleared':(act.length&&dn===0)?'none':(left>0&&left<=2)?'near':dn>0?'mid':null; }catch(e){ LQ.err(e); } let st=0; try{ st=curStreak(); }catch(e){ LQ.err(e); } return {c,left,dn,st}; }
 const fill=(t,x)=>t.replace('{n}',x.left).replace('{d}',x.dn).replace('{s}',x.st);
 const GO={
  morn:['좋은 아침이에요. 오늘도 우리 함께 시작해요.','어서 와요. 오늘의 첫 페이지를 같이 열어 볼까요?'],
@@ -240,7 +240,7 @@ function greet(kind){ try{
   let ms=lowenaShow(greetText(kind==='return'?'open':kind,first&&kind!=='return'));
   if(kind==='open'){ ms=5000; window.lowenaTrim&&window.lowenaTrim(ms); }
   if(S.settings.martyPop!==false&&Math.random()<(first?.6:.25)) setTimeout(()=>{ if(!byeOpen&&$('martyPop').className!=='show') martyShow(null,LQD.pick('marty.open',MG_OPEN,{who:'marty'})); },ms+1300);
-}catch(e){} }
+}catch(e){ LQ.err(e); } }
 /* 실행화면 다음에 인사 */
 const sp=$('splash');
 if(!sp||!document.body.contains(sp)) setTimeout(()=>greet('open'),800);
@@ -251,18 +251,18 @@ let hiddenAt=0; document.addEventListener('visibilitychange',()=>{ if(document.h
 const _sb=window.startBgm; window.startBgm=function(){ if(byeOpen) return; return _sb.apply(this,arguments); };
 const _rs=window.lowenaShow; window.lowenaShow=function(t){ if(byeOpen&&!t) return 0; return _rs(t); };
 const _ms=window.martyShow; window.martyShow=function(k,t){ if(byeOpen) return; return _ms(k,t); };
-window.lowenaBye=function(){ if(byeOpen) return; byeOpen=true; try{ lowenaHide(); martyHide(); }catch(e){} try{ stopBgm(); }catch(e){}
+window.lowenaBye=function(){ if(byeOpen) return; byeOpen=true; try{ lowenaHide(); martyHide(); }catch(e){ LQ.err(e); } try{ stopBgm(); }catch(e){ LQ.err(e); }
   S.lastBye=Date.now(); save();
   const o=$('byeScreen'); o.innerHTML=mascotImg(96)+'<div class="by-b"><b>로웨나</b>'+esc(byeText())+'</div><div class="by-m"><img src="'+MARTY_IMG+'" alt=""><span>'+esc(LQD.pick('marty.bye',MG_BYE,{who:'marty'}))+'</span></div><div class="by-f"><button class="gold-btn" onclick="byeBack()">다시 돌아가기</button></div>';
   o.classList.add('show'); requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add('in'))); };
-window.byeBack=function(){ const o=$('byeScreen'); o.classList.remove('in'); setTimeout(()=>{ o.classList.remove('show'); o.innerHTML=''; },600); byeOpen=false; try{ if(bgmOn()) startBgm(); }catch(e){} setTimeout(()=>greet('back'),700); };
+window.byeBack=function(){ const o=$('byeScreen'); o.classList.remove('in'); setTimeout(()=>{ o.classList.remove('show'); o.innerHTML=''; },600); byeOpen=false; try{ if(bgmOn()) startBgm(); }catch(e){ LQ.err(e); } setTimeout(()=>greet('back'),700); };
 /* 설정 연동 */
 const _lw=window.setLw; window.setLw=function(k,v){ _lw(k,v); if(k==='lowenaGreet'){ if(v) lowenaShow('앱을 켤 때마다 인사할게요. 어서 와요, 하고요.'); else toast('로웨나: 조용히 맞이할게요. 필요하면 다시 켜 줘요.'); } };
-const _rm=window.renderMaster; window.renderMaster=function(){ _rm(); const e=$('lowenaGreetSel'); if(e) e.value=S.settings.lowenaGreet===false?'0':'1'; };
+LQ.on('master:after',function(){ const e=$('lowenaGreetSel'); if(e) e.value=S.settings.lowenaGreet===false?'0':'1'; });
 if($('screen-master')&&$('screen-master').classList.contains('active')) window.renderMaster();
 })();
 
-document.head.insertAdjacentHTML('beforeend','<style>.mp-bub{max-width:min(440px,calc(100vw - 24px));padding:8px 14px;line-height:1.5}.mp-bub b,.rp-bub b{display:block;margin:0 0 3px 0}.rp-all{flex-direction:column-reverse;align-items:flex-start;gap:6px}.rp-bub{max-width:min(440px,calc(100vw - 20px));margin:0;padding:8px 14px;line-height:1.5}.rp-bub:before{left:27px;top:auto;bottom:-8px;border:8px solid transparent;border-bottom:0;border-top-color:var(--gold-d)}.rp-bub:after{left:29px;top:auto;bottom:-6px;border:6px solid transparent;border-bottom:0;border-top-color:var(--parch)}</style>');
+
 
 /* 마티와 로웨나가 둘 다 왼쪽에 나오므로, 마티가 떠 있는 동안엔 로웨나가 끝나길 기다렸다가 나온다 */
 (function(){ const _r=window.lowenaShow; if(typeof _r!=='function') return;
