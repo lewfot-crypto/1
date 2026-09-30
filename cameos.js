@@ -127,11 +127,11 @@
     if(t.m===12&&t.d>=30&&S.yearEnd!==t.y) whenFree(function(){ S.yearEnd=t.y; save(); window.lqYearNow(false); });
   };
   window.lqAnniAdd=function(){
-    var n=(document.getElementById('anniName').value||'').trim(), d=document.getElementById('anniDate').value||'';
+    var n=(document.getElementById('anniName').value||'').trim(), sv=function(id){ return document.getElementById(id).value; }, d=(sv('anniY')&&sv('anniM')&&sv('anniD'))?sv('anniY')+'-'+('0'+sv('anniM')).slice(-2)+'-'+('0'+sv('anniD')).slice(-2):'';
     if(!n){ toast('이름을 적어 주세요'); return; } if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ toast('날짜를 골라 주세요'); return; }
     if(A().length>=12){ toast('장부에는 12개까지 적을 수 있어요'); return; }
     A().push({id:'an'+Date.now(),name:n.slice(0,20),y:+d.slice(0,4),m:+d.slice(5,7),d:+d.slice(8,10)}); save();
-    document.getElementById('anniName').value=''; document.getElementById('anniDate').value=''; window.lqAnniRender(); toast('알레센도가 장부에 적었어요'); };
+    document.getElementById('anniName').value=''; ['anniY','anniM','anniD'].forEach(function(id){ document.getElementById(id).value=''; }); window.lqAnniRender(); toast('알레센도가 장부에 적었어요'); };
   window.lqAnniDel=function(id){ S.annis=A().filter(function(a){ return a.id!==id; }); save(); window.lqAnniRender(); };
   window.lqAnniRender=function(){ var el=document.getElementById('anniList'); if(!el) return;
     el.innerHTML=A().length?A().map(function(a){ return '<div class="tg"><span>'+h(a.name)+' · '+a.m+'월 '+a.d+'일</span><button class="ghost-btn" style="padding:3px 8px" onclick="lqAnniDel(\''+a.id+'\')">지우기</button></div>'; }).join(''):'<div style="font-size:12px;color:var(--ink-soft);margin-bottom:6px">아직 적힌 기념일이 없어요.</div>'; };

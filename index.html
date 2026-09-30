@@ -406,8 +406,8 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
         <label>생일이나 기념일을 적어 두면 그날 알레센도가 챙겨 줘요. (12월 30~31일엔 알레센도가 올해 결산도 해 줘요)</label>
         <div id="anniList"></div>
         <input id="anniName" maxlength="20" placeholder="이름 (예: 엄마 생일, 결혼기념일)">
-        <label for="anniDate">날짜 (매년 같은 월·일에 챙겨요)</label>
-        <input id="anniDate" type="date">
+        <label for="anniY">날짜 (매년 같은 월·일에 챙겨요)</label>
+        <div class="inline" id="anniSel" style="gap:6px"><select id="anniY" aria-label="년"></select><select id="anniM" aria-label="월"></select><select id="anniD" aria-label="일"></select></div>
         <button class="gold-btn" onclick="lqAnniAdd()">장부에 적기</button>
         <div class="inline" style="margin-top:10px"><button class="ghost-btn" onclick="lqRetroNow(true)">지난달 회고 보기</button><button class="ghost-btn" onclick="lqYearNow(true)">올해 결산 미리 보기</button></div>
       </div>
@@ -483,6 +483,12 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
 </div>
 
 <script src="core.js"></script>
+<script>(function(){ /* 기념일 날짜: 아이폰 date 입력칸이 카드를 넘치는 문제를 피하려고 년·월·일 선택으로 */
+function fill(id,a,lab){ var s=document.getElementById(id); if(s) s.innerHTML='<option value="">'+lab+'</option>'+a.map(function(v){ return '<option value="'+v+'">'+v+'</option>'; }).join(''); }
+var y=new Date().getFullYear(), ys=[], ms=[], ds=[], i; for(i=y+1;i>=y-90;i--) ys.push(i); for(i=1;i<=12;i++) ms.push(i); for(i=1;i<=31;i++) ds.push(i);
+fill('anniY',ys,'년'); fill('anniM',ms,'월'); fill('anniD',ds,'일');
+})();</script>
+
 
 <script src="lowena-react.js"></script>
 
