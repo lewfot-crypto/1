@@ -1,6 +1,6 @@
 /* 홈/퀘스트 탭 지나가기 카메오 (웰라·시나·알레센도) */
 (function(){
-  var MAX=2, tm=null;
+  var MAX=1, tm=null;
   function on(){ try{ return S.settings.wellaPop!==false; }catch(e){ return true; } }
   function st(){ var d=todayStr(); if(!S.passDay||S.passDay.d!==d) S.passDay={d:d,n:0,al:0,clr:0}; return S.passDay; }
   function hour(){ try{ return kstNow().getUTCHours(); }catch(e){ return new Date().getHours(); } }
@@ -23,14 +23,19 @@
     o.querySelector('.pb-x').onclick=close; document.body.appendChild(o);
     setTimeout(function(){ var e=document.getElementById('passBy'); if(e===o) o.remove(); },9000);
   }
-  function fire(scr){
+  /* 겹칠 때 순서: 로웨나 > 마티 > 웰라·시나 > 알레센도. 앞선 말풍선이 떠 있거나 곧 뜰 예정이면 5초 뒤 다시 시도해요. */
+  function pend(){ var p=false; try{ p=!!_mtPend; }catch(e){ LQ.err(e); } return p; }
+  function retry(scr,n){ if((n||0)<14) tm=setTimeout(function(){ fire(scr,(n||0)+1); },5000); }
+  function fire(scr,rn){
     try{
-      if(!on()||!act(scr)||!freeSafe()) return;
+      if(!on()||!act(scr)) return;
+      if(!freeSafe()||pend()){ retry(scr,rn); return; }
       var s=st(), cl=false; try{ cl=computeToday().cleared; }catch(e){ LQ.err(e); }
       if(cl&&hour()>=17&&!s.clr){ s.clr=1; s.n++; save(); card('wella',LQD.pick('wella.pass.cleared',[]),'✦ 빗자루가 지나가요'); return; }
+      if(scr==='home'&&!s.al&&s.alr==null){ s.alr=Math.random()<.15?1:0; save(); }
+      if(scr==='home'&&!s.al&&s.alr===1){ if(document.getElementById('passBy')||document.getElementById('trChat')){ retry(scr,rn); return; } s.al=1; save(); card('alesendo',LQD.pick('alesendo.homecameo',[],{who:'alesendo'}),'📖 장부를 든 채로'); return; }
       if(s.n>=MAX+s.al) return;
       var r=Math.random(), who;
-      if(scr==='home'&&!s.al&&r<.28){ s.al=1; save(); card('alesendo',LQD.pick('alesendo.homecameo',[],{who:'alesendo'}),'📖 장부를 든 채로'); return; }
       if(Math.random()>.55) return;
       who=Math.random()<.6?'wella':'sina'; s.n++; save();
       card(who,LQD.pick(who+'.pass.'+scr,[],{who:who}),who==='wella'?'✦ 빗자루가 지나가요':'✦ 검은 그림자가 지나가요');
@@ -39,7 +44,7 @@
   LQ.on('screen:after',function(scr){
     clearTimeout(tm); close();
     if(scr!=='home'&&scr!=='quests') return;
-    tm=setTimeout(function(){ fire(scr); },(window.__passFast?300:7000+Math.random()*13000));
+    tm=setTimeout(function(){ fire(scr); },(window.__passFast?300:20000+Math.random()*40000));
   });
   window.passByNow=function(who,text){ card(who,text,''); };
   

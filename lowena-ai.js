@@ -121,6 +121,16 @@ window.lqAsk=async function(msgs,max,extra){ return call(msgs,max||900,sysPrompt
 function face(k){ var i=document.getElementById('dcFace'); if(i&&LW_CROP[k]) i.src=LW_CROP[k]; }
 function log(){ return document.getElementById('dcLog'); }
 function add(role,txt,cls){ var l=log(); if(!l) return null; var d=document.createElement('div'); d.className='dc-b '+role+(cls?' '+cls:''); d.textContent=txt; l.appendChild(d); l.scrollTop=l.scrollHeight; return d; }
+/* 로웨나 답장: 한 글자씩 타이핑 / 생각 중 말풍선: …이 하나씩 나타남 */
+function addT(txt){ var d=add('lw',''); if(!d) return d; var l=log(), full=String(txt), ch=Array.from(full), i=0, done=false;
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){ d.textContent=full; return d; }
+  d.style.minHeight=''; d.style.cursor='pointer';
+  function fin(){ if(done) return; done=true; d.textContent=full; d.style.cursor=''; if(l) l.scrollTop=l.scrollHeight; }
+  d.addEventListener('click',fin);
+  (function step(){ if(done) return; if(!d.isConnected){ done=true; return; } var c=ch[i++]; d.textContent+=c; if(l) l.scrollTop=l.scrollHeight; if(i>=ch.length){ fin(); return; }
+    var f=ch.length>160; setTimeout(step,/[.!?…~]/.test(c)?(f?100:180):c==='\n'?(f?120:240):/[,]/.test(c)?(f?50:100):(f?18:36)); })();
+  return d; }
+function addWait(){ var d=add('lw','.','wait'); if(!d) return d; d.style.minWidth='3.4em'; var n=1, t=setInterval(function(){ if(!d.isConnected){ clearInterval(t); return; } n=n%3+1; d.textContent='...'.slice(0,n); },450); return d; }
 function clr(){ var l=log(); if(l) l.innerHTML=''; return l; }
 function ov(){ var o=document.getElementById('dcOv'); if(!o){ o=document.createElement('div'); o.id='dcOv'; document.body.appendChild(o); } return o; }
 function dcHead(){ return '<button class="dc-x" onclick="dcClose()">나가기</button><div class="dc-face"><img id="dcFace" src="'+LW_CROP.greet+'" alt=""></div><div id="dcLog"></div>'; }
@@ -137,16 +147,16 @@ function drawKey(){ var o=ov();
   add('lw','로웨나와 이야기하려면 Anthropic API 키가 필요해요. console.anthropic.com에서 발급받아 아래에 붙여 넣어 주세요. 키는 이 기기에만 저장되고, 대화 내용은 Anthropic 서버로 전송돼요.'); DC.view='key'; }
 window.dcOpen=function(){ DC.h=[]; DC.busy=false; DC.cur=null;
   if(!key()){ drawKey(); ov().style.display='flex'; return; }
-  drawChat(); ov().style.display='flex'; add('lw',GREET); face('greet'); };
+  drawChat(); ov().style.display='flex'; addT(GREET); face('greet'); };
 window.dcClose=function(){ if(DC.cur) summarize(DC.cur,'close'); var o=document.getElementById('dcOv'); if(o){ o.style.display='none'; o.innerHTML=''; } DC.h=[]; DC.busy=false; DC.cur=null; };
 window.dcKeyStart=function(){ var i=document.getElementById('dcKeyIn'); var v=i?(i.value||'').trim():''; if(!v){ toast('키를 붙여 넣어 주세요'); return; } if(!lsSet(KEYN,v)){ toast('키를 저장하지 못했어요'); return; } dcSync(); window.dcOpen(); };
 var _dcSend0=async function(){
   if(DC.busy) return; var ta=document.getElementById('dcIn'), t=ta?(ta.value||'').trim():''; if(!t) return;
   DC.busy=true; ta.value=''; var mb=add('me',t), risk=RISK.test(t);
   if(risk) add('lw','혼자 견디지 않아도 돼요. 지금 위험하다고 느껴지면 119나 112에, 마음이 너무 힘들면 자살예방상담전화 109(24시간)에 연락해 주세요. 가까운 사람에게 지금 이야기하는 것도 좋아요.','care');
-  DC.h.push({role:'user',content:t}); face('listen'); var w=add('lw','…','wait'), sb=document.getElementById('dcSend'); if(sb) sb.disabled=true;
+  DC.h.push({role:'user',content:t}); face('listen'); var w=addWait(), sb=document.getElementById('dcSend'); if(sb) sb.disabled=true;
   try{ var hist=DC.h.slice(-20); while(hist.length&&hist[0].role!=='user') hist.shift();
-    var a=await call(hist,600); if(w) w.remove(); if(!a) throw new Error('빈 응답'); DC.h.push({role:'assistant',content:a}); rec(t,a); add('lw',a); if(DC.cur) summarize(DC.cur,'auto'); face(risk?'sad':'proud'); }
+    var a=await call(hist,600); if(w) w.remove(); if(!a) throw new Error('빈 응답'); DC.h.push({role:'assistant',content:a}); rec(t,a); addT(a); if(DC.cur) summarize(DC.cur,'auto'); face(risk?'sad':'proud'); }
   catch(e){ if(w) w.remove(); if(mb) mb.remove(); DC.h.pop(); var t2=document.getElementById('dcIn'); if(t2) t2.value=t;
     add('lw','지금은 이야기를 이어 갈 수 없어요. 그래도 여기 있을게요.','err'); add('lw','('+String(e.message||e).slice(0,140)+')','err small'); face('worry'); }
   DC.busy=false; sb=document.getElementById('dcSend'); if(sb) sb.disabled=false; };
@@ -244,7 +254,7 @@ window.dcMemNow=async function(){ var c=DC.cur||(S.deepChats||[]).slice(-1)[0]; 
 function rec(u,a){ if(!saveOn()) return; var L=(S.deepChats=S.deepChats||[]), c=DC.cur; if(!c){ c={id:'dc'+Date.now(),ts:Date.now(),d:todayStr(),m:[]}; L.push(c); DC.cur=c; } c.m.push({r:'me',t:u},{r:'lw',t:a}); if(c.m.length>400) c.m=c.m.slice(-400); while(L.length>60) L.shift(); save(); }
 function fmt(c){ var d=new Date(c.ts+9*36e5); return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+' '+String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0'); }
 function findC(id){ return (S.deepChats||[]).find(function(x){ return x.id===id; }); }
-window.dcNew=function(){ if(DC.busy) return; if(DC.cur) summarize(DC.cur,'close'); if(DC.view!=='chat') drawChat(); DC.h=[]; DC.cur=null; if(clr()) add('lw',GREET); face('greet'); };
+window.dcNew=function(){ if(DC.busy) return; if(DC.cur) summarize(DC.cur,'close'); if(DC.view!=='chat') drawChat(); DC.h=[]; DC.cur=null; if(clr()) addT(GREET); face('greet'); };
 window.dcHist=function(){ var l=log(); if(!l) return; DC.view='hist'; l.innerHTML=''; var L=(S.deepChats||[]).slice().reverse();
   l.innerHTML=(L.length?L.map(function(c){ var f=(c.m[0]||{}).t||''; return '<div class="dc-row"><span onclick="dcView(\''+c.id+'\')">'+esc(fmt(c))+' · '+esc(f.slice(0,22))+(f.length>22?'…':'')+' <small>('+Math.ceil(c.m.length/2)+'턴)</small></span><button class="cfb" style="padding:3px 8px;font-size:11px" onclick="dcDel(\''+c.id+'\')">삭제</button></div>'; }).join(''):'<div class="dc-note">저장된 대화가 없어요</div>'); };
 window.dcView=function(id){ var c=findC(id), l=clr(); if(!c||!l) return; c.m.forEach(function(m){ add(m.r,m.t); });

@@ -488,8 +488,8 @@ function stIntent(t){ return ST_INTENT.test(t)&&!ST_CRISIS.test(t); }
 function stById(id){ var i; for(i=0;i<ST_LIST.length;i++) if(ST_LIST[i].id===id) return ST_LIST[i]; for(i=0;i<ST_EPS.length;i++) if(ST_EPS[i].id===id) return ST_EPS[i]; return null; }
 function stRnd(a){ return a[Math.floor(Math.random()*a.length)]; }
 function stPick(){
-  var rec=(S.stRecent=S.stRecent||[]), keep=Math.min(rec.length,Math.max(0,ST_LIST.length-2)), recent=rec.slice(-keep||rec.length), pool=ST_LIST.filter(function(s){ return recent.indexOf(s.id)<0; });
-  if(!pool.length) pool=ST_LIST; var s=stRnd(pool); rec.push(s.id); if(rec.length>ST_LIST.length) rec.splice(0,rec.length-ST_LIST.length); return s; }
+  var rec=(S.stRecent=S.stRecent||[]), keep=Math.min(rec.length,Math.max(0,ST_LIST.length-2)), recent=rec.slice(-keep||rec.length), pool=ST_LIST.filter(function(s){ return recent.indexOf(s.id)<0&&s.id.indexOf('st_bd')!==0; });
+  if(!pool.length) pool=ST_LIST.filter(function(s){ return s.id.indexOf('st_bd')!==0; }); var s=stRnd(pool); rec.push(s.id); if(rec.length>ST_LIST.length) rec.splice(0,rec.length-ST_LIST.length); return s; }
 var cur=null;
 function bubble(txt,extra){ return '<div class="mascot-row">'+mascotImg(56,'cheer')+'<div class="speech-bubble" style="white-space:pre-line">'+esc(txt)+'</div></div>'+(extra||''); }
 function roomHush(msg){ try{ cfRoomFace('proud'); var h=document.getElementById('cfHi'); if(h&&msg) h.textContent=msg; }catch(e){ LQ.err(e); } }
@@ -533,8 +533,12 @@ function stEndScreen(pre){ var e=window.__stEndState||{line:'',more:false};
   if(pre){ cfShowTyped(bubble(pre,'<div style="display:flex;margin-top:12px"><button class="cfb" style="flex:1" onclick="stEndScreen(\'\')">다음</button></div>')); return; }
   cfShowTyped(bubble(e.line,'<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">'+(e.more?'<button class="cfb" onclick="stMore()">📖 하나만 더 들려주세요</button>':'')+'<button class="cfb" onclick="stBye()">🌙 접속 종료 · 인사하고 잘래요</button><button class="cfb" onclick="closeModal()">밀담실에 더 있을래요</button></div>')); }
 function stReflect(){
-  var row='<div style="display:flex;gap:6px;margin-top:10px"><input id="stRef" type="text" maxlength="160" autocomplete="off" placeholder="이야기가 어땠는지 한 줄 남겨 줘요" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){event.preventDefault();stRefSend();}" style="flex:1;font-size:16px"><button class="cfb" style="flex:0 0 auto" onclick="stRefSend()">남기기</button></div><div style="display:flex;margin-top:8px"><button class="cfb" style="flex:1" onclick="stRefSkip()">건너뛸게요</button></div>';
-  cfShowTyped(bubble('이야기가 끝났어요. 들으면서 어땠는지, 마음에 남은 장면이나 궁금한 게 있으면 한 줄만 남겨 줘요.',row)); }
+  var row='<div style="display:flex;gap:6px;margin-top:10px"><input id="stRef" type="text" maxlength="160" autocomplete="off" placeholder="어땠는지 편하게 말해 줘요" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){event.preventDefault();stRefSend();}" style="flex:1;font-size:16px"><button class="cfb" style="flex:0 0 auto" onclick="stRefSend()">남기기</button></div><div style="display:flex;margin-top:8px"><button class="cfb" style="flex:1" onclick="stRefSkip()">건너뛸게요</button></div>';
+  cfShowTyped(bubble('이야기가 끝났어요.\n'+stAskLine(),row)); }
+/* "어땠어요?" 멘트: 기본형 50개 / 이야기별 관련형 2개 중 절반씩 랜덤, 최근에 쓴 멘트는 피함 */
+function stAskLine(){ try{ var A=window.LQ_ASK||{}, base=A.base||[], id=(cur&&cur.s&&(cur.s.ser||cur.s.id))||'', rel=(A.by&&A.by[id])||[], rc=(S.stAskRecent=S.stAskRecent||[]);
+  var pool=(rel.length&&Math.random()<.5)?rel:base, f=pool.filter(function(x){ return rc.indexOf(x)<0; }); if(!f.length) f=pool; var q=stRnd(f);
+  rc.push(q); while(rc.length>12) rc.shift(); try{ save(); }catch(e){ LQ.err(e); } return q; }catch(e){ LQ.err(e); return '이야기는 어땠어요?'; } }
 window.stRefSkip=function(){ stEndScreen(''); };
 var ST_THEME=[[/^sr_genji|^st_gj_/,'겐지 이야기는 계절과 향, 짧은 노래에 마음을 담는 이야기라서 끝나고 나면 여운이 오래 남아요.'],[/^sr_guunmong/,'구운몽은 긴 꿈에서 깨어나 진짜 마음을 알게 되는 이야기예요. 부귀영화가 꿈처럼 지나가도 배운 마음은 남아요.'],[/^sr_arabian/,'천 하룻밤 동안 이야기가 이야기를 낳는 것처럼, 이야기 하나가 마음을 살려 내기도 해요.'],[/^sr_kusamakura/,'풀베개는 세상 이해득실에서 한 걸음 물러나 풍경을 바라보는 이야기예요. 조용히 그림을 보는 것 같지요.'],[/^sr_neko/,'이름 없는 고양이의 눈으로 보면 사람들의 소동도 어쩐지 정겨워요.'],[/^sr_botchan/,'도련님은 무모하지만 정직해서 시원한 이야기예요. 기요 같은 사람이 곁에 있다는 건 큰 힘이에요.'],[/^sr_kokoro/,'마음은 한 사람이 다른 사람에게 마음을 건네는 이야기예요. 무거운 대목은 접어 두었지만 그 조용한 무게는 남아요.'],[/^sr_makura/,'마쿠라노소시는 좋아하는 것을 한 줄씩 적은 천 년 전의 글이에요. 오늘의 좋아하는 것 하나를 떠올려 봐도 좋아요.'],[/^sr_yume10/,'소세키의 꿈은 이유 없이 시작해서 이유 없이 끝나요. 그래서 설명하지 않아도 마음에 남지요.'],[/^sr_starmap/,'웰라와 시나의 별 지도는 이름 없는 별에게 이름을 붙여 주는 다정한 이야기예요.'],[/^sr_nightshop/,'알레센도의 밤 가게에는 언제든 쉬어 가도 되는 자리가 있어요.'],[/^st_/,'잠들기 전에 듣는 이야기는 조용히 마음에 내려앉아요.']];
 var ST_REF_A=['들려주는 동안 저도 즐거웠어요. 그렇게 느껴 줘서 고마워요.','아멜리아 님 이야기를 들으니 저도 다시 그 장면이 떠올라요.','그렇게 느꼈군요. 이야기는 그렇게 각자 마음에 남는 거예요.','한 줄이지만 마음이 전해졌어요. 고마워요.'];

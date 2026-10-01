@@ -13,6 +13,8 @@ window.LQ=(function(){ var H={};
 })();
 /* 웰라의 웃음소리: 대사에는 "하하"로 적어 두고, 보여 줄 때 상황에 맞게 하하 / 하핫 / 캬핫으로 바꿔요.
    자신만만하거나 신나는 말 뒤엔 캬핫, 실수하거나 놀란 말 뒤엔 하핫, 나머지는 주로 하하 */
+/* 마법냥이 말투: 문장 끝의 '~다'를 '~다냥'으로 (이미 다냥이면 그대로) */
+window.lqNya=function(t){ if(!t||typeof t!=='string') return t; return t.replace(/([가-힣])다(?=[.!?…~]|\n|\s*[✨👏🌙⭐💜]|$)/g,'$1다냥'); };
 window.lqLaugh=function(t){ if(!t||typeof t!=='string'||t.indexOf('하하')<0) return t;
   return t.replace(/하하(?!하)/g,function(m,off){ var c=t.slice(Math.max(0,off-45),off);
     if(/성공|완벽|합격|신기록|최고|자신|해냈|출발|슝|도전|짜잔|짠|반짝|대박|멋져|우승/.test(c)&&Math.random()<.7) return '캬핫';
@@ -606,10 +608,12 @@ function mgPicks(){ const have=new Set(S.rewards.map(r=>r.name)), pool=MARTY_IDE
 function mgDays(price){ const g=S.gold||0; if(price<=0) return '…바로 쓸 수 있다냥.'; if(price<=g) return '…지금 골드로 바로 살 수 있다냥.'; return '…하루 약 '+MG_DAILY+'골드씩 모이니까 약 '+Math.ceil((price-g)/MG_DAILY)+'일이면 된다냥.'; }
 function mgCat(magic){ const src=(window.WL_IMG1&&window.WL_IMG1.magic)?window.WL_IMG1.magic:'';
   return magic&&src?`<img class="mg-img mg-magic" src="${src}" alt="마법냥이">`:`<span class="mg-img mg-black" title="평소의 시나">🐈‍⬛</span>`; }
+/* 마법냥이의 추천 대사: 하루 한 번 랜덤으로 정해서 그날은 '다른 추천'을 눌러도 바뀌지 않아요 */
+function mgSayToday(){ const d=todayStr(); if(!S.mgSay||S.mgSay.d!==d||!S.mgSay.t){ S.mgSay={d,t:LQD.pick('magic.guide.pick',[`…마법냥이 모드다냥. ✨\n보상 후보를 뽑아 왔다.\n지금 모은 골드는 ◈{g}.`],{cameo:false,vars:{g:'{g}'}})}; save(); } return String(S.mgSay.t).split('{g}').join(S.gold||0); }
 function mgRender(){ const o=document.getElementById('askOv'); let say='', body='', foot='', magic=false;
   if(MG.step==='pick'){
     magic=true;
-    say=MG.picks.length?LQD.pick('magic.guide.pick',[`…마법냥이 모드다냥. ✨\n보상 후보를 뽑아 왔다.\n지금 모은 골드는 ◈{g}.`],{cameo:false,vars:{g:S.gold||0}}):`…준비한 추천은 전부 담았다냥. 👏\n이제 직접 만들어라.`;
+    say=MG.picks.length?mgSayToday():`…준비한 추천은 전부 담았다냥. 👏\n이제 직접 만들어라.`;
     body=MG.picks.map((it,i)=>`<button class="mg-opt" onclick="mgChoose(${i})"><b>${esc(it[0])}</b><span>${it[1]<=40?'가볍게':it[1]<=150?'적당히':'크게'} · ◈${it[1]}${it[1]<=(S.gold||0)?' · 지금 가능':''}</span></button>`).join('');
     foot=(MG.picks.length?`<button class="ghost-btn" onclick="mgReroll()">🔄 다른 추천</button>`:'')+`<button class="ghost-btn" onclick="mgCustom()">✏️ 직접 만들래요</button><button class="ghost-btn" onclick="mgClose()">닫기</button>`;
   } else if(MG.step==='name'){
@@ -621,7 +625,7 @@ function mgRender(){ const o=document.getElementById('askOv'); let say='', body=
     body=`<input id="mgPrice" type="number" inputmode="numeric" min="0" value="${MG.price}" oninput="mgHint()" onkeydown="if(event.key==='Enter')mgAdd()">`;
     foot=`<button class="ghost-btn" onclick="mgBack()">뒤로</button><button class="gold-btn" onclick="mgAdd()">추가하기</button>`;
   }
-  o.innerHTML=`<div class="ask-box mg-box"><div class="mg-row">${mgCat(magic)}<div class="speech-bubble">${say}</div></div>${body}<div class="mg-foot">${foot}</div></div>`;
+  o.innerHTML=`<div class="ask-box mg-box"><div class="mg-row">${mgCat(magic)}<div class="speech-bubble">${lqNya(say)}</div></div>${body}<div class="mg-foot">${foot}</div></div>`;
   o.classList.add('show'); if(MG.step==='name') setTimeout(()=>{ const i=document.getElementById('mgName'); if(i) i.focus(); },60); }
 function martyRewardGuide(){ MG={step:'pick',picks:mgPicks()}; mgRender(); }
 function mgClose(){ const o=document.getElementById('askOv'); o.classList.remove('show'); o.innerHTML=''; }
@@ -935,7 +939,7 @@ function evXtra(){ return {
 11:['늦가을 기록장','따뜻한 국물 요리하기','한 해 사진 돌아보기','두꺼운 이불 꺼내기','좋아하는 노래 3곡 고르기'],
 12:['한 해의 마지막 장','올해의 책·음악 꼽기','따뜻한 저녁 차리기','소중한 사람에게 연락하기','내년 첫 주 계획 세우기']}; }
 function evSpecials(){ return [
-{k:'bday',md:'07-22',pre:7,name:'🎂 나의 생일 주간',items:['나에게 줄 작은 선물 고르기','좋아하는 음식 먹기','올 한 해 돌아보며 한 줄 적기'],reward:'🎂 생일 보물',gold:80},
+{k:'bday',md:'07-22',pre:7,name:'🎂 아멜리아의 생일 주간',items:['나에게 줄 작은 선물 고르기','좋아하는 음식 먹기','올 한 해 돌아보며 한 줄 적기'],reward:'🎂 생일 보물',gold:80},
 {k:'xmas',md:'12-25',pre:7,name:'🎄 크리스마스 이브의 모험',items:['따뜻한 음료 마시며 캐럴 듣기','소중한 사람에게 안부 전하기','겨울밤 조명 보며 산책'],reward:'🎄 크리스마스 보물',gold:60},
 {k:'chuseok',lunar:{2026:'09-25',2027:'09-15',2028:'10-03',2029:'09-22',2030:'09-12'},pre:6,name:'🌕 한가위 보름달',items:['보름달 올려다보기','가족·친구에게 안부 전하기','송편이나 제철 과일 먹기'],reward:'🌕 한가위 보물',gold:60},
 {k:'seol',lunar:{2027:'02-06',2028:'01-26',2029:'02-13',2030:'02-03'},pre:5,name:'🧧 설날의 첫 페이지',items:['새해 인사 전하기','따뜻한 국물 한 그릇','올해 소망 하나 적기'],reward:'🧧 설날 보물',gold:60}]; }
@@ -1738,7 +1742,7 @@ function renderConfess(){ const el=document.getElementById('homeConfess'); if(!e
     recallHtml='<div class="cf-recall" onclick="openConfessLog()">💭 '+esc(e.d)+' · '+esc(label)+' — "'+esc(snip)+'" 그때 이런 얘기 했었죠.</div>'; } } }catch(err){ LQ.err(err); }
   const qDone=!!qotdEntryToday();
   el.innerHTML=(cfFuCard()||recallHtml)
-    +'<div class="inline" style="margin-bottom:8px"><button class="ghost-btn" style="flex:1" onclick="openConfess()">로웨나의 밀담실</button><button class="ghost-btn" style="flex:1" onclick="openConfessLog()">고해 노트 ('+(S.confess||[]).length+')</button></div>'
+    +'<div class="inline" style="margin-bottom:8px"><button class="ghost-btn" style="flex:1" onclick="openConfess()">로웨나의 밀담실</button><button class="ghost-btn" style="flex:1" onclick="openConfessLog()">고해 노트</button></div>'
     +'<div class="inline" style="margin-bottom:8px"><button class="ghost-btn" style="flex:1" onclick="openQotd()">'+(qDone?'오늘의 질문 ✓':'오늘의 질문')+'</button><button class="ghost-btn" style="flex:1" onclick="openMoodCheck()">기분 체크인</button></div>'
     +'<div class="inline" style="margin-bottom:14px"><button class="ghost-btn" style="flex:1" onclick="hugMe()">그냥 안아주세요</button>'+((S.confess||[]).length>=3?'<button class="ghost-btn" style="flex:1" onclick="openWeekLetter()">주간 편지</button>':'')+'</div>'; }
 { const _rh=renderHome; renderHome=function(){ _rh(); try{ renderConfess(); }catch(e){ LQ.err(e); } };
@@ -1828,14 +1832,14 @@ function condLabel(c){
 function manualUnlock(id){ const a=S.achievements.find(x=>x.id===id); if(!a) return; S.gold=(S.gold||0)+halfG(a.gold||20); a.unlocked=true; a.unlockedAt=todayStr(); save(); celebrate('ach',a.name); renderAchievements(); renderHome(); try{ achMilestone(); }catch(e){ LQ.err(e); } }
 function renderAchEditList(){
   const el=document.getElementById('achEditList'); if(!el) return;
-  el.innerHTML = pgSlice('ed',S.achievements).map(a=>`<div class="quest-row"><div class="label">${esc(a.name)}${a.unlocked?' ✦':''}<div class="qdesc2">${condLabel(a.cond)}</div></div>
-    <div class="qr-actions" style="display:flex"><button class="small-x" onclick="openAchModal('${a.id}')">✎</button></div></div>`).join('')+pgHTML('ed',S.achievements.length);
+  el.innerHTML='<div style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:10px">업적 목록은 비밀로 두었어요. 어떤 업적이 있는지는 해금될 때까지 알 수 없고, 고치거나 지울 수도 없어요. 새 업적만 로웨나의 안내를 받아 추가할 수 있어요.</div>';
 }
 function achTypeChange(){
   const t=document.getElementById('achType').value;
   document.getElementById('achValRow').style.display = ['totalClear','streak','recipes','videos','debtPct','bodyDays','recipeDone','nightCount','rewardsUsed','stages','earlySleep','bodyLogs','journal'].includes(t)?'block':'none';
 }
 function openAchModal(id){
+  id=null; /* 기존 업적은 편집할 수 없어요. 새 업적 추가만 가능 */
   const a = id ? S.achievements.find(x=>x.id===id) : {name:'',desc:'',cond:{type:'manual',value:1}};
   const c=a.cond||{type:'manual',value:1};
   document.getElementById('modalBox').innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button>
