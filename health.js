@@ -1,5 +1,5 @@
 /* ===== 건강 점검: 저장 공간 확인 · 오류 기록(E 버튼) =====
-   - 저장 공간: 브라우저 저장 한도(약 5MB) 대비 사용량을 설정의 백업 칸에 보여주고, 80%가 넘으면 마티가 하루 한 번 알려요.
+   - 저장 공간: 설정에는 표시하지 않고, 브라우저 저장 한도(약 5MB)의 85%가 넘으면 로웨나가 하루 한 번 알려요.
    - 오류 기록: 앱이 조용히 넘긴 오류를 이 기기에만 최근 30개까지 남겨요(백업에는 들어가지 않아요).
    - E 버튼: 설정 맨 아래의 작은 버튼. 처음 누르면 마티가 설명하고, 다음부터는 최근 기록을 보여줘요. */
 (function(){
@@ -17,13 +17,9 @@
   /* ---------- 저장 공간 ---------- */
   function usage(){ var n=0; try{ for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); n+=k.length+(localStorage.getItem(k)||'').length; } }catch(e){ LQ.err(e); } return n; }
   function pct(){ return Math.min(100,Math.round(usage()/LIMIT*100)); }
-  function box(){ var info=document.getElementById('backupInfo'); if(!info) return; var el=document.getElementById('storInfo');
-    if(!el){ el=document.createElement('div'); el.id='storInfo'; el.style.cssText='font-size:12px;margin:-2px 0 8px'; info.insertAdjacentElement('afterend',el); }
-    var u=usage(), p=pct(), col=p>=95?'#c0392b':p>=80?'#b7791f':'#6b8e4e';
-    el.innerHTML='<div style="color:#c9b88f">저장 공간 '+(u/1e6).toFixed(2)+'MB / 약 5MB ('+p+'%)'+(p>=80?' · 백업을 권해요':'')+'</div><div style="height:5px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:4px"><div style="height:100%;width:'+Math.max(1,p)+'%;border-radius:3px;background:'+col+'"></div></div>'; }
-  function warn(){ try{ var p=pct(), d=todayStr(); if(p<80||S.storWarn===d) return; S.storWarn=d; save();
-    var t=p>=95?'저장 공간이 거의 가득 찼어요. 지금 백업 코드를 만들어 두고, 설정에서 오래된 기록을 정리해 주세요. 저장이 안 되면 기록이 사라질 수 있어요.':'저장 공간이 '+p+'%나 찼어요. 백업 코드를 만들어 두면 안심이에요. 설정의 BACKUP 칸에서 만들 수 있어요.';
-    if(typeof martyShow==='function') martyShow(null,t); }catch(e){ LQ.err(e); } }
+  function warn(){ try{ var p=pct(), d=todayStr(); if(p<85||S.storWarn===d) return; S.storWarn=d; save();
+    var t=p>=95?'아멜리아, 저장 공간이 거의 가득 찼어요. 새 기록이 저장되지 않을 수 있으니 지금 설정에서 백업 파일을 만들어 두세요.':'아멜리아, 저장 공간이 '+p+'% 찼어요. 곧 가득 찰 수 있으니 설정에서 백업 파일을 만들어 두면 안심이에요.';
+    if(typeof lowenaShow==='function') lowenaShow(t); }catch(e){ LQ.err(e); } }
   /* ---------- E 버튼 ---------- */
   var GUIDE='이 작은 E 버튼은 오류 기록이에요. 앱이 조용히 넘긴 문제가 이 기기에만 쌓여 있다가, 다음부터 이 버튼을 누르면 최근 기록을 볼 수 있어요. 이상한 일이 생기면 그 화면을 캡처해서 보내 주세요!';
   window.lqErrBtn=function(){ try{
@@ -34,10 +30,13 @@
       +'<div style="display:flex;gap:6px;margin-top:10px"><button class="cfb" style="flex:1" onclick="lqErrClear()">기록 지우기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>');
   }catch(e){ LQ.err(e); } };
   window.lqErrClear=function(){ wr([]); closeModal(); try{ toast('오류 기록을 지웠어요'); }catch(e){} };
+  var VER='v5.7'; /* sw.js 의 V 번호와 같게 올려요 */
   function eBtn(){ var sc=document.getElementById('screen-master'); if(!sc||document.getElementById('lqEBtn')) return;
+    var w=document.createElement('div'); w.style.cssText='display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:18px 0 8px';
+    var v=document.createElement('span'); v.id='lqVer'; v.textContent=VER; v.style.cssText='font-size:9px;letter-spacing:.5px;color:rgba(201,162,77,.45)';
     var b=document.createElement('button'); b.id='lqEBtn'; b.textContent='E'; b.setAttribute('aria-label','오류 기록');
-    b.style.cssText='display:block;margin:18px 0 8px auto;width:26px;height:26px;padding:0;font-size:12px;font-weight:700;border-radius:50%;border:1px solid rgba(201,162,77,.45);background:transparent;color:rgba(201,162,77,.7);cursor:pointer';
-    b.onclick=window.lqErrBtn; sc.appendChild(b); }
-  LQ.on('master:after',function(){ try{ box(); eBtn(); }catch(e){ LQ.err(e); } });
+    b.style.cssText='width:26px;height:26px;padding:0;font-size:12px;font-weight:700;border-radius:50%;border:1px solid rgba(201,162,77,.45);background:transparent;color:rgba(201,162,77,.7);cursor:pointer';
+    b.onclick=window.lqErrBtn; w.appendChild(v); w.appendChild(b); sc.appendChild(w); }
+  LQ.on('master:after',function(){ try{ eBtn(); }catch(e){ LQ.err(e); } });
   LQ.on('screen:after',function(s){ if(s==='home') setTimeout(warn,9000); });
 })();
