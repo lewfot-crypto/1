@@ -1282,7 +1282,9 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
   var POS_RE=/좋았|좋아서|기뻐|기쁘|행복|뿌듯|재밌|재미있|즐거|웃었|감사|고마|설레|다행|해냈|성공|합격|축하|나아졌|괜찮아졌|풀렸|편해졌|해결/;
 
   function pk(arr,key){ return LQD.pick('lowena.cf.'+key,arr,{who:'lowena'}); }
-  function tone(k,t){ if(k==='dessert'||k==='hungry'||k==='tired'||k==='crave') return 'neu'; if(k==='sad'||k==='lonely'||k==='angry'||k==='anxious') return 'neg'; if(k==='joy') return 'pos'; var st=cfStripNeg(t), n=NEG_RE.test(st)||CF_NEG2.test(t)||CF_NEG3.test(st), p=POS_RE.test(st); return (n&&!p)?'neg':(p&&!n)?'pos':(n&&p)?'neg':'neu'; }
+  /* "재밌는 얘기 해줄래요?"처럼 로웨나에게 부탁하는 말은 기쁜 소식이 아니라서 축하하지 않는다 */
+  var REQ_RE=/(해|들려|알려|말해|읽어|골라|추천해)\s*(줄래|줄\s*수|주세요|주실|주라|줘(?!서)|줄까|봐(?!서))/;
+  function tone(k,t){ if(k==='dessert'||k==='hungry'||k==='tired'||k==='crave') return 'neu'; if(k==='sad'||k==='lonely'||k==='angry'||k==='anxious') return 'neg'; if(k==='joy') return 'pos'; if(REQ_RE.test(t)&&!NEG_RE.test(cfStripNeg(t))) return 'neu'; var st=cfStripNeg(t), n=NEG_RE.test(st)||CF_NEG2.test(t)||CF_NEG3.test(st), p=POS_RE.test(st); return (n&&!p)?'neg':(p&&!n)?'pos':(n&&p)?'neg':'neu'; }
   function topic(t){ var s=cfStripNeg(t).replace(/돈까스|돈가스/g,''), best=null;
     TOPICS.forEach(function(tp,ti){ tp.w.forEach(function(e){ var w=Array.isArray(e)?e[0]:e, i=s.indexOf(w); if(i<0) return;
       var pv=s.charAt(i-1), nx=s.charAt(i+w.length);

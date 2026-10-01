@@ -144,7 +144,7 @@ function note(){ var n=document.getElementById('dcNote'); if(n) n.textContent=(s
 function drawKey(){ var o=ov();
   o.innerHTML=dcHead()+''
    +'<input id="dcKeyIn" type="password" autocomplete="off" placeholder="sk-ant-..." style="background:rgba(40,25,14,.78);color:#f6ecd2;border:1px solid rgba(209,168,86,.6);border-radius:3px;padding:8px;font-size:16px;font-family:inherit"><button class="cfb" style="width:100%" onclick="dcKeyStart()">저장하고 시작</button>';
-  add('lw','로웨나와 이야기하려면 Anthropic API 키가 필요해요. console.anthropic.com에서 발급받아 아래에 붙여 넣어 주세요. 키는 이 기기에만 저장되고, 대화 내용은 Anthropic 서버로 전송돼요.'); DC.view='key'; }
+  add('lw','아래에 키를 넣어야 해요.'); DC.view='key'; }
 window.dcOpen=function(){ DC.h=[]; DC.busy=false; DC.cur=null;
   if(!key()){ drawKey(); ov().style.display='flex'; return; }
   drawChat(); ov().style.display='flex'; addT(GREET); face('greet'); };

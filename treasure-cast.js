@@ -67,8 +67,13 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
    {id:'hs_dust',name:'🔮 별가루 든 유리병',price:500,line:'별가루는 밤에만 반짝여요. 밤에 열어 보세요.'}];
   var HID_NEED=10, _say='', _sayTab='', _sc='', _scLast='';
   var SCG={joy:['smile'],greet:['hello','read1','read2','sit','smile'],night:['write','res'],shop:['sort1','sort2'],own:['sort3','sort4'],low:['herb'],mid:['brew1','brew2','potion'],high:['tutor','study'],key:['ponder'],used:['cat2','read1'],ledger:['write','res','sit'],gift:['cat1','hello'],poor:['worry'],buy:['guest','smile'],use:['cat1','smile'],empty:['worry']};
-  function scPick(g){ var a=SCG[g]||SCG.greet, k=a[Math.random()*a.length|0]; if(k===_scLast&&a.length>1) k=a[(a.indexOf(k)+1)%a.length]; _scLast=k; return k; }
-  function scFor(tab){ if(tab==='shop'){ var f=FIL.shelf||'all', h=+kstNow().getUTCHours(); return f==='all'?((h>=22||h<5)?'night':'greet'):f; } return ({own:'own',used:'used',ledger:'ledger',gift:'gift'})[tab]||'greet'; }
+  SCG.shopAll=SCG.greet.concat(SCG.night);
+  var TABG={shopAll:1,own:1,used:1,ledger:1,gift:1,low:1,mid:1,high:1,key:1};
+  /* 탭마다 알레센도 사진은 하루에 하나로 고정(날짜+탭으로 정해요). 사고·부족 같은 반응 장면만 그때그때 달라요 */
+  function scPick(g){ var a=SCG[g]||SCG.greet, k;
+    if(TABG[g]){ var d=todayStr()+g, x=5381; for(var i=0;i<d.length;i++) x=((x<<5)+x+d.charCodeAt(i))>>>0; k=a[x%a.length]; _scLast=k; return k; }
+    k=a[Math.random()*a.length|0]; if(k===_scLast&&a.length>1) k=a[(a.indexOf(k)+1)%a.length]; _scLast=k; return k; }
+  function scFor(tab){ if(tab==='shop'){ var f=FIL.shelf||'all'; return f==='all'?'shopAll':f; } return ({own:'own',used:'used',ledger:'ledger',gift:'gift'})[tab]||'greet'; }
   function esc2(t){ return String(t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function fill(t,n){ return t.replace('{n}',n||'보물'); }
   function unl(){ return (S.achievements||[]).filter(function(a){ return a.unlocked; }).length; }
@@ -163,7 +168,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     var list=f==='all'?items:items.filter(function(r){ return shelfOf(r)[0]===f; }), page=pgSlice('tre',list);
     if(f==='all'&&PG.tre===0){ var mm=+todayStr().slice(5,7), se=seasonOf(mm); h+='<div class="als-mo">'+({sp:'🌸',su:'🌊',au:'🍂',wi:'❄️'})[se]+' '+mm+'월의 진열이에요. 이 중 절반은 다음 달에 새 물건으로 바뀌어요.</div>'; }
     if(f==='all'&&items.length){ var pk=items[dayIdx(items.length)], PL=LINES.pick.concat(LQD.get('alesendo.pick')), q=PL[dayIdx(PL.length)];
-      h+='<div class="shelf-h">✦ 오늘의 추천</div><div class="als-pick"><div class="k">오늘 입고된 물건</div>'+row(pk).replace('class="treasure-row"','class="treasure-row" style="margin:0"')+'<div class="q">'+esc2(q)+'</div></div>'; }
+      h+='<div class="shelf-h">✦ 오늘의 추천</div><div class="als-pick"><div class="k">오늘 입고된 물건</div>'+row(pk).replace('class="treasure-row"','class="treasure-row" style="margin:0"').replace('margin-left:6px','display:block;margin:2px 0 0')+'<div class="q">'+esc2(q)+'</div></div>'; }
     var last=''; page.forEach(function(r){ var s=shelfOf(r); if(f==='all'&&s[0]!==last){ last=s[0]; h+='<div class="shelf-h">'+s[1]+'</div>'; } h+=row(r); });
     if(!list.length&&!items.length&&_sc!=='worry') _sc=scPick('empty');
     if(!list.length) h+='<div class="empty" style="margin-top:8px">'+(items.length?'비어 있어요':esc2(rnd(LINES.empty,'empty')))+'</div>';
@@ -181,8 +186,9 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     if(tab==='shop') body=shopHTML(); else if(tab==='ledger') body=ledgerHTML(); else if(tab==='gift') body=giftHTML();
     else { var list=S.rewards.filter(function(r){ return rwState(r)===tab; }).sort(function(a,b){ return (a.price||0)-(b.price||0); });
       body=(pgSlice('tre',list).map(row).join('')||'<div class="empty">여기엔 아직 아무것도 없어요</div>')+pgHTML('tre',list.length); }
-    document.getElementById('treasureList').innerHTML=head(tab)+'<div class="gold-bar">◈ 골드 '+(S.gold||0).toLocaleString()+'</div>'+chestBtn()+tabs()+body; LQ.fire('treasure:rendered'); };
-  window.shSet=function(v){ FIL.shelf=v; PG.tre=0; _sc=scPick(v==='all'?'shop':v); renderTreasure(); };
+    document.getElementById('treasureList').innerHTML=head(tab)+'<div class="gold-bar">◈ 골드 '+(S.gold||0).toLocaleString()+'</div>'+chestBtn()+tabs()+body; LQ.fire('treasure:rendered');
+    try{ var ab=document.getElementById('addRewardBtn'); if(ab) ab.style.display=(tab==='shop')?'':'none'; }catch(e){ LQ.err(e); } };
+  window.shSet=function(v){ FIL.shelf=v; PG.tre=0; _sc=scPick(scFor('shop')); renderTreasure(); };
   window.gfClaim=function(id){ var g=GIFTS.find(function(x){ return x.id===id; }); if(!g) return; S.giftGot=S.giftGot||{}; if(S.giftGot[id]) return;
     if(unl()<g.need){ toast('아직 업적이 모자라요'); return; }
     S.giftGot[id]=todayStr(); S.rewards.push({id:g.id,name:g.name,price:0,owned:true,redeemed:false,repeatable:false,gift:true,note:g.desc});
@@ -266,7 +272,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
    {i:'forest',w:'좋았어요, 첫 단계 끝! 컨셉은 확실히 잡혔죠? 벌써 간판에 그릴 그림이 떠올랐어요. 빗자루 타고 후딱 붙이러 갈까요?!',s:'…간판은 아직 없다냥. 진정해.'},
    {i:'potion',w:'남의 가게 메뉴 염탐이라니, 완전 제 취향이에요! 살금살금… 아, 염탐 아니고 견학이에요, 견학!',s:'…염탐 맞잖아.'},
    {i:'potion',w:'드디어 제 시간이에요! 냄비랑 병 전부 꺼내 올게요. 이번엔 폭발 안 시킬 자신 있어요. …아마도요!',s:'…지난번엔 눈썹이 탔다냥.'},
-   {i:'magic',w:'숫자는 어렵지만 벌써 반이나 왔어요! 열매는 아껴도 정성은 안 아낀다, 이거 제 신조예요. 히히!',s:'…반환점이다. …잘했어.',fx:'✨ 시나의 눈이 파랗게 빛나요'},
+   {i:'magic',w:'숫자는 어렵지만 벌써 반이나 왔어요! 열매는 아껴도 정성은 안 아낀다, 이거 제 신조예요. 하하!',s:'…반환점이다. …잘했어.',fx:'✨ 시나의 눈이 파랗게 빛나요'},
    {i:'forest',w:'우리 가게 얼굴이 생기는 단계네요! 로고에는 별 하나 꼭 넣어요. 제 모자에 있는 것처럼요!',s:'…고양이도 넣어라냥.'},
    {i:'potion',w:'돈 얘기는 서기관님이 더 잘 아시지만… 골드 주머니 지키는 건 자신 있어요! 누가 건드리면 제가 빗자루로 한 방이에요!',s:'…계산은 내가 지켜본다냥.'},
    {i:'fly',w:'자리가 정해졌어요! 하늘에서 내려다보니까 동네가 다 예쁘던데요? 아, 빗자루 타고 답사 다녀왔어요!',s:'…허락도 안 받고 날아갔다냥.'},
@@ -302,10 +308,11 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     var el=document.getElementById('wlPop'); if(!el) return;
     var src=(o.img==='smile'&&window.__als)?window.__als.smile:(IMG[o.img]||(window.WL_IMG2||{})[o.img]||IMG.potion);
     window._wlNext=o.next||null; try{ if(!o.noLog) lqNote('웰라·시나',(o.title||'')+' – '+(o.w||'')); }catch(e){ LQ.err(e); }
-    el.innerHTML='<div class="wl-card" onclick="event.stopPropagation()"><div class="wl-t">'+esc3(o.title)+'</div><img src="'+src+'" alt="">'
+    var mg=(o.img==='magic');
+    el.innerHTML='<div class="wl-card" onclick="event.stopPropagation()">'+(mg?'':'<div class="wl-t">'+esc3(o.title)+'</div>')+'<img src="'+src+'" alt="">'
       +(o.fx?'<div class="wl-fx">'+esc3(o.fx)+'</div>':'')
       +(o.a?'<div class="wl-b a"><b>알레센도</b>'+esc3(o.a)+'</div>':'')
-      +'<div class="wl-b w"><b>웰라</b>'+esc3(o.w)+'</div><div class="wl-b s"><b>시나</b>'+esc3(o.s)+'</div>'
+      +'<div class="wl-b w"><b>웰라</b>'+esc3(lqLaugh(o.w))+'</div><div class="wl-b s"><b>'+(mg?'마법냥이':'시나')+'</b>'+esc3(mg?lqNya(o.s):o.s)+'</div>'
       +'<div class="wl-btn"><button class="gold-btn" onclick="wlDone()">'+esc3(o.btn||'좋아요!')+'</button></div></div>';
     el.onclick=function(){ wlDone(); };
     el.classList.add('show'); void el.offsetWidth; el.classList.add('in');
@@ -371,7 +378,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     var box=document.getElementById('treasureList'), hd=box&&box.querySelector('.als-head'); if(!hd||box.querySelector('.wl-shop')) return;
     var L=lines(), x=dayHash(), pick=L[x%L.length];
     var el=document.createElement('div'); el.className='wl-shop';
-    el.innerHTML='<div class="pt"><img src="'+FACE+'" alt="웰라"></div><div><div class="k">☕ 카페 재료 코너 · 웰라</div><div class="t">'+h(pick[0])+'</div><div class="s">'+h(pick[1])+'</div></div>';
+    el.innerHTML='<div class="pt"><img src="'+FACE+'" alt="웰라"></div><div><div class="k">☕ 카페 재료 코너 · 웰라</div><div class="t">'+h(lqLaugh(pick[0]))+'</div><div class="s">'+h(pick[1])+'</div></div>';
     hd.insertAdjacentElement('afterend',el);
   });
 })();
@@ -443,25 +450,32 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   function imgSrc(k){ var d=A[k]||B[k]; return d||''; }
   function active(){ var sc=document.getElementById('screen-treasure'); return sc&&sc.classList.contains('active'); }
   function close(){ var e=document.getElementById('trChat'); if(e) e.remove(); }
+  function fade(){ var e=document.getElementById('trChat'); if(!e||e.classList.contains('tc-out')) return; e.classList.add('tc-out'); setTimeout(function(){ if(e.parentNode&&e.classList.contains('tc-out')) e.remove(); },1100); }
+  function cap(){ var d=todayStr(), c=S.trChatCap; if(!c||c.d!==d) c=S.trChatCap={d:d,n:0}; return c; }
   function show(){
     try{
       if(!on()||!active()||document.getElementById('bnCard')) return;
+      /* 로웨나·마티가 떠 있거나 곧 뜰 예정이면 잠시 뒤 다시 */
+      var lp=document.getElementById('lowenaPop'), mp=document.getElementById('martyPop'), pd=false; try{ pd=!!_mtPend; }catch(x){ LQ.err(x); }
+      if((lp&&lp.classList.contains('show'))||(mp&&mp.classList.contains('show'))||pd){ clearTimeout(window._trRetry); window._trRetry=setTimeout(show,6000); return; }
+      if(cap().n>=2) return; /* 하루 최대 2번 */
       if(document.getElementById('askOv')&&document.getElementById('askOv').classList.contains('show')) return;
       var wp=document.getElementById('wlPop'); if(wp&&wp.classList.contains('show')) return;
       close();
       var t=LQD.pick('wella.chat',T,{cameo:false}), magic=t[0]==='magic';
-      try{ lqNote(magic?'마법냥이':'웰라',t[1]+' – '+(t[2]||t[3])); }catch(e){ LQ.err(e); }
+      try{ lqNote(magic?'마법냥이':'웰라',(magic?'':t[1]+' – ')+(t[2]||(magic?lqNya(t[3]):t[3]))); }catch(e){ LQ.err(e); }
       var el=document.createElement('div'); el.id='trChat'; if(magic) el.className='tc-magic';
-      el.innerHTML='<img src="'+imgSrc(t[0])+'" alt=""><div class="tc-b"><div class="tc-k">'+(magic?'✨ 마법냥이 모드 · ':'')+h(t[1])+'</div>'+(t[2]?'<div class="tc-w"><b>웰라</b>'+h(t[2])+'</div>':'')+(t[3]?'<div class="tc-s"><b>'+(magic?'마법냥이':'시나')+'</b>'+h(t[3])+'</div>':'')+'</div><button class="tc-x" aria-label="닫기">×</button>';
-      el.querySelector('.tc-x').onclick=close;
+      el.innerHTML='<img src="'+imgSrc(t[0])+'" alt=""><div class="tc-b">'+(magic?'':'<div class="tc-k">'+h(t[1])+'</div>')+(t[2]?'<div class="tc-w"><b>웰라</b>'+h(lqLaugh(t[2]))+'</div>':'')+(t[3]?'<div class="tc-s"><b>'+(magic?'마법냥이':'시나')+'</b>'+h(magic?lqNya(t[3]):t[3])+'</div>':'')+'</div><button class="tc-x" aria-label="닫기">×</button>';
+      el.querySelector('.tc-x').onclick=fade;
       document.body.appendChild(el);
-      clearTimeout(tmr2); tmr2=setTimeout(close,14000);
+      cap().n++; save();
+      clearTimeout(tmr2); tmr2=setTimeout(fade,14000);
     }catch(e){ LQ.err(e); }
   }
   window.trChatNow=show;
-  function loop(){ clearTimeout(timer); timer=setTimeout(function(){ if(active()) show(); loop(); },(45+Math.random()*60)*1000); }
+  function loop(){ clearTimeout(timer); timer=setTimeout(function(){ if(active()) show(); loop(); },(180+Math.random()*180)*1000); }
   LQ.on('screen:after',function(sn){
-    if(sn==='treasure'){ loop(); clearTimeout(window._trFirst); window._trFirst=setTimeout(function(){ if(Math.random()<.6) show(); },(8+Math.random()*10)*1000); } else { close(); clearTimeout(timer); }
+    if(sn==='treasure'){ loop(); clearTimeout(window._trFirst); window._trFirst=setTimeout(function(){ if(Math.random()<.6) show(); },(40+Math.random()*50)*1000); } else { close(); clearTimeout(timer); }
   });
   
 })();
@@ -478,10 +492,10 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     if(n>=100) return {magic:'…전부 해냈다냥. 100개 전부다. ✨ 웰라도 마티도 알레센도도, 모두 박수 치고 있다.'}[who]||'';
     var T={
      magic:['…마법냥이 모드다냥. ✨ 벌써 {n}개를 해냈다. 남은 건 {left}개뿐이다.','…{n}개째다냥. 별이 하나 더 켜졌다. 남은 건 {left}개.'],
-     wella:['와아, {n}개째예요! 빗자루 타고 한 바퀴 돌고 싶은 기분이에요! 이제 {left}개 남았어요, 히히!','벌써 {n}개! 포션 병이 다 반짝이고 있어요. 남은 건 {left}개예요, 조금만 더요!'],
+     wella:['와아, {n}개째예요! 빗자루 타고 한 바퀴 돌고 싶은 기분이에요! 이제 {left}개 남았어요, 하하!','벌써 {n}개! 포션 병이 다 반짝이고 있어요. 남은 건 {left}개예요, 조금만 더요!'],
      marty:['조수 마티, 소식 전해요! 업적 {n}개 달성이에요! 남은 건 {left}개, 끝이 보여요 ✨','대단해요, {n}개나 해냈어요! 마티가 제일 먼저 박수 칠게요. 이제 {left}개 남았어요 👏'],
      alesendo:['장부에 기록했습니다. 업적 {n}개 달성이군요. 남은 것은 {left}개입니다.','축하드립니다. {n}번째 업적을 정리해 두었습니다. 이제 {left}개가 남았습니다.']};
-    return LQD.pick('ach.'+who,T[who]||[],{cameo:false,vars:{n:n,left:left}}); }
+    var r=LQD.pick('ach.'+who,T[who]||[],{cameo:false,vars:{n:n,left:left}}); return who==='wella'?lqLaugh(r):r; }
   function free(){ var a=document.getElementById('askOv'), m=document.getElementById('modalOverlay'), w=document.getElementById('wlPop');
     var busy=false; try{ busy=!!stampBusy; }catch(e){ LQ.err(e); }
     return !busy&&!(a&&a.classList.contains('show'))&&!(m&&m.classList.contains('show'))&&!(w&&w.classList.contains('show')); }
@@ -491,9 +505,9 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
       close();
       var who=(n===90||n>=100)?'magic':ROT[(n-90)%4], c=CH[who];
       var o=document.createElement('div'); o.id='achMile'; if(who==='magic') o.className='am-magic';
-      var title=n===90?'✨ 마법냥이 모드 · 업적 90개 달성!':n>=100?'🏆 업적 100개 전부 해금!':'✦ 업적 '+n+'개 달성';
+      var title=n===90?'✨ 업적 90개 달성!':n>=100?'🏆 업적 100개 전부 해금!':'✦ 업적 '+n+'개 달성';
       o.innerHTML='<div class="am-box"><img src="'+c.img()+'" alt=""><div class="am-t">'+title+'</div><div class="am-w"><b>'+c.name+'</b>'+
-        (n===90?'…90개를 해냈다냥. ✨ 이제 마지막 10개가 남았다. …끝까지 같이 가 준다.':say(who,n)).replace(/[&<>"]/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];})+
+        (function(x){ return who==='magic'?lqNya(x):x; })(n===90?'…90개를 해냈다냥. ✨ 이제 마지막 10개가 남았다. …끝까지 같이 가 준다.':say(who,n)).replace(/[&<>"]/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];})+
         '</div><button class="gold-btn" onclick="document.getElementById(\'achMile\').remove()">고마워요</button></div>';
       document.body.appendChild(o);
     })();

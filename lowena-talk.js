@@ -168,7 +168,7 @@ const RG={
 };
 const PREF=/가장|제일|최애|인상\s*깊|좋아|좋을까|좋겠|추천|뭐가|누구|어느|어떤|무슨|뭐야|뭘|뭐\s*(읽|마시|피|좋)|읽어\s*봤|읽어봤|본\s*적|어때|어떻게\s*생각|생각해|읽을까|마실까/;
 const INTERR=/[?？]|어떤|무슨|어느|누구|뭐|뭘|어디|어때|어떻게|(야|니|까|나요|어요|죠|줘|래)[\s~.!…]*$/;
-const INV=/(얘기|이야기|대화|수다).{0,12}(나누|하고\s*싶|해\s*보|하자|할래|할까|해\s*줘|해\s*요|들려|해\s*볼)|(나누고|얘기하고|이야기하고|수다\s*떨고)\s*싶|얘기\s*좀|이야기\s*좀/;
+const INV=/(얘기|이야기|대화|수다).{0,12}(나누|하고\s*싶|해\s*보|하자|할래|할까|해\s*줘|해\s*줄래|해\s*주세요|해\s*줄\s*수|해\s*요|들려|해\s*볼)|(나누고|얘기하고|이야기하고|수다\s*떨고)\s*싶|얘기\s*좀|이야기\s*좀/;
 const HELLO=/안녕|하이|헬로|반가워|왔어|왔다/;
 const NEG=/^(sad|lonely|angry|anxious|tired)$/;
 
@@ -459,6 +459,29 @@ var ST_END=[
 '들어 줘서 고마워요. 이제 정말 잘 시간이에요. 남은 이야기는 꿈에서 이어 봐요.',
 '오늘 이야기는 여기서 덮을게요. 더 깨어 있고 싶은 마음은 알지만, 이제는 편히 자요. 내일 또 만나요.',
 '촛불은 제가 마지막까지 지킬게요. 자야지요. 좋은 꿈 꿔요.'];
+/* "재밌는 얘기 해 줘" 처럼 이야기를 청할 때: 낮(5~20시)에는 잠 얘기 없이 들려준다 */
+var ST_FUN=/(재밌|재미있|재미난|웃긴|웃기는|신기한|무서운|신나는|따뜻한|아무|짧은|옛날)\s*[가-힣]{0,2}\s*(얘기|이야기)|(얘기|이야기)\s*(하나|좀|한\s*(편|개|자락))\s*(해|들려)/, ST_FUN_ASK=/(해|들려)\s*(줄래|줘(?!서)|주세요|주실|주라|줄\s*수|봐(?!서)|볼래)|듣고\s*싶|없을까|없어요|있어요\?|있나요/;
+var ST_FUN_DAY=[
+'재밌는 이야기라면 서가에 몇 편 꽂아 뒀어요. 하나 꺼내 올까요? 차 한 잔 옆에 두고 가볍게 들어요.',
+'좋아요. 마침 들려주고 싶은 이야기가 있었어요. 조금 길지만 천천히 읽어 줄게요. 들어 볼래요?',
+'이야기를 청해 주니 반가워요. 오늘은 어떤 이야기가 나올지 저도 궁금해요. 하나 펼쳐 볼까요?'];
+var ST_FUN_NIGHT=[
+'좋아요, 이 밤에 어울리는 이야기 하나 꺼내 올게요. 듣다가 졸리면 그냥 자도 돼요.',
+'밤에 청하는 이야기는 특별하죠. 하나 들려줄게요. 불은 조금 낮춰 둘게요.'];
+var ST_DAY_INTRO=[
+'그럼 시작할게요. 편하게 앉아서 들어요.',
+'자, 첫 장을 펼칠게요. 중간에 언제든 멈춰도 괜찮아요.'];
+var ST_DAY_MORE=[
+'좋아요, 하나 더요. 이번엔 어떤 이야기가 나올까요.',
+'이야기가 마음에 들었나 봐요. 하나 더 펼쳐 볼게요.'];
+var ST_DAY_END=[
+'이야기는 여기까지예요. 들어 줘서 고마워요. 남은 하루도 이 이야기처럼 조용히 흘러가길 바라요.',
+'오늘 이야기는 여기서 덮을게요. 마음에 남는 장면이 있었다면 그걸로 충분해요.',
+'끝까지 들어 줘서 고마워요. 이야기가 필요해지면 언제든 다시 청해요.'];
+var ST_DAY_LAST='오늘은 이야기를 벌써 여러 편 들려줬어요. 남은 이야기는 다음에 또 해 줄게요.';
+var stDay=false;
+function stHour(){ return new Date(Date.now()+9*36e5).getUTCHours(); }
+function stFun(t){ return ST_FUN.test(t)&&ST_FUN_ASK.test(t)&&!ST_CRISIS.test(t); }
 var ST_QUIT=[
 '괜찮아요. 남은 이야기는 다음에 이어서 해 줄게요. 오늘은 여기까지 해요.',
 '그만 들어도 돼요. 언제든 다시 청하면 이어서 들려줄게요.'];
@@ -495,12 +518,12 @@ function bubble(txt,extra){ return '<div class="mascot-row">'+mascotImg(56,'chee
 function roomHush(msg){ try{ cfRoomFace('proud'); var h=document.getElementById('cfHi'); if(h&&msg) h.textContent=msg; }catch(e){ LQ.err(e); } }
 function clearInput(){ try{ var ta=document.getElementById('cfText'); if(ta) ta.value=''; cfRoomAfterSend('free'); }catch(e){ LQ.err(e); } }
 
-window.stOffer=function(t){
-  window.__stText=t||'';
-  var rs=S.stResume&&stById(S.stResume.id), line=stRnd(ST_OFFER);
+window.stOffer=function(t,fun){
+  window.__stText=t||''; var hr=stHour(); stDay=!!fun&&hr>=5&&hr<21;
+  var rs=S.stResume&&stById(S.stResume.id), line=stRnd(fun?(stDay?ST_FUN_DAY:ST_FUN_NIGHT):ST_OFFER);
   if(rs) line+='\n\n지난번에 「'+rs.t.replace(/^\S+\s/,'')+'」는 아직 끝까지 못 들었어요. 이어서 들려줄 수도 있어요.';
   var sbtn=''; if(!rs&&S.stSer&&S.stSer.next>0){ var ep0=stById(S.stSer.id+':'+S.stSer.next), sr0=null; ST_SER.forEach(function(x){ if(x.id===S.stSer.id) sr0=x; }); if(ep0&&sr0) sbtn='<button class="cfb" onclick="stSerGo(\''+sr0.id+'\')">📖 '+esc(sr0.t.replace(/^\S+\s/,''))+' '+(S.stSer.next+1)+'화 이어 듣기</button>'; }
-  var btns='<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px"><button class="cfb" onclick="stStart()">🌙 들려주세요</button>'+(rs?'<button class="cfb" onclick="stStart(true)">📖 지난 이야기 이어서</button>':'')+sbtn+'<button class="cfb" onclick="stDecline()">오늘은 괜찮아요</button></div>';
+  var btns='<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px"><button class="cfb" onclick="stStart()">'+(stDay?'📖':'🌙')+' 들려주세요</button>'+(rs?'<button class="cfb" onclick="stStart(true)">📖 지난 이야기 이어서</button>':'')+sbtn+'<button class="cfb" onclick="stDecline()">오늘은 괜찮아요</button></div>';
   cfShowTyped(bubble(line,btns)); };
 window.stDecline=function(){ window.__stSkip=true; closeModal(); try{ window.cfSend(); }catch(e){ window.__stSkip=false; } };
 window.stSerGo=function(sid){ var pg=stSerIdx(sid), ep=stById(sid+':'+(pg>0?pg:0)); if(!ep){ stStart(); return; } window.__stEp=ep; stStart(); };
@@ -513,12 +536,12 @@ window.stStart=function(resume){
   stChain=0; cur={s:s,i:Math.min(i,s.p.length-1),leadPending:!(resume&&i>0)}; if(window.__stLead){ cur.lead=window.__stLead; window.__stLead=null; }
   else if(s.ser&&s.ser.indexOf('sr_genji')===0&&!resume) cur.lead=(s.ser==='sr_genji1'&&s.idx===0&&!(S.stProg&&S.stProg.sr_genji1!=null))?ST_GJ_FIRST:stRnd(ST_GJ_LEAD);
   try{ var t=window.__stText||''; (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(잠들기 전 이야기를 들었어요 · '+s.t.replace(/^\S+\s/,'')+')',reply:'🌙 '+s.t.replace(/^\S+\s/,'')+' 이야기를 들려줬어요'}); save(); }catch(e){ LQ.err(e); }
-  clearInput(); roomHush('이야기를 들려주는 중이에요.\n눈은 감고 들어도 좋아요.'); stShow(); };
+  clearInput(); roomHush(stDay?'이야기를 들려주는 중이에요.\n편하게 들어요.':'이야기를 들려주는 중이에요.\n눈은 감고 들어도 좋아요.'); stShow(); };
 function stSayRow(){ return '<div style="display:flex;gap:6px;margin-top:8px"><input id="stSay" type="text" maxlength="120" autocomplete="off" placeholder="이야기에 대해 로웨나에게 말해 봐요" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){event.preventDefault();stSay();}" style="flex:1;font-size:16px"><button class="cfb" style="flex:0 0 auto" onclick="stSay()">💬</button></div>'; }
 function stShow(){
   var s=cur.s, n=s.p.length, i=cur.i, last=(i>=n-1);
   S.stResume={id:s.id,i:i}; try{ save(); }catch(e){ LQ.err(e); }
-  if(cur.leadPending){ cur.leadPending=false; var ld=cur.lead||stRnd(ST_INTRO); cfShowTyped(bubble(ld,'<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:2" onclick="stBack()">이야기 시작</button><button class="cfb" style="flex:1" onclick="stQuit()">그만 들을래요</button></div>'+stSayRow())); return; }
+  if(cur.leadPending){ cur.leadPending=false; var ld=cur.lead||stRnd(stDay?ST_DAY_INTRO:ST_INTRO); cfShowTyped(bubble(ld,'<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:2" onclick="stBack()">이야기 시작</button><button class="cfb" style="flex:1" onclick="stQuit()">그만 들을래요</button></div>'+stSayRow())); return; }
   var head='<div style="font-size:12px;color:var(--ink-soft);margin:0 0 8px">'+(i+1)+' / '+n+'</div>';
   var btns='<div style="display:flex;gap:6px;margin-top:12px"><button class="cfb" style="flex:2" onclick="stNext()">'+(last?'끝까지 들었어요':'다음')+'</button><button class="cfb" style="flex:1" onclick="stQuit()">그만 들을래요</button></div>';
   cfShowTyped(head+bubble(s.p[i],btns+stSayRow())); }
@@ -526,12 +549,12 @@ window.stNext=function(){ if(!cur) return; cur.i++; if(cur.i>=cur.s.p.length) st
 function stEnd(){ S.stResume=null; var sr=cur&&cur.s&&cur.s.ser, fin=false;
   if(sr){ var pg=(S.stProg=S.stProg||{}); if(cur.s.idx+1<cur.s.n){ S.stSer={id:sr,next:cur.s.idx+1}; pg[sr]=cur.s.idx+1; } else { pg[sr]=-1; fin=true; S.stSer=null; var dn=(S.stSerDone=S.stSerDone||[]); if(dn.indexOf(sr)<0) dn.push(sr); if(dn.length>=ST_SER.length) S.stSerDone=[]; } }
   try{ save(); }catch(e){ LQ.err(e); }
-  roomHush('이야기가 끝났어요.\n이제 눈을 감아도 좋아요.');
-  var more=(stChain<2), line=sr?(sr==='sr_yume10'?stRnd(fin?ST_SS_END:ST_SER_MID):sr.indexOf('sr_genji')===0?stRnd(fin?(sr==='sr_genji1'?ST_GJ_END:sr==='sr_genji2'?ST_GJ_END2:sr==='sr_genji3'?ST_GJ_END3:ST_GJ_END4):ST_GJ_MID):stRnd(fin?ST_SER_END:ST_SER_MID)):(more?stRnd(ST_END):ST_LAST);
+  roomHush(stDay?'이야기가 끝났어요.':'이야기가 끝났어요.\n이제 눈을 감아도 좋아요.');
+  var more=(stChain<2), line=sr?(sr==='sr_yume10'?stRnd(fin?ST_SS_END:ST_SER_MID):sr.indexOf('sr_genji')===0?stRnd(fin?(sr==='sr_genji1'?ST_GJ_END:sr==='sr_genji2'?ST_GJ_END2:sr==='sr_genji3'?ST_GJ_END3:ST_GJ_END4):ST_GJ_MID):stRnd(fin?ST_SER_END:ST_SER_MID)):(more?stRnd(stDay?ST_DAY_END:ST_END):(stDay?ST_DAY_LAST:ST_LAST));
   window.__stEndState={line:line,more:more}; stReflect(); }
 function stEndScreen(pre){ var e=window.__stEndState||{line:'',more:false};
   if(pre){ cfShowTyped(bubble(pre,'<div style="display:flex;margin-top:12px"><button class="cfb" style="flex:1" onclick="stEndScreen(\'\')">다음</button></div>')); return; }
-  cfShowTyped(bubble(e.line,'<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">'+(e.more?'<button class="cfb" onclick="stMore()">📖 하나만 더 들려주세요</button>':'')+'<button class="cfb" onclick="stBye()">🌙 접속 종료 · 인사하고 잘래요</button><button class="cfb" onclick="closeModal()">밀담실에 더 있을래요</button></div>')); }
+  cfShowTyped(bubble(e.line,'<div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">'+(e.more?'<button class="cfb" onclick="stMore()">📖 하나만 더 들려주세요</button>':'')+'<button class="cfb" onclick="stBye()">'+(stDay?'👋 접속 종료 · 인사하고 갈래요':'🌙 접속 종료 · 인사하고 잘래요')+'</button><button class="cfb" onclick="closeModal()">밀담실에 더 있을래요</button></div>')); }
 function stReflect(){
   var row='<div style="display:flex;gap:6px;margin-top:10px"><input id="stRef" type="text" maxlength="160" autocomplete="off" placeholder="어땠는지 편하게 말해 줘요" onkeydown="if(event.key===\'Enter\'&&!event.isComposing){event.preventDefault();stRefSend();}" style="flex:1;font-size:16px"><button class="cfb" style="flex:0 0 auto" onclick="stRefSend()">남기기</button></div><div style="display:flex;margin-top:8px"><button class="cfb" style="flex:1" onclick="stRefSkip()">건너뛸게요</button></div>';
   cfShowTyped(bubble('이야기가 끝났어요.\n'+stAskLine(),row)); }
@@ -563,7 +586,7 @@ window.stRefSend=async function(){
   if(!ans) ans=stReflectLocal(t);
   try{ (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'chat',text:'(이야기 감상) '+t,reply:ans}); save(); }catch(e){ LQ.err(e); }
   stEndScreen(ans); };
-window.stMore=function(){ stChain++; var s=stPick(); cur={s:s,i:0,lead:stRnd(ST_MORE),leadPending:true};
+window.stMore=function(){ stChain++; var s=stPick(); cur={s:s,i:0,lead:stRnd(stDay?ST_DAY_MORE:ST_MORE),leadPending:true};
   try{ (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'sit',text:'(잠들기 전 이야기를 한 편 더 들었어요 · '+s.t.replace(/^\S+\s/,'')+')',reply:'🌙 '+s.t.replace(/^\S+\s/,'')+' 이야기를 들려줬어요'}); save(); }catch(e){ LQ.err(e); }
   roomHush('이야기를 들려주는 중이에요.\n눈은 감고 들어도 좋아요.'); stShow(); };
 window.stBye=function(){ closeModal(); try{ cfRoomClose(); }catch(e){ LQ.err(e); } setTimeout(function(){ try{ lowenaBye(); }catch(e){ LQ.err(e); } },300); };
@@ -735,6 +758,7 @@ window.cfSend=function(){
       if(t&&!(bb&&bb.classList.contains('on'))&&stBookShow(t)) return;
       if(t&&!(bb&&bb.classList.contains('on'))&&stRequest(t)) return;
       if(t&&!(bb&&bb.classList.contains('on'))&&stIntent(t)){ stOffer(t); return; }
+      if(t&&!(bb&&bb.classList.contains('on'))&&stFun(t)){ stOffer(t,true); return; }
     }
   }catch(e){ LQ.err(e); }
   window.__stSkip=false;

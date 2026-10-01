@@ -80,3 +80,13 @@
 #bnCard .bn-nx{background:transparent;border:1px solid #8a6a2a;color:#f3d88a;border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer}
 @keyframes bnIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes bnLine{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* 입력칸이 아이폰에서 옆으로 삐져나오지 않게 */
+input,select,textarea{min-width:0;max-width:100%}
+input[type=date],input[type=time],input[type=month],input[type=datetime-local]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;height:42px;line-height:1.2;text-align:left;overflow:hidden}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left;min-height:1.3em}
+.inline>input[type=date],.inline>input[type=time]{flex:1 1 0}
+#anniSel select{flex:1 1 0;min-width:0;margin-bottom:8px}#anniSel{align-items:stretch}
+
+@keyframes trOut{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,6px)}}#trChat.tc-out{animation:trOut 1s ease forwards;pointer-events:none}
+#trChat.tc-magic .tc-k{display:none}

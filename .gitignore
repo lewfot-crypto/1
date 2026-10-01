@@ -1,0 +1,5 @@
+.DS_Store
+*.zip
+node_modules/
+CLAUDE.md
+index_preview.html
