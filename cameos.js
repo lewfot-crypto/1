@@ -93,20 +93,54 @@
   function close(){ var e=document.getElementById('lqCard'); if(e) e.remove(); }
   function card(o){
     close(); var e=document.createElement('div'); e.id='lqCard'; e.className='show'+(o.cls?' '+o.cls:'');
-    e.innerHTML='<div class="lc-box"><div class="lc-t">'+h(o.title)+'</div><div class="lc-row">'+o.face+'<div class="lc-w"><b>'+h(o.name)+'</b>'+h(o.text)+'</div></div>'
+    e.innerHTML='<div class="lc-box" style="max-height:88vh;overflow:auto"><div class="lc-t">'+h(o.title)+'</div>'+(o.many?o.many.map(function(r){ return '<div class="lc-row" style="margin-bottom:10px">'+r[0]+'<div class="lc-w"><b>'+h(r[1])+'</b>'+h(r[2])+'</div></div>'; }).join(''):'<div class="lc-row">'+o.face+'<div class="lc-w"><b>'+h(o.name)+'</b>'+h(o.text)+'</div></div>')
       +(o.rows?'<div class="lc-st">'+o.rows.map(function(r){ return '<div><span>'+h(r[0])+'</span><b>'+h(r[1])+'</b></div>'; }).join('')+'</div>':'')
-      +(o.fx?'<div class="lc-fx">'+h(o.fx)+'</div>':'')+'<button class="gold-btn" id="lcOk">'+h(o.btn||'고마워요')+'</button></div>';
-    document.body.appendChild(e); document.getElementById('lcOk').onclick=function(){ close(); };
+      +(o.extra||'')+(o.fx?'<div class="lc-fx">'+h(o.fx)+'</div>':'')+'<button class="gold-btn" id="lcOk">'+h(o.btn||'고마워요')+'</button></div>';
+    document.body.appendChild(e); document.getElementById('lcOk').onclick=function(){ close(); if(o.next) setTimeout(o.next,250); };
     try{ sfx('check'); }catch(x){ LQ.err(x); }
-    try{ lqNote(o.name,o.text); }catch(x){ LQ.err(x); } }
+    try{ if(o.many) lqNote(o.many[0][1],o.many[0][2]); else lqNote(o.name,o.text); }catch(x){ LQ.err(x); } }
+  /* 회고 달력: 다 클리어한 날 금빛, 조금 한 날 연한 보라, 쉬는 날 달 */
+  function cal(ym){
+    var y=+ym.slice(0,4), m=+ym.slice(5,7), last=new Date(y,m,0).getDate(), first=new Date(y,m-1,1).getDay(), H=S.history||{}, c='';
+    ['일','월','화','수','목','금','토'].forEach(function(w){ c+='<div class="rc-w">'+w+'</div>'; });
+    for(var i=0;i<first;i++) c+='<div></div>';
+    for(var d=1;d<=last;d++){ var r=H[ym+'-'+(d<10?'0'+d:d)]||{}, n=Object.keys(r.done||{}).filter(function(x){ return r.done[x]; }).length;
+      var cls=r.cleared?'rc-g':r.pass?'rc-p':n?'rc-s':''; c+='<div class="rc-d '+cls+'">'+(r.pass&&!r.cleared?'☾':d)+'</div>'; }
+    return '<div class="rc-cal">'+c+'</div><div class="rc-lg"><span><i class="rc-g"></i>클리어</span><span><i class="rc-s"></i>조금 한 날</span><span><i class="rc-p">☾</i>쉬는 날</span></div>'; }
+  var rcCss=document.createElement('style');
+  rcCss.textContent='#lqCard .rc-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:12px 0 4px}'
+    +'#lqCard .rc-w{font-size:10px;text-align:center;color:#b9a8d6}'
+    +'#lqCard .rc-d{height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;border-radius:3px;background:rgba(255,255,255,.05);color:#8f84a3;image-rendering:pixelated}'
+    +'#lqCard .rc-d.rc-g{background:#f3d88a;color:#3a2a10;font-weight:700;box-shadow:inset -2px -2px 0 #c9a24d,inset 2px 2px 0 #fff2c4}'
+    +'#lqCard .rc-d.rc-s{background:#5b4a80;color:#e9e0f5;box-shadow:inset -2px -2px 0 #463866}'
+    +'#lqCard .rc-d.rc-p{background:#2c2440;color:#cdb8ff;font-size:13px}'
+    +'#lqCard .rc-lg{display:flex;justify-content:center;gap:12px;font-size:10.5px;color:#b9a8d6;margin-bottom:4px}'
+    +'#lqCard .rc-lg i{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px;font-style:normal;font-size:9px;line-height:10px;text-align:center;border-radius:2px}'
+    +'#lqCard .rc-lg i.rc-g{background:#f3d88a}#lqCard .rc-lg i.rc-s{background:#5b4a80}#lqCard .rc-lg i.rc-p{background:#2c2440;color:#cdb8ff}';
+  document.head.appendChild(rcCss);
+  /* 회고 두 번째 장: 친구들 한마디 (그 달 숫자에 맞춰서) */
+  var RF={
+    marty:{high:['{m}월은 클리어한 날이 {c}일이에요! 마티 수첩이 금빛 동그라미로 꽉 찼어요 ✨','{m}월 정말 대단했어요! 마티가 금빛 칸 세다가 손가락이 모자랐어요 🎉'],
+           mid:['{m}월은 클리어한 날이 {c}일! 반짝이는 날이 꽤 많았어요. 마티는 다 기억해요 ✨','{m}월 수고했어요! 금빛 칸 사이사이 연한 칸도 전부 노력한 날이에요 🌟'],
+           low:['{m}월은 조금 쉬어 간 달이었죠? 괜찮아요. 마티는 연한 칸 하나하나도 다 반가웠어요 ✨','다음 달 달력은 새하얀 첫 장이에요! 마티가 첫 칸부터 응원할게요 🌱']},
+    wella:{best:['연속 {s}일이라니! 제 빗자루 연속 비행 기록보다 길어요! 하하, 분하다!','{s}일 연속이에요! 저도 다음 달엔 빗자루에서 {s}일 연속 안 떨어져 볼래요, 하하!'],
+           any:['{m}월 달력 봤어요! 금빛 칸 위로 빗자루 타고 한 바퀴 돌고 싶어요, 하하!','저도 {m}월에 열심히 했어요! 빗자루에서 세 번만 떨어졌어요, 하하!']},
+    sina:{high:['…{m}월, 나쁘지 않았다냥. …아니, 꽤 좋았다냥.','…금빛 칸이 많다냥. 따뜻해 보인다냥. 그 위에서 자고 싶다냥.'],
+          mid:['…{m}월은 적당했다냥. 적당한 게 오래간다냥.','…빈칸도 있다냥. 고양이도 하루는 잔다냥. 괜찮다냥.'],
+          low:['…쉰 달도 달이다냥. 다음 달에 또 하면 된다냥.','…달력 빈칸은 낮잠 자리다냥. 나쁘지 않다냥.']}};
+  function rfImg(k){ try{ return k==='marty'?'<img src="'+MARTY_IMG+'" alt="">':k==='wella'?'<img src="assets/fa2c999a3b.webp" alt="">':'<img src="'+((window.WL_IMG1||{}).magic||'')+'" alt="">'; }catch(e){ return ''; } }
+  function rfPick(a,v){ return a[Math.floor(Math.random()*a.length)].replace(/\{m\}/g,v.m).replace(/\{c\}/g,v.c).replace(/\{s\}/g,v.s); }
+  function friends(m,k,st){ var v={m:m,c:st.cl,s:st.best}, w=rfPick(st.best>=5?RF.wella.best:RF.wella.any,v);
+    card({title:'📅 '+m+'월 회고 · 모두의 한마디',many:[[rfImg('marty'),'마티',rfPick(RF.marty[k],v)],[rfImg('wella'),'웰라',window.lqLaugh?lqLaugh(w):w],[rfImg('sina'),'시나',rfPick(RF.sina[k],v)]]}); }
   function ymPrev(){ var t=todayStr(), y=+t.slice(0,4), m=+t.slice(5,7)-1; if(m<1){ m=12; y--; } return y+'-'+(m<10?'0'+m:m); }
   window.lqRetroNow=function(force,ym){
     ym=ym||ymPrev(); var st=stats(ym), m=+ym.slice(5,7);
     if(!st.days){ if(force) toast('그 달의 기록이 아직 없어요'); return; }
     var k=st.avg>=80?'high':st.avg>=50?'mid':'low';
     var txt=LQD.pick('lowena.retro.'+k,[],{who:'lowena',cameo:false,vars:{m:m,c:st.cl,s:st.best}});
-    card({title:'📅 '+m+'월 회고',face:(typeof mascotImg==='function'?mascotImg(64,k==='low'?'':'cheer'):''),name:'로웨나',text:txt,
-      rows:[['퀘스트 클리어한 날',st.cl+'일'],['가장 길었던 연속 기록',st.best+'일'],['해낸 퀘스트',st.done+'개'],['평균 달성률',st.avg+'%'],['해금한 업적',st.ach+'개']]}); };
+    card({title:'📅 '+m+'월 회고',face:(typeof mascotImg==='function'?mascotImg(64,k==='low'?'':'cheer'):''),name:'로웨나',text:txt,extra:cal(ym),
+      rows:[['퀘스트 클리어한 날',st.cl+'일'],['가장 길었던 연속 기록',st.best+'일'],['해낸 퀘스트',st.done+'개'],['평균 달성률',st.avg+'%'],['해금한 업적',st.ach+'개']],
+      btn:'다음',next:function(){ friends(m,k,st); }}); };
   window.lqYearNow=function(force,yr){
     yr=yr||todayStr().slice(0,4); var st=stats(yr+'-');
     if(!st.days){ if(force) toast('올해 기록이 아직 없어요'); return; }
