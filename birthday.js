@@ -14,9 +14,10 @@
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 
   /* ---------- 지금 다른 창이 떠 있지 않을 때만 보여줘요 ---------- */
+  function splashOn(){ var sp=document.getElementById('splash'); if(!sp) return false; var cs=getComputedStyle(sp); return cs.display!=='none'&&cs.visibility!=='hidden'&&+cs.opacity>.05; }
   function busy(){ var q=function(i){ var e=document.getElementById(i); return e&&e.classList.contains('show'); }, b=false; try{ b=!!stampBusy; }catch(e){ LQ.err(e); }
-    return b||q('askOv')||q('modalOverlay')||q('wlPop')||q('martyPop')||q('lowenaPop')||document.getElementById('achMile')||document.getElementById('lqCard')||document.getElementById('bnCard'); }
-  function whenFree(fn){ var n=0; (function go(){ if(busy()&&n++<40) return void setTimeout(go,1500); var h=document.getElementById('screen-home'); if(h&&h.classList.contains('active')) fn(); })(); }
+    return b||splashOn()||q('askOv')||q('modalOverlay')||q('wlPop')||q('martyPop')||q('lowenaPop')||document.getElementById('achMile')||document.getElementById('lqCard')||document.getElementById('bnCard'); }
+  function whenFree(fn){ var n=0; (function go(){ if(busy()&&n++<40) return void setTimeout(go,1500); var h=document.getElementById('screen-home'); if(h&&h.classList.contains('active')&&!busy()) fn(); })(); }
   function closeCard(){ var e=document.getElementById('lqCard'); if(e) e.remove(); }
   function face(k){ var s={
       lowena:function(){ return typeof mascotImg==='function'?mascotImg(64,'cheer'):''; },
@@ -94,8 +95,11 @@
 
   /* ---------- 홈에 올 때마다 확인 ---------- */
   var tm=null;
-  LQ.on('screen:after',function(s){ clearTimeout(tm); if(s!=='home') return;
+  function onHome(){ clearTimeout(tm);
     try{ banner(); }catch(e){ LQ.err(e); }
     tm=setTimeout(function(){ try{ if(!on()) return;
-      if(isDay()) runDay(); else if(daysTo()===1) runOnce('eve'); else if(isAfter()) runOnce('after'); }catch(e){ LQ.err(e); } },3600); });
+      if(isDay()) runDay(); else if(daysTo()===1) runOnce('eve'); else if(isAfter()) runOnce('after'); }catch(e){ LQ.err(e); } },3600); }
+  LQ.on('screen:after',function(s){ if(s==='home') onHome(); else clearTimeout(tm); });
+  /* 앱을 막 열었을 때는 screen:after가 오지 않아서 한 번 직접 확인해요 */
+  setTimeout(function(){ try{ var h=document.getElementById('screen-home'); if(h&&h.classList.contains('active')) onHome(); }catch(e){ LQ.err(e); } },800);
 })();

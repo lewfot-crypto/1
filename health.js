@@ -30,9 +30,12 @@
       +'<div style="display:flex;gap:6px;margin-top:10px"><button class="cfb" style="flex:1" onclick="lqErrClear()">기록 지우기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>');
   }catch(e){ LQ.err(e); } };
   window.lqErrClear=function(){ wr([]); closeModal(); try{ toast('오류 기록을 지웠어요'); }catch(e){} };
-  var VER='v6.0'; /* sw.js 의 V 번호와 같게 올려요 */
+  var VER='v6.01'; /* sw.js 의 V 번호와 같게 올려요 */
   /* 업데이트 기록: 설정 맨 아래 버전 번호를 누르면 보여요. 업데이트할 때마다 맨 위에 한 줄씩 추가해요 */
   var LOG=[
+   ['v6.01','2026-10-02',['밀담실 촛불을 도트 그림으로 바꿨어요 (불꽃이 일렁이고 빛이 깜빡여요)',
+     '앱을 막 열었을 때 생일 주간 배너가 안 보이던 문제 해결',
+     '시작 화면 위에 생일 카드가 겹쳐 뜨지 않게']],
    ['v6.0','2026-10-02',['🎃 할로윈 주간(10/24~10/31): 홈 위쪽에 호박 등불과 박쥐 장식, 할로윈까지 남은 날짜',
      '특별 이벤트 「🎃 할로윈 밤의 모험」 퀘스트 3개 (다 하면 할로윈 보물과 골드)',
      '10/31 당일: 로웨나 인사와 모두의 한마디, 호박 세 개 중 하나를 고르는 「사탕 아니면 장난!」',

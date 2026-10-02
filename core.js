@@ -1549,8 +1549,30 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
   window.cfVisit=function(){ try{ var t=todayStr(), V=S.cfVisits=S.cfVisits||[]; if(V.indexOf(t)<0){ V.push(t); if(V.length>60) V.splice(0,V.length-60); save(); } }catch(e){ LQ.err(e); } };
   function visitDays(){ var t0=Date.parse(todayStr()); return (S.cfVisits||[]).filter(function(d){ var q=t0-Date.parse(d); return q>=0&&q<7*864e5; }).length; }
   window.cfCandlesHtml=function(){ var n=Math.min(7,Math.max(1,visitDays())), P=[[-150,46],[-126,32],[134,58],[-176,40],[158,36],[-100,50],[110,42],[-72,34],[84,44]], c=Math.min(P.length,2+n), h='<div class="cf-candles">';
-    for(var i=0;i<c;i++){ var x=P[i][0]; h+='<i class="cf-candle" style="left:calc(50% '+(x<0?'- '+(-x):'+ '+x)+'px);height:'+P[i][1]+'px"></i>'; }
+    for(var i=0;i<c;i++){ var x=P[i][0], hh=P[i][1], d=(-(i*0.37)%1.2).toFixed(2); h+='<i class="cf-pxc" style="left:calc(50% '+(x<0?'- '+(-x):'+ '+x)+'px);height:'+hh+'px;background-image:url('+pxBody(hh)+')"><b class="cf-pxg" style="background-image:url('+pxSpr().g+');animation-delay:'+d+'s"></b><b class="cf-pxf" style="background-image:url('+pxSpr().f+');animation-delay:'+d+'s;animation-duration:'+(0.72+(i%3)*0.11).toFixed(2)+'s"></b></i>'; }
     return h+'</div>'; };
+  /* 도트 촛불: 몸통(높이별)·불꽃(6장 넘김)·빛 무리를 캔버스로 그려 쓴다. 1칸 = 2px */
+  var PXC={}, PXS=null;
+  function pxCv(w,h){ var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+  function pxDraw(x,rows,pal,ox){ rows.forEach(function(r,y){ for(var i=0;i<r.length;i++){ var k=r.charAt(i); if(pal[k]){ x.fillStyle=pal[k]; x.fillRect((ox||0)+i,y,1,1); } } }); }
+  function pxBody(hp){ if(PXC[hp]) return PXC[hp]; var R=Math.round(hp/2), c=pxCv(11,R), x=c.getContext('2d'), W=['#5a3a22','#fff3d6','#f2e2bb','#e6d1a2','#d4bb86','#b89a66'], f=function(col,y,cl){ x.fillStyle=cl; x.fillRect(col,y,1,1); };
+    for(var y=0;y<R-3;y++){ f(2,y,W[0]); f(8,y,W[0]); for(var k=1;k<=5;k++) f(2+k,y,W[k]); }
+    for(var k=3;k<=7;k++){ f(k,0,W[0]); f(k,1,'#fffaea'); } f(2,0,'rgba(0,0,0,0)'); x.clearRect(2,0,1,1); x.clearRect(8,0,1,1); f(2,1,W[0]); f(8,1,W[0]);
+    f(3,2,'#fffaea'); f(3,3,'#fffaea'); f(3,4,'#fffaea'); f(6,2,'#f6e8c8'); f(6,3,'#f6e8c8');
+    f(2,2,W[1]); f(2,3,W[1]); f(1,2,W[0]); f(1,3,W[0]); f(2,4,W[0]);
+    for(var k=1;k<=9;k++){ f(k,R-3,k<3||k>7?'#5a3a22':'#f0c860'); f(k,R-2,k===1?'#f0c860':k===9?'#8a5a1c':'#c9973a'); } f(0,R-2,'#5a3a22'); f(10,R-2,'#5a3a22'); for(var k=0;k<=10;k++) f(k,R-1,'#4a2a12');
+    return PXC[hp]=c.toDataURL(); }
+  function pxSpr(){ if(PXS) return PXS;
+    var pal={k:'#3a2a1a',w:'#fffbe6',y:'#ffe066',o:'#ff9a2a',r:'#e0531f'},
+      F1=['...r...','...o...','..oo...','..oyo..','.oyyo..','.oywyo.','.oywyo.','.oywyo.','..oyo..','...w...','...k...'],
+      F2=['....r..','....o..','...oo..','..oyo..','..oyyo.','.oywyo.','.oywyo.','.oywyo.','..oyo..','...w...','...k...'],
+      F3=['..r....','...o...','..oo...','..oyo..','.oyyo..','.oywyo.','.oywyo.','..owo..','..oyo..','...w...','...k...'],
+      F4=['.......','...r...','...o...','..oyo..','.oyyo..','.oywyo.','.oywyo.','.oywyo.','..oyo..','...w...','...k...'],
+      fr=[F1,F2,F1,F4,F3,F2], c=pxCv(7*fr.length,11), x=c.getContext('2d');
+    fr.forEach(function(F,i){ pxDraw(x,F,pal,i*7); });
+    var g=pxCv(16,16), y=g.getContext('2d');
+    for(var a=0;a<16;a++) for(var b=0;b<16;b++){ var dd=Math.round(Math.hypot(a-7.5,b-8.5)*2)/2, al=dd<3.5?.42:dd<5?.28:dd<6.5?.16:dd<8?.07:0; if(al){ y.fillStyle='rgba(255,170,70,'+al+')'; y.fillRect(a,b,1,1); } }
+    return PXS={f:c.toDataURL(),g:g.toDataURL()}; }
   window.cfCandleNote=function(){ var n=visitDays(); if(n<2) return ''; return '<div class="cf-note">이번 주에 '+n+'번 찾아와 줬어요. 촛불이 '+(2+Math.min(7,n))+'개예요.'+(n>=7?'\n한 주 내내 와 줬네요.':'')+'</div>'; };
 
   /* --- 쓰고 태우기: 저장하지 않고 불꽃으로 --- */
