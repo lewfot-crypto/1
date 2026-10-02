@@ -29,6 +29,7 @@ window.LOWENA_CORE={
   speech:[
     '항상 부드러운 한국어 해요체.',
     '보통 2~5문장으로 짧게. 사용자가 길게 원하거나 정보가 필요하면 조금 더 길어져도 된다.',
+    '이야기를 들려줄 때도 한 번에 너무 길게 쓰지 않는다. 한 장면씩 들려주고 문장은 항상 끝까지 마무리한 뒤, 이어서 들을지 묻는다.',
     '조언보다 먼저 들어주고, 감정을 정확히 짚어 준다. 질문은 필요할 때 한 번에 하나만 한다.',
     '목록·마크다운·이모지는 쓰지 않는다. 일상, 고민, 공부, 일, 지식, 잡담, 창작 등 주제에 제한은 없다.'
   ],
@@ -112,7 +113,10 @@ async function call(msgs,max,sysOverride){
   clearTimeout(to);
   if(!r.ok){ var em=''; try{ em=(await r.json()).error.message; }catch(e){ LQ.err(e); }
     throw new Error(r.status===401?'API 키가 올바르지 않아요. 설정에서 다시 넣어 주세요.':r.status===429?'요청이 너무 많거나 사용 한도에 걸렸어요. 잠시 뒤에 다시 해 봐요.':(r.status+' '+em)); }
-  var d=await r.json(); return (d.content||[]).filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; }).join('').trim();
+  var d=await r.json(), txt=(d.content||[]).filter(function(b){ return b.type==='text'; }).map(function(b){ return b.text; }).join('').trim();
+  /* 길이 한도에 걸려 잘린 답이면 마지막으로 끝난 문장까지만 보여 준다 (JSON 응답은 그대로) */
+  if(d.stop_reason==='max_tokens'&&txt&&txt.charAt(0)!=='{'){ var cut=-1; ['.','!','?','…','~'].forEach(function(c){ cut=Math.max(cut,txt.lastIndexOf(c)); }); if(cut>txt.length*0.4) txt=txt.slice(0,cut+1).trim(); }
+  return txt;
 }
 
 window.lqAiOn=function(){ try{ return !!key()&&key()!=='demo'; }catch(e){ return false; } };
@@ -122,14 +126,17 @@ function face(k){ var i=document.getElementById('dcFace'); if(i&&LW_CROP[k]) i.s
 function log(){ return document.getElementById('dcLog'); }
 function add(role,txt,cls){ var l=log(); if(!l) return null; var d=document.createElement('div'); d.className='dc-b '+role+(cls?' '+cls:''); d.textContent=txt; l.appendChild(d); l.scrollTop=l.scrollHeight; return d; }
 /* 로웨나 답장: 한 글자씩 타이핑 / 생각 중 말풍선: …이 하나씩 나타남 */
-function addT(txt){ var d=add('lw',''); if(!d) return d; var l=log(), full=String(txt), ch=Array.from(full), i=0, done=false;
-  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){ d.textContent=full; return d; }
-  d.style.minHeight=''; d.style.cursor='pointer';
-  function fin(){ if(done) return; done=true; d.textContent=full; d.style.cursor=''; if(l) l.scrollTop=l.scrollHeight; }
-  d.addEventListener('click',fin);
-  (function step(){ if(done) return; if(!d.isConnected){ done=true; return; } var c=ch[i++]; d.textContent+=c; if(l) l.scrollTop=l.scrollHeight; if(i>=ch.length){ fin(); return; }
-    var f=ch.length>160; setTimeout(step,/[.!?…~]/.test(c)?(f?100:180):c==='\n'?(f?120:240):/[,]/.test(c)?(f?50:100):(f?18:36)); })();
-  return d; }
+function addT(txt){ var full=String(txt), pages=(window.LQB&&LQB.split(full))||[full], l=log(), B=[], k=0, stop=false;
+  /* 2~3문장씩 말풍선을 나눠 차례로 타이핑. 아무 말풍선이나 누르면 남은 것까지 한 번에 보여 줘요 */
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){ var f0=null; pages.forEach(function(p){ var d0=add('lw',p); f0=f0||d0; }); return f0; }
+  function scr(){ if(l) l.scrollTop=l.scrollHeight; }
+  function all(){ if(stop) return; stop=true; B.forEach(function(o){ o.done=true; o.d.textContent=o.full; o.d.style.cursor=''; }); while(k<pages.length) add('lw',pages[k++]); scr(); }
+  function one(){ if(stop||k>=pages.length) return; var o={full:pages[k++],done:false,d:add('lw','')}; if(!o.d) return; B.push(o);
+    var ch=Array.from(o.full), i=0, f=ch.length>160; o.d.style.cursor='pointer'; o.d.addEventListener('click',all);
+    (function step(){ if(o.done||stop) return; if(!o.d.isConnected){ stop=true; return; } var c=ch[i++]; o.d.textContent+=c; scr();
+      if(i>=ch.length){ o.done=true; o.d.style.cursor=''; setTimeout(one,420); return; }
+      setTimeout(step,/[.!?…~]/.test(c)?(f?100:180):c==='\n'?(f?120:240):/[,]/.test(c)?(f?50:100):(f?18:36)); })(); }
+  one(); return B.length?B[0].d:null; }
 function addWait(){ var d=add('lw','.','wait'); if(!d) return d; d.style.minWidth='3.4em'; var n=1, t=setInterval(function(){ if(!d.isConnected){ clearInterval(t); return; } n=n%3+1; d.textContent='...'.slice(0,n); },450); return d; }
 function clr(){ var l=log(); if(l) l.innerHTML=''; return l; }
 function ov(){ var o=document.getElementById('dcOv'); if(!o){ o=document.createElement('div'); o.id='dcOv'; document.body.appendChild(o); } return o; }
@@ -148,7 +155,15 @@ function drawKey(){ var o=ov();
 window.dcOpen=function(){ DC.h=[]; DC.busy=false; DC.cur=null;
   if(!key()){ drawKey(); ov().style.display='flex'; return; }
   drawChat(); ov().style.display='flex'; addT(GREET); face('greet'); };
-window.dcClose=function(){ if(DC.cur) summarize(DC.cur,'close'); var o=document.getElementById('dcOv'); if(o){ o.style.display='none'; o.innerHTML=''; } DC.h=[]; DC.busy=false; DC.cur=null; };
+/* 아이폰 키보드: 화면 전체 높이로 고정된 대화창이 키보드 뒤로 들어가 입력칸이 마지막 메시지를 가렸어요.
+   보이는 영역(visualViewport)에 맞춰 대화창 높이를 줄이고, 키보드가 떠 있는 동안 얼굴 사진은 접어 둬요 */
+function dcFit(){ try{ var o=document.getElementById('dcOv'), v=window.visualViewport; if(!o||o.style.display==='none'||!v) return;
+  var kb=window.innerHeight-v.height>120; o.classList.toggle('dc-kb',kb);
+  if(kb){ o.style.top=v.offsetTop+'px'; o.style.height=v.height+'px'; o.style.bottom='auto'; } else { o.style.top=''; o.style.height=''; o.style.bottom=''; }
+  var lg=log(); if(lg) lg.scrollTop=lg.scrollHeight; }catch(e){ LQ.err(e); } }
+if(window.visualViewport){ visualViewport.addEventListener('resize',dcFit); visualViewport.addEventListener('scroll',dcFit); }
+document.addEventListener('focusin',function(e){ if(e.target&&e.target.id==='dcIn'){ setTimeout(dcFit,60); setTimeout(dcFit,350); } });
+window.dcClose=function(){ try{ var o0=document.getElementById('dcOv'); if(o0){ o0.classList.remove('dc-kb'); o0.style.top=''; o0.style.height=''; o0.style.bottom=''; } }catch(e){ LQ.err(e); }  if(DC.cur) summarize(DC.cur,'close'); var o=document.getElementById('dcOv'); if(o){ o.style.display='none'; o.innerHTML=''; } DC.h=[]; DC.busy=false; DC.cur=null; };
 window.dcKeyStart=function(){ var i=document.getElementById('dcKeyIn'); var v=i?(i.value||'').trim():''; if(!v){ toast('키를 붙여 넣어 주세요'); return; } if(!lsSet(KEYN,v)){ toast('키를 저장하지 못했어요'); return; } dcSync(); window.dcOpen(); };
 var _dcSend0=async function(){
   if(DC.busy) return; var ta=document.getElementById('dcIn'), t=ta?(ta.value||'').trim():''; if(!t) return;
@@ -156,7 +171,7 @@ var _dcSend0=async function(){
   if(risk) add('lw','혼자 견디지 않아도 돼요. 지금 위험하다고 느껴지면 119나 112에, 마음이 너무 힘들면 자살예방상담전화 109(24시간)에 연락해 주세요. 가까운 사람에게 지금 이야기하는 것도 좋아요.','care');
   DC.h.push({role:'user',content:t}); face('listen'); var w=addWait(), sb=document.getElementById('dcSend'); if(sb) sb.disabled=true;
   try{ var hist=DC.h.slice(-20); while(hist.length&&hist[0].role!=='user') hist.shift();
-    var a=await call(hist,600); if(w) w.remove(); if(!a) throw new Error('빈 응답'); DC.h.push({role:'assistant',content:a}); rec(t,a); addT(a); if(DC.cur) summarize(DC.cur,'auto'); face(risk?'sad':'proud'); }
+    var a=await call(hist,1400); if(w) w.remove(); if(!a) throw new Error('빈 응답'); DC.h.push({role:'assistant',content:a}); rec(t,a); addT(a); if(DC.cur) summarize(DC.cur,'auto'); face(risk?'sad':'proud'); }
   catch(e){ if(w) w.remove(); if(mb) mb.remove(); DC.h.pop(); var t2=document.getElementById('dcIn'); if(t2) t2.value=t;
     add('lw','지금은 이야기를 이어 갈 수 없어요. 그래도 여기 있을게요.','err'); add('lw','('+String(e.message||e).slice(0,140)+')','err small'); face('worry'); }
   DC.busy=false; sb=document.getElementById('dcSend'); if(sb) sb.disabled=false; };

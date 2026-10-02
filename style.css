@@ -90,3 +90,6 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 
 @keyframes trOut{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,6px)}}#trChat.tc-out{animation:trOut 1s ease forwards;pointer-events:none}
 #trChat.tc-magic .tc-k{display:none}
+#dcOv.dc-kb{padding-bottom:8px;gap:6px}#dcOv.dc-kb .dc-face{display:none}
+/* 팝업이 아이폰 아래 홈 막대·위 상태 표시줄에 가리지 않게 */
+#trChat,#bnCard{bottom:calc(76px + env(safe-area-inset-bottom,0px))}#passBy{bottom:calc(84px + env(safe-area-inset-bottom,0px))}

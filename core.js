@@ -1460,14 +1460,23 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
     var b=document.querySelector('#modalBox .speech-bubble'); if(!b||b.__typing) return;
     var full=b.textContent; if(!full) return;
     if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches) return;
-    b.style.minHeight=b.offsetHeight+'px'; b.textContent=''; b.__typing=1; b.style.cursor='pointer';
-    var ch=Array.from(full), i=0, done=false, fast=ch.length>140;
-    function fin(){ if(done) return; done=true; b.textContent=full; b.__typing=0; b.style.cursor=''; }
-    b.addEventListener('click',fin);
-    function step(){ if(done) return; if(!b.isConnected){ done=true; return; }
+    /* 2~3문장씩 쪽으로 나눠 한 쪽씩 타이핑 (bubbles.js 의 LQB.split). 마지막 쪽이 끝나야 아래 버튼들이 보여요 */
+    var pages=(window.LQB&&LQB.split(full))||[full], pi=0, box=document.getElementById('modalBox'), row=b;
+    while(row.parentNode&&row.parentNode!==box) row=row.parentNode;
+    if(pages.length>1&&row.parentNode===box){ row.classList.add('bp-row'); box.classList.add('bp-wait'); }
+    var longest=pages.reduce(function(a,c){ return c.length>a.length?c:a; },''); b.textContent=longest; b.style.minHeight=b.offsetHeight+'px';
+    b.textContent=''; b.__typing=1; b.__bpOwn=1; b.__typedOnce=1; b.style.cursor='pointer';
+    var ch, i, done, fast, tok=0;
+    function last(){ return pi>=pages.length-1; }
+    function fin(){ if(done) return; done=true; b.textContent=pages[pi];
+      if(!last()){ var m=document.createElement('span'); m.className='bp-more'; m.textContent='▼'; b.appendChild(m); }
+      else { b.__typing=0; b.style.cursor=''; box.classList.remove('bp-wait'); } }
+    function page(){ ch=Array.from(pages[pi]); i=0; done=false; fast=ch.length>140; b.textContent=''; var my=++tok; setTimeout(function(){ step(my); },pi?120:260); }
+    b.addEventListener('click',function(){ if(!done) fin(); else if(!last()){ pi++; page(); } });
+    function step(my){ if(done||my!==tok) return; if(!b.isConnected){ done=true; return; }
       var c=ch[i++]; b.textContent+=c; if(i>=ch.length){ fin(); return; }
-      setTimeout(step, /[.!?…~]/.test(c)?(fast?110:190):c==='\n'?(fast?150:260):/[,]/.test(c)?(fast?60:110):(fast?22:38)); }
-    setTimeout(step,260);
+      setTimeout(function(){ step(my); }, /[.!?…~]/.test(c)?(fast?110:190):c==='\n'?(fast?150:260):/[,]/.test(c)?(fast?60:110):(fast?22:38)); }
+    page();
   }catch(e){ LQ.err(e); } };
   window.cfShowTyped=function(h){ showModal(h); cfTypeIn(); };
 
@@ -1713,7 +1722,7 @@ function hugMe(){ const r=LQD.pick('lowena.hug',HUG_LINES,{who:'lowena'});
   cfShowTyped('<div class="mascot-row">'+mascotImg(56,'cheer')+'<div class="speech-bubble">'+esc(r)+'</div></div><div style="margin-top:12px"><button class="cfb" style="width:100%" onclick="closeModal()">닫기</button></div>'); }
 var MOOD_EMOJI={happy:'😊',okay:'🙂',meh:'😐',sad:'😢',angry:'😠',anxious:'😰'};
 var MOOD_LINES={happy:['좋은 기분이네요! 그 느낌 오래가길 바라요.','오늘 컨디션이 좋아 보여요, 다행이에요.'],okay:['무난한 하루였나 봐요. 그것도 좋아요.','평온한 하루, 그 자체로 좋은 거예요.'],meh:['그럭저럭인 날도 있는 법이죠.','애매한 기분, 그대로 인정해 줘도 돼요.'],sad:['오늘 마음이 가라앉았군요. 무리하지 말아요.','속상한 하루였나 봐요, 잘 버텼어요.'],angry:['오늘 좀 답답했나 봐요. 그 마음 인정해요.','화가 났던 하루, 잠시 내려놓고 가요.'],anxious:['불안한 하루를 보냈군요. 지금은 안전해요.','걱정이 많았던 날이네요, 천천히 가요.']};
-function openMoodCheck(){ showModal('<h3 style="margin-bottom:6px">오늘 기분은 어때요?</h3><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px">'+Object.keys(MOOD_EMOJI).map(m=>'<button class="cfb" style="font-size:22px;padding:10px 14px" onclick="moodCheck(\''+m+'\')">'+MOOD_EMOJI[m]+'</button>').join('')+'</div>'); }
+function openMoodCheck(){ showModal('<h3 style="margin-bottom:6px">오늘 기분은 어때요?</h3><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px">'+Object.keys(MOOD_EMOJI).map(m=>'<button class="cfb" style="font-size:30px;padding:8px 12px;line-height:1" onclick="moodCheck(\''+m+'\')">'+MOOD_EMOJI[m]+'</button>').join('')+'</div>'); }
 function moodCheck(m){ const P=MOOD_LINES[m]||['알려줘서 고마워요.']; const r=LQD.pick('lowena.mood.'+m,P,{who:'lowena'});
   (S.confess=S.confess||[]).push({id:'cf'+Date.now(),ts:Date.now(),d:todayStr(),k:'mood',text:(MOOD_EMOJI[m]||'')+' 기분 체크인',reply:r}); save();
   try{ lwFaceTemp({happy:'smile',okay:'proud',meh:'worry',sad:'sad',angry:'angry',anxious:'worry2'}[m]||'greet',90000); }catch(e){ LQ.err(e); }

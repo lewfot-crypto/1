@@ -30,10 +30,36 @@
       +'<div style="display:flex;gap:6px;margin-top:10px"><button class="cfb" style="flex:1" onclick="lqErrClear()">기록 지우기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>');
   }catch(e){ LQ.err(e); } };
   window.lqErrClear=function(){ wr([]); closeModal(); try{ toast('오류 기록을 지웠어요'); }catch(e){} };
-  var VER='v5.8'; /* sw.js 의 V 번호와 같게 올려요 */
+  var VER='v5.9'; /* sw.js 의 V 번호와 같게 올려요 */
+  /* 업데이트 기록: 설정 맨 아래 버전 번호를 누르면 보여요. 업데이트할 때마다 맨 위에 한 줄씩 추가해요 */
+  var LOG=[
+   ['v5.9','2026-10-02',['설정 맨 아래 버전 번호를 누르면 업데이트 기록이 보여요',
+     '말풍선 글이 길면 2~3문장씩 나눠서 보여 줘요 (누르면 다음으로)',
+     '오늘 기분 체크의 표정을 귀여운 도트 얼굴로 새로 그렸어요',
+     '길게 대화하기: 글을 쓸 때 입력칸이 마지막 메시지를 가리던 문제 해결',
+     '길게 대화하기: 로웨나 답이 문장 중간에 끊기던 문제 해결, 답을 여러 말풍선으로 나눠 보여 줘요',
+     '짧은 알림이 화면 맨 위 상태 표시줄에 가려지던 문제 해결',
+     '트레저·홈 지나가기 팝업이 아이폰 아래쪽 홈 막대에 가리지 않게 조정']],
+   ['v5.8','2026-10-02',['이모지를 도트 그림으로 (자주 쓰는 50개는 직접 그림, 나머지는 자동 변환)',
+     '밀담실: "재밌는 얘기 해 줘"라고 하면 로웨나가 이야기를 제안해요',
+     '밀담실: 부탁하는 말을 기쁜 소식으로 잘못 알아듣고 축하하던 문제 해결',
+     '길게 대화하기: 키 안내를 짧게',
+     '구운몽·겐지 이야기 4부·생일 이야기 추가',
+     '트레저 탭 웰라·시나 말풍선은 하루 2번까지, 서서히 사라지게',
+     '아이폰에서 입력칸이 옆으로 넘치던 문제 해결']],
+   ['v5.7','',['생일 주간 이벤트와 생일 이야기',
+     '저장 공간이 85%를 넘으면 로웨나가 하루 한 번 알려 줘요',
+     '업적 90개 이후 달성 소식을 캐릭터들이 번갈아 알려 줘요',
+     '설정 맨 아래 오류 기록(E) 버튼과 버전 표시',
+     '팝업이 겹치면 로웨나 → 마티 → 시나·웰라 → 알레센도 순서로']]];
+  window.lqVerLog=function(){ try{
+    showModal('<h3 style="margin-bottom:6px">업데이트 기록</h3><div class="panel-sub" style="margin-top:0">지금 버전은 '+h(VER)+'이에요.</div>'
+      +LOG.map(function(v){ return '<div class="cf-ent"><div class="m">'+h(v[0])+(v[1]?' · '+h(v[1]):'')+(v[0]===VER?' · 지금 버전':'')+'</div><ul style="margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.6">'+v[2].map(function(x){ return '<li>'+h(x)+'</li>'; }).join('')+'</ul></div>'; }).join('')
+      +'<div class="panel-sub">v5.7 이전 기록은 따로 남아 있지 않아요.</div><button class="cfb" style="width:100%;margin-top:10px" onclick="closeModal()">닫기</button>');
+  }catch(e){ LQ.err(e); } };
   function eBtn(){ var sc=document.getElementById('screen-master'); if(!sc||document.getElementById('lqEBtn')) return;
     var w=document.createElement('div'); w.style.cssText='display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:18px 0 8px';
-    var v=document.createElement('span'); v.id='lqVer'; v.textContent=VER; v.style.cssText='font-size:9px;letter-spacing:.5px;color:rgba(201,162,77,.45)';
+    var v=document.createElement('span'); v.id='lqVer'; v.textContent=VER; v.style.cssText='font-size:9px;letter-spacing:.5px;color:rgba(201,162,77,.45);padding:6px 4px;cursor:pointer'; v.setAttribute('role','button'); v.setAttribute('aria-label','업데이트 기록'); v.onclick=window.lqVerLog;
     var b=document.createElement('button'); b.id='lqEBtn'; b.textContent='E'; b.setAttribute('aria-label','오류 기록');
     b.style.cssText='width:26px;height:26px;padding:0;font-size:12px;font-weight:700;border-radius:50%;border:1px solid rgba(201,162,77,.45);background:transparent;color:rgba(201,162,77,.7);cursor:pointer';
     b.onclick=window.lqErrBtn; w.appendChild(v); w.appendChild(b); sc.appendChild(w); }
