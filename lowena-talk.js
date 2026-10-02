@@ -510,9 +510,14 @@ function stOn(){ try{ return !(S.settings&&S.settings.sleepStory===false); }catc
 function stIntent(t){ return ST_INTENT.test(t)&&!ST_CRISIS.test(t); }
 function stById(id){ var i; for(i=0;i<ST_LIST.length;i++) if(ST_LIST[i].id===id) return ST_LIST[i]; for(i=0;i<ST_EPS.length;i++) if(ST_EPS[i].id===id) return ST_EPS[i]; return null; }
 function stRnd(a){ return a[Math.floor(Math.random()*a.length)]; }
+/* 할로윈 이야기(st_hw)는 할로윈 주간(10/24~10/31)에만 고르고, 그 주에 처음 들려줄 땐 먼저 골라요 */
+function stHwWeek(){ var t=todayStr(); return t.slice(5)>='10-24'&&t.slice(5)<='10-31'; }
+function stSpecial(id){ return id.indexOf('st_bd')===0||(id.indexOf('st_hw')===0&&!stHwWeek()); }
 function stPick(){
-  var rec=(S.stRecent=S.stRecent||[]), keep=Math.min(rec.length,Math.max(0,ST_LIST.length-2)), recent=rec.slice(-keep||rec.length), pool=ST_LIST.filter(function(s){ return recent.indexOf(s.id)<0&&s.id.indexOf('st_bd')!==0; });
-  if(!pool.length) pool=ST_LIST.filter(function(s){ return s.id.indexOf('st_bd')!==0; }); var s=stRnd(pool); rec.push(s.id); if(rec.length>ST_LIST.length) rec.splice(0,rec.length-ST_LIST.length); return s; }
+  var rec=(S.stRecent=S.stRecent||[]), y=todayStr().slice(0,4);
+  if(stHwWeek()&&S.hwStory!==y){ var hw=stById('st_hw_lantern'); if(hw){ S.hwStory=y; rec.push(hw.id); return hw; } }
+  var keep=Math.min(rec.length,Math.max(0,ST_LIST.length-2)), recent=rec.slice(-keep||rec.length), pool=ST_LIST.filter(function(s){ return recent.indexOf(s.id)<0&&!stSpecial(s.id); });
+  if(!pool.length) pool=ST_LIST.filter(function(s){ return !stSpecial(s.id); }); var s=stRnd(pool); rec.push(s.id); if(rec.length>ST_LIST.length) rec.splice(0,rec.length-ST_LIST.length); return s; }
 var cur=null;
 function bubble(txt,extra){ return '<div class="mascot-row">'+mascotImg(56,'cheer')+'<div class="speech-bubble" style="white-space:pre-line">'+esc(txt)+'</div></div>'+(extra||''); }
 function roomHush(msg){ try{ cfRoomFace('proud'); var h=document.getElementById('cfHi'); if(h&&msg) h.textContent=msg; }catch(e){ LQ.err(e); } }
