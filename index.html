@@ -380,7 +380,7 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
       <div class="section-h">⚙ QUEST MASTER</div>
 
       <div class="qm-group">
-        <h3>DAILY QUEST 편집</h3>
+        <h3>DAILY QUEST<span class="kr">편집</span></h3>
         <div id="dqEditList"></div>
         <button class="gold-btn" onclick="mtNewDQ()">+ 마티와 함께 새 퀘스트 만들기</button>
       </div>
@@ -396,13 +396,13 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
       </div>
 
       <div class="qm-group">
-        <h3>업적 편집</h3>
+        <h3 class="kr">업적 편집</h3>
         <div id="achEditList"></div>
         <button class="gold-btn" onclick="openAchModal()">+ 새 업적 만들기</button>
       </div>
 
       <div class="qm-group">
-        <h3>알레센도의 기념일 장부</h3>
+        <h3 class="kr">알레센도의 기념일 장부</h3>
         <label>생일이나 기념일을 적어 두면 그날 알레센도가 챙겨 줘요. (12월 30~31일엔 알레센도가 올해 결산도 해 줘요)</label>
         <div id="anniList"></div>
         <input id="anniName" maxlength="20" placeholder="이름 (예: 엄마 생일, 결혼기념일)">
@@ -413,7 +413,7 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
       </div>
 
       <div class="qm-group">
-        <h3>로웨나 & 마티</h3>
+        <h3 class="kr">로웨나 & 마티</h3>
         <div class="tg-list"><div class="tg"><span>로웨나 반응 대사</span><select id="lwReactSel" onchange="setLw('lowenaReact',this.value==='1')"><option value="1">켬</option><option value="0">끔</option></select></div><div class="tg"><span>로웨나 인사 (앱 켤 때)</span><select id="lowenaGreetSel" onchange="setLw('lowenaGreet',this.value==='1')"><option value="1">켬</option><option value="0">끔</option></select></div><div class="tg"><span>로웨나 가끔 말 걸기</span><select id="lowenaChatSel" onchange="setLw('lowenaChat',this.value==='1')"><option value="1">켬</option><option value="0">끔</option></select></div><div class="tg"><span>로웨나 취향 대사</span><select id="lwTasteSel" onchange="setLwTaste(this.value)"><option value="some">가끔</option><option value="often">자주</option><option value="off">끔</option></select></div><div class="tg"><span>밀담실 (고해성사)</span><select id="cfSel" onchange="setLw('confess',this.value==='1')"><option value="1">켬</option><option value="0">끔</option></select></div><div class="tg"><span>잠들기 전 이야기</span><select id="lwStorySel" onchange="setLw('sleepStory',this.value==='1')"><option value="1">켬</option><option value="0">끔</option></select></div><div class="tg"><span>마티 등장 (반짝)</span><select id="martySel" onchange="setLw('martyPop',this.value==='1')"><option value="1">켬</option><option value="0">끔</option></select></div><div class="tg"><span>마티 잡담</span><select id="martyChatSel" onchange="setLw('martyChat',this.value==='1')"><option value="1">켬</option><option value="0">끔</option></select></div><div class="tg"><span>웰라·시나 등장</span><select id="wlSel" onchange="setWella(this.value==='1')"><option value="1">켬</option><option value="0">끔</option></select></div></div>
         <div class="inline" style="margin-top:10px"><button class="ghost-btn" onclick="martyQuestGuide(true)">퀘스트 안내</button><button class="ghost-btn" onclick="martyShow(null)">마티 불러보기</button><button class="ghost-btn" onclick="lowenaShow()">로웨나 불러보기</button></div>
         <label>로웨나 AI 대화 · Anthropic API 키 (이 기기에만 저장 · 백업에는 포함되지 않아요)</label>
@@ -427,14 +427,14 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
         <div class="inline" style="margin-top:14px;border-top:1px dashed var(--gold-d);padding-top:10px"><button class="ghost-btn" style="color:#b5533c;border-color:#b5533c" onclick="resetAllData()">모든 기록 초기화</button></div>
       </div>
       <div class="qm-group">
-        <h3>배경 그림</h3>
+        <h3 class="kr">배경 그림</h3>
         <label>탭 배경 그림 (언제든 '없음'으로 되돌릴 수 있어요)</label>
         <select id="bgPatSel" onchange="setBgPattern(this.value)"><option value="castle">밤의 성</option><option value="sky">별이 총총한 하늘</option><option value="candles">떠다니는 촛불</option><option value="circle">큰 마법진</option><option value="none">없음 (원래 배경)</option></select>
         <label>도트 애니메이션 (반짝이는 픽셀아트 배경)</label>
         <select id="bgPxSel" onchange="setBgPixel(this.value==='1')"><option value="1">켜기</option><option value="0">끄기 (부드러운 그림)</option></select>
       </div>
       <div class="qm-group">
-        <h3>사운드</h3>
+        <h3 class="kr">사운드</h3>
         <div class="inline" style="margin-bottom:10px"><button class="ghost-btn" id="sfxBtn" onclick="toggleSfx()">효과음</button><button class="ghost-btn" id="bgmBtn" onclick="toggleBgm()">배경음악</button></div>
         <label style="color:#c9b88f">배경음악 볼륨</label>
         <input type="range" id="volRange" min="0" max="100" oninput="setVol(this.value)">
@@ -444,7 +444,7 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
       </div>
 
       <div class="qm-group">
-        <h3>BACKUP · 저장 / 복원</h3>
+        <h3>BACKUP<span class="kr">· 저장 / 복원</span></h3>
         <div class="mdesc" style="font-size:12px;color:#c9b88f;margin-bottom:8px" id="backupInfo"></div>
         <button class="gold-btn" onclick="exportBackup()">백업 코드 만들기</button>
         <textarea id="backupText" rows="4" style="margin-top:8px" placeholder="여기에 백업 코드가 나타나요. 복원할 땐 이 칸에 붙여넣으세요."></textarea>
@@ -462,7 +462,7 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
       </div>
 
       <div class="qm-group">
-        <h3>MAIN / SUB QUEST 진행도 수정</h3>
+        <h3>MAIN / SUB QUEST<span class="kr">진행도 수정</span></h3>
         <div id="progressEditList"></div>
       </div>
     </section>
