@@ -30,9 +30,10 @@
       +'<div style="display:flex;gap:6px;margin-top:10px"><button class="cfb" style="flex:1" onclick="lqErrClear()">기록 지우기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>');
   }catch(e){ LQ.err(e); } };
   window.lqErrClear=function(){ wr([]); closeModal(); try{ toast('오류 기록을 지웠어요'); }catch(e){} };
-  var VER='v6.3'; /* sw.js 의 V 번호와 같게 올려요 */
+  var VER='v6.31'; /* sw.js 의 V 번호와 같게 올려요 */
   /* 업데이트 기록: 설정 맨 아래 버전 번호를 누르면 보여요. 업데이트할 때마다 맨 위에 한 줄씩 추가해요 */
   var LOG=[
+   ['v6.31','2026-10-02',['업데이트 기록을 한 장씩 넘겨 볼 수 있어요 (왼쪽으로 밀면 이전 버전)']],
    ['v6.3','2026-10-02',['🎄 크리스마스: 12/18~25 눈 내리는 홈 장식, 이브·당일 카드, 선물 상자 고르기',
      '🎍 새해: 연말 불꽃놀이 장식, 12/31 한 해 마무리(1월 1일에 적은 소원을 다시 꺼내 줘요), 1/1 올해의 소원 적기와 복주머니',
      '🧧 설날: 세배와 알레센도의 세뱃돈',
@@ -77,11 +78,30 @@
      '업적 90개 이후 달성 소식을 캐릭터들이 번갈아 알려 줘요',
      '설정 맨 아래 오류 기록(E) 버튼과 버전 표시',
      '팝업이 겹치면 로웨나 → 마티 → 시나·웰라 → 알레센도 순서로']]];
-  window.lqVerLog=function(){ try{
-    showModal('<h3 style="margin-bottom:6px">업데이트 기록</h3><div class="panel-sub" style="margin-top:0">지금 버전은 '+h(VER)+'이에요.</div>'
-      +LOG.map(function(v){ return '<div class="cf-ent"><div class="m">'+h(v[0])+(v[1]?' · '+h(v[1]):'')+(v[0]===VER?' · 지금 버전':'')+'</div><ul style="margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.6">'+v[2].map(function(x){ return '<li>'+h(x)+'</li>'; }).join('')+'</ul></div>'; }).join('')
-      +'<div class="panel-sub">v5.7 이전 기록은 따로 남아 있지 않아요.</div><button class="cfb" style="width:100%;margin-top:10px" onclick="closeModal()">닫기</button>');
+  /* 업데이트 기록: 한 페이지에 버전 하나씩. 왼쪽으로 넘기면(또는 「이전 버전 ▶」) 더 옛날 버전이 나와요 */
+  var VL=0;
+  function vlPage(i){ var v=LOG[i], n=LOG.length;
+    return '<div id="vlPage" style="min-height:240px;animation:vlIn .22s ease">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 8px"><b style="font-size:17px;color:var(--brown,#6b4a1e)">'+h(v[0])+'</b>'
+      +'<span style="font-size:12px;opacity:.7">'+(v[1]?h(v[1]):'')+(v[0]===VER?' · 지금 버전':'')+'</span></div>'
+      +'<ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.7">'+v[2].map(function(x){ return '<li>'+h(x)+'</li>'; }).join('')+'</ul>'
+      +(i===n-1?'<div class="panel-sub" style="margin-top:12px">'+h(v[0])+' 이전 기록은 따로 남아 있지 않아요.</div>':'')+'</div>'
+      +'<div style="display:flex;justify-content:center;gap:5px;margin:12px 0 8px">'+LOG.map(function(x,j){ return '<i style="width:7px;height:7px;border-radius:50%;background:'+(j===i?'var(--gold,#c9a24d)':'rgba(120,90,40,.25)')+'"></i>'; }).join('')+'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center"><button class="cfb" style="flex:1" '+(i===0?'disabled style="flex:1;opacity:.35"':'')+' onclick="lqVerGo(-1)">◀ 최근</button>'
+      +'<span style="font-size:12px;min-width:44px;text-align:center">'+(i+1)+' / '+n+'</span>'
+      +'<button class="cfb" style="flex:1'+(i===n-1?';opacity:.35" disabled':'"')+' onclick="lqVerGo(1)">이전 버전 ▶</button></div>'
+      +'<button class="cfb" style="width:100%;margin-top:8px" onclick="closeModal()">닫기</button>'; }
+  function vlDraw(){ var box=document.getElementById('vlBox'); if(box) box.innerHTML=vlPage(VL); }
+  window.lqVerGo=function(d){ var j=Math.max(0,Math.min(LOG.length-1,VL+d)); if(j===VL) return; VL=j; vlDraw(); };
+  window.lqVerLog=function(){ try{ VL=0;
+    showModal('<h3 style="margin-bottom:2px">업데이트 기록</h3><div class="panel-sub" style="margin-top:0">왼쪽으로 넘기면 이전 버전을 볼 수 있어요.</div><div id="vlBox"></div>');
+    vlDraw();
+    var box=document.getElementById('vlBox'), x0=null, y0=null;
+    box.addEventListener('touchstart',function(e){ var t=e.touches[0]; x0=t.clientX; y0=t.clientY; },{passive:true});
+    box.addEventListener('touchend',function(e){ if(x0==null) return; var t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0; x0=null;
+      if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3) window.lqVerGo(dx<0?1:-1); },{passive:true});
   }catch(e){ LQ.err(e); } };
+  try{ var vcss=document.createElement('style'); vcss.textContent='@keyframes vlIn{from{opacity:.2;transform:translateX(14px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){#vlPage{animation:none!important}}'; document.head.appendChild(vcss); }catch(e){}
   function eBtn(){ var sc=document.getElementById('screen-master'); if(!sc||document.getElementById('lqEBtn')) return;
     var w=document.createElement('div'); w.style.cssText='display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:18px 0 8px';
     var v=document.createElement('span'); v.id='lqVer'; v.textContent=VER; v.style.cssText='font-size:9px;letter-spacing:.5px;color:rgba(201,162,77,.45);padding:6px 4px;cursor:pointer'; v.setAttribute('role','button'); v.setAttribute('aria-label','업데이트 기록'); v.onclick=window.lqVerLog;
