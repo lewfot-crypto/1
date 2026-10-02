@@ -63,7 +63,7 @@ var SKIP='script,style,textarea,input,select,option,title,noscript,svg,canvas,.p
    이모지 표시 기호(FE0F)가 없으면 글자 모양 기호(FE0E)를 붙여 글자로 보이게 해요 */
 var TXT=/([\u2190-\u2BFF])(?![\uFE0E\uFE0F])/g, XP=/\p{Extended_Pictographic}/u;
 function textStyle(t){ var s=t.nodeValue; if(!/[\u2190-\u2BFF]/.test(s)) return; var p=t.parentNode; if(!p||p.nodeType!==1||p.closest(SKIP)) return;
-  var n=s.replace(TXT,function(c){ return XP.test(c)?c+'\uFE0E':c; }); if(n!==s) t.nodeValue=n; }
+  var n=s.replace(TXT,function(c){ return XP.test(c)&&!EP.test(c)&&!SPR[c]?c+'\uFE0E':c; }); /* ✨☕⭐처럼 원래 이모지로 보이는 문자, 직접 그린 그림이 있는 문자(❄ 등)는 그대로 */ if(n!==s) t.nodeValue=n; }
 function doText(t){ try{ textStyle(t); }catch(e){} var s=t.nodeValue; if(!s||s.length<1) return; RE.lastIndex=0; if(!RE.test(s)) return;
   var p=t.parentNode; if(!p||p.nodeType!==1||p.closest(SKIP)) return;
   RE.lastIndex=0; var f=document.createDocumentFragment(), last=0, m, hit=false;

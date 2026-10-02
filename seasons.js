@@ -2,7 +2,9 @@
    24절기: 그날 처음 홈에 오면 로웨나와 친구 한 명이 한마디 (해마다 1번, S.sj[연도][절기])
    크리스마스 주간(12/18~12/25): 홈 맨 위 눈 내리는 장식과 카운트다운 (이벤트 퀘스트는 core.js evSpecials의 🎄 크리스마스 이브의 모험)
    12/24 이브: 로웨나 인사 + 「전나무 이야기 듣기」 → 모두의 한마디
-   12/25 당일: 로웨나 인사 → 모두의 한마디 → 선물 상자 고르기 (해마다 1번, S.xm[연도]) */
+   12/25 당일: 로웨나 인사 → 모두의 한마디 → 선물 상자 고르기 (해마다 1번, S.xm[연도])
+   새해: 12/29~1/1 불꽃놀이 배너, 12/31 한 해 마무리(1/1에 적은 소원을 다시 꺼내 줌, 열두 띠 이야기 버튼),
+   1/1 새해 인사 → 올해의 소원 적기(S.ny[연도].wish) → 복주머니 고르기 → 모두의 새해 인사, 설날 세배와 세뱃돈 20골드 */
 (function(){
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function td(){ var t=todayStr(); return {y:+t.slice(0,4),m:+t.slice(5,7),d:+t.slice(8,10),md:t.slice(5)}; }
@@ -91,25 +93,28 @@
     {who:'marty',t:'마티 선물 도착! 리본을 세 번이나 다시 묶었어요. 열어 보니 골드가 반짝반짝하죠? ✨',g:[10,15]},
     {who:'alesendo',t:'제 선물은 장부에 적어 두었습니다. 「하고 싶은 일 하나」 쿠폰입니다. 언제든 보물 진열대에서 쓰십시오.',item:'🎁 알레센도의 크리스마스 쿠폰 · 하고 싶은 일 하나'},
     {who:'sina',t:'…내 선물이다냥. 상자 안에 내가 들어가 있었다. …오늘 하루 무릎 위에 앉아 주겠다냥. 그리고 골드도 조금.',g:[8,12]}];
-  function giftCard(){
-    var h=xm(); if(h.gift) return;
-    var pool=GIFT.slice().sort(function(){ return Math.random()-.5; }).slice(0,3);
+  /* 상자·주머니 고르기 (o: {title,intro,icon,pool,store,fxGold,fxItem}) */
+  function pickCard(o){
+    var h=o.store(); if(h.gift) return;
+    var pool=o.pool.slice().sort(function(){ return Math.random()-.5; }).slice(0,3);
     var boxes='<div style="display:flex;justify-content:center;gap:14px;margin:6px 0 12px" id="ssBoxes">'+[0,1,2].map(function(i){
-      return '<button class="ghost-btn" data-i="'+i+'" style="font-size:34px;padding:8px 10px;line-height:1">🎁</button>'; }).join('')+'</div>';
-    card({title:'🎁 선물 상자 고르기',rows:[['lowena','트리 아래에 상자가 세 개 있어요. 누가 놓아둔 건지는 열어 봐야 알아요. 하나만 골라 봐요.']],extra:boxes});
+      return '<button class="ghost-btn" data-i="'+i+'" style="font-size:34px;padding:8px 10px;line-height:1">'+o.icon+'</button>'; }).join('')+'</div>';
+    card({title:o.title,rows:[['lowena',o.intro]],extra:boxes});
     Array.prototype.forEach.call(document.querySelectorAll('#ssBoxes button'),function(b){ b.onclick=function(){
-      var hh=xm(); if(hh.gift) return; var gft=pool[+b.getAttribute('data-i')], fx='';
+      var hh=o.store(); if(hh.gift) return; var gft=pool[+b.getAttribute('data-i')], fx='';
       hh.gift=1;
-      if(gft.item){ S.rewards=S.rewards||[]; S.rewards.push({id:'r'+Date.now(),name:gft.item,redeemed:false,owned:true,price:0}); fx='🎁 보물 진열대에 「'+gft.item.replace(/^\S+\s/,'')+'」가 생겼어요'; }
-      else { var g=rnd(gft.g[0],gft.g[1]); S.gold=(S.gold||0)+g; fx='🎁 크리스마스 선물 ◈ +'+g+' 골드'; }
+      if(gft.item){ S.rewards=S.rewards||[]; S.rewards.push({id:'r'+Date.now(),name:gft.item,redeemed:false,owned:true,price:0}); fx=o.icon+' 보물 진열대에 「'+gft.item.replace(/^\S+\s/,'')+'」가 생겼어요'; }
+      else { var g=rnd(gft.g[0],gft.g[1]); S.gold=(S.gold||0)+g; fx=o.icon+' '+o.fxGold+' ◈ +'+g+' 골드'; }
       save(); try{ renderHome(); }catch(e){ LQ.err(e); } try{ renderTreasure(); }catch(e){ LQ.err(e); }
       var body=document.getElementById('ssBody'), bx=document.getElementById('ssBoxes');
       if(bx) bx.outerHTML='<div class="lc-fx">'+esc(fx)+'</div><button class="gold-btn" id="ssOk">고마워요!</button>';
       if(body) body.innerHTML=rows([[gft.who,gft.t]]);
-      var ok=document.getElementById('ssOk'); if(ok) ok.onclick=closeCard;
+      var ok=document.getElementById('ssOk'); if(ok) ok.onclick=function(){ closeCard(); if(o.next) setTimeout(o.next,250); };
       try{ sfx('check'); }catch(e){ LQ.err(e); } try{ lqNote(NAME[gft.who],gft.t); }catch(e){ LQ.err(e); }
     }; });
   }
+  function giftCard(){ pickCard({title:'🎁 선물 상자 고르기',icon:'🎁',fxGold:'크리스마스 선물',pool:GIFT,store:xm,
+    intro:'트리 아래에 상자가 세 개 있어요. 누가 놓아둔 건지는 열어 봐야 알아요. 하나만 골라 봐요.'}); }
   function friends(next){ card({title:'🎄 모두의 한마디',rows:[['marty',pick(L.marty)],['wella',pick(L.wella)],['sina',pick(L.sina)],['alesendo',pick(L.alesendo)]],btn:next?'다음':'고마워요',next:next}); }
   function runEve(){ var h=xm(); if(h.eve) return;
     whenFree(function(){ h.eve=1; save();
@@ -121,15 +126,90 @@
     whenFree(function(){ h.day=1; save();
       card({title:'🎄 메리 크리스마스, 아멜리아',rows:[['lowena',pick(L.day)+' '+L.dayGift]],btn:'다음',next:function(){ friends(giftCard); }}); }); }
 
+
+  /* ================= 새해 (12/29~1/1) · 설날 ================= */
+  function nyLeft(){ var t=td(); if(t.m===12&&t.d>=29) return 32-t.d; if(t.m===1&&t.d===1) return 0; return -1; }
+  function ny(y){ var h=S.ny; if(!h||typeof h!=='object') h=S.ny={}; return h[y]=h[y]||{}; }
+  var NY={
+    eve:['올해의 마지막 날이에요, 아멜리아 님. 일 년 동안 이 서재에 찾아와 줘서 고마워요. 잘한 일도 못 한 일도 전부 아멜리아 님의 한 해였어요. 오늘은 그걸 조용히 안아 줘요.',
+         '한 해의 마지막 페이지예요. 촛불 하나 켜 두고, 올해 수고한 아멜리아 님에게 박수를 보낼게요. 내일은 새 책의 첫 장이에요.'],
+    eveWish:'올해 1월 1일에 아멜리아 님은 「{w}」라고 소원을 적었어요. 그 소원은 올해 어떻게 자랐나요? 다 이루지 못했어도 괜찮아요. 적어 둔 것만으로도 한 걸음이었어요.',
+    eveStory:'잠들기 전에 들려줄 열두 띠 이야기도 준비했어요. 듣고 싶으면 아래 버튼을 눌러요.',
+    day:['새해 복 많이 받아요, 아멜리아 님. 새 달력의 첫 장을 같이 넘기게 되어 기뻐요. 올해도 천천히, 아멜리아 님 속도로 가요.',
+         '새해예요, 아멜리아 님. 오늘은 거창한 계획보다 마음에 드는 작은 소원 하나면 충분해요. 제가 기억해 둘게요.'],
+    wishAsk:'올해의 소원을 하나 적어 볼래요? 짧아도 괜찮아요. 한 해의 마지막 날에 제가 다시 꺼내 볼게요.',
+    wishOk:['「{w}」. 좋은 소원이에요. 서재 맨 위 칸에 잘 넣어 둘게요.','적어 줘서 고마워요. 「{w}」, 일 년 동안 제가 곁에서 같이 기억할게요.'],
+    wishSkip:'괜찮아요. 소원은 마음속에만 있어도 충분해요.',
+    marty:['새해 복 많이 받으세요, 아멜리아 님! 마티는 올해 목표가 「아멜리아 님 웃게 하기 365번」이에요 ✨',
+           '해피 뉴 이어! 마티가 새 달력에 아멜리아 님 좋은 날 표시를 미리 잔뜩 해 뒀어요 🎉'],
+    wella:['새해 복 많이 받으세요! 올해는 빗자루에서 안 떨어지기가 목표예요. 하하, 이미 오늘 한 번 떨어졌지만요!',
+           '새해 첫 비행 다녀왔어요! 첫 해돋이가 진짜 예뻤어요. 소원도 빌었어요, 하하!'],
+    sina:['…새해다냥. …올해도 잘 부탁한다냥. 밥은 제때 주라냥.',
+          '…해가 바뀌어도 나는 그대로다냥. …그게 좋은 거다냥.'],
+    alesendo:['새해 복 많이 받으십시오, 아멜리아. 장부를 새로 펼쳤습니다. 첫 줄에는 아멜리아의 이름을 적었습니다.',
+              '새해를 축하드립니다. 지난해의 장부는 잘 덮어 두었습니다. 올해의 장부는 아멜리아와 함께 채워 가겠습니다.'],
+    seol:['설날이에요, 아멜리아 님. 떡국 한 그릇 드셨어요? 이제 진짜로 한 살 더 먹은 거래요. 저는 아멜리아 님과 함께 나이 드는 게 좋아요.',
+          '설날 아침이에요. 옛사람들은 오늘 웃어른께 세배하고 덕담을 나눴대요. 제 덕담은 이거예요. 올해도 아멜리아 님이 아멜리아 님답게 지내길.'],
+    seolF:[['wella','새해 복 많이 받으세요! 세배는 어떻게 하는 거예요? 이렇게요? 앗, 넘어졌어요, 하하!'],
+           ['marty','마티도 세배할게요! 올해도 조수 마티를 잘 부탁드려요 ✨'],
+           ['sina','…세배는 고양이 식으로 하겠다냥. …꾹꾹이다냥.']],
+    seolA:'설날을 맞아 장부에서 세뱃돈을 준비했습니다. 많지는 않지만 올 한 해의 첫 행운으로 받아 주십시오.'};
+  var POUCH=[
+    {who:'wella',t:'제 복주머니예요! 안에 반짝이 골드를 담았어요. 올해 좋은 일만 생기라고 리본도 두 번 묶었어요, 하하!',g:[10,15]},
+    {who:'marty',t:'마티 복주머니 도착! 열면 행운이 와르르 쏟아져요 ✨',g:[10,15]},
+    {who:'alesendo',t:'제 복주머니에는 쿠폰을 넣었습니다. 「늦잠 한 번」입니다. 새해에는 한 번쯤 마음껏 쉬셔도 됩니다.',item:'🧧 알레센도의 새해 쿠폰 · 늦잠 한 번'},
+    {who:'sina',t:'…내 복주머니다냥. …안에 내 털이 조금 섞였을지도 모른다냥. 골드도 있다냥.',g:[8,12]}];
+  function nyFriends(next){ card({title:'🎍 모두의 새해 인사',rows:[['marty',pick(NY.marty)],['wella',pick(NY.wella)],['sina',pick(NY.sina)],['alesendo',pick(NY.alesendo)]],btn:next?'다음':'고마워요',next:next}); }
+  function runNYE(){ var t=td(), h=ny(t.y); if(h.eve) return;
+    whenFree(function(){ h.eve=1; save();
+      var w=(ny(t.y).wish||'').trim(), txt=pick(NY.eve)+(w?' '+NY.eveWish.replace('{w}',w):'')+' '+NY.eveStory;
+      var story='<button class="ghost-btn" style="width:100%;margin-top:8px" id="ssStory">🌙 열두 띠 이야기 듣기</button>';
+      card({title:'🎆 올해의 마지막 날',rows:[['lowena',txt]],extra:story,btn:'고마워요'});
+      var sb=document.getElementById('ssStory'); if(sb) sb.onclick=function(){ closeCard(); setTimeout(function(){ try{ window.stRequest('열두 띠 이야기 들려줘'); }catch(e){ LQ.err(e); } },250); };
+    }); }
+  function wishCard(next){ var t=td();
+    var box='<textarea id="ssWish" rows="2" maxlength="60" placeholder="예: 매일 조금씩 걷기" style="width:100%;box-sizing:border-box;margin:4px 0 10px;padding:8px;font-size:16px;border-radius:6px;border:1px solid #a78bfa;background:#1a1426;color:#f0e6d0;font-family:inherit"></textarea>'
+      +'<div style="display:flex;gap:8px"><button class="ghost-btn" style="flex:1" id="ssWSkip">다음에 할래요</button><button class="gold-btn" style="flex:1" id="ssWOk">적어 둘래요</button></div>';
+    card({title:'✍️ 올해의 소원',rows:[['lowena',NY.wishAsk]],extra:box});
+    function done(w){ var h=ny(t.y); if(w){ h.wish=w.slice(0,60); save(); }
+      var body=document.getElementById('ssBody'); if(body) body.innerHTML=rows([['lowena',w?pick(NY.wishOk).replace('{w}',w):NY.wishSkip]]);
+      var bx=document.getElementById('ssWish'); if(bx&&bx.parentNode){ var p=bx.parentNode; p.removeChild(bx.nextSibling); p.removeChild(bx); }
+      var lc=document.querySelector('#lqCard .lc-box'); if(lc){ var b=document.createElement('button'); b.className='gold-btn'; b.textContent='다음'; b.onclick=function(){ closeCard(); if(next) setTimeout(next,250); }; lc.appendChild(b); } }
+    document.getElementById('ssWOk').onclick=function(){ var v=(document.getElementById('ssWish').value||'').replace(/\s+/g,' ').trim(); done(v); };
+    document.getElementById('ssWSkip').onclick=function(){ done(''); }; }
+  function pouchCard(next){ var t=td(); pickCard({title:'🧧 복주머니 고르기',icon:'🧧',fxGold:'새해 복',pool:POUCH,store:function(){ var h=ny(t.y); return {get gift(){ return h.pouch; },set gift(v){ h.pouch=v; }}; },
+    intro:'모두가 복주머니를 하나씩 매달아 두었대요. 하나만 골라 봐요. 올해의 첫 행운이에요.',next:next}); }
+  function runNYD(){ var t=td(), h=ny(t.y);
+    if(h.day){ if(!h.pouch) whenFree(function(){ pouchCard(function(){ nyFriends(null); }); }); return; }
+    whenFree(function(){ h.day=1; save();
+      card({title:'🎍 새해 복 많이 받아요',rows:[['lowena',pick(NY.day)]],btn:'다음',next:function(){ wishCard(function(){ pouchCard(function(){ nyFriends(null); }); }); }}); }); }
+  /* 설날: core.js evSpecials 의 음력 날짜를 같이 써요 */
+  var SEOL={2027:'02-06',2028:'01-26',2029:'02-13',2030:'02-03',2031:'01-23',2032:'02-11'};
+  function isSeol(){ var t=td(); return SEOL[t.y]===t.md; }
+  function runSeol(){ var t=td(), h=ny(t.y); if(h.seol) return;
+    whenFree(function(){ h.seol=1; S.gold=(S.gold||0)+20; save(); try{ renderHome(); }catch(e){ LQ.err(e); }
+      card({title:'🧧 설날이에요',rows:[['lowena',pick(NY.seol)]],btn:'다음',next:function(){
+        var f=NY.seolF.slice().sort(function(){ return Math.random()-.5; }).slice(0,2);
+        card({title:'🧧 모두의 세배',rows:f.concat([['alesendo',NY.seolA]]),fx:'🧧 알레센도의 세뱃돈 ◈ +20 골드',btn:'고마워요'}); }}); }); }
+
   /* ---------- 홈 배너: 카운트다운 + 내리는 눈 ---------- */
   var css=document.createElement('style');
   css.textContent='#xmBanner{position:relative;overflow:hidden;margin:0 0 10px;padding:22px 12px 10px;text-align:center;font-size:13.5px;font-weight:700;color:#e8f4ff;border:1px solid #6fa8dc;border-radius:8px;background:linear-gradient(#13243a,#0e1a2a);box-shadow:0 0 14px rgba(111,168,220,.3)}'
     +'#xmBanner .xm-s{position:absolute;top:-14px;font-size:11px;pointer-events:none;animation:xmFall linear infinite;opacity:.9}'
-    +'#xmBanner .xm-t{position:absolute;top:2px;font-size:16px;pointer-events:none}'
+    +'#xmBanner .xm-t,#nyBanner .xm-t{position:absolute;top:2px;font-size:16px;pointer-events:none}'
     +'@keyframes xmFall{0%{transform:translate(0,0)}50%{transform:translate(6px,34px)}100%{transform:translate(-2px,70px)}}'
     +'@media (prefers-reduced-motion:reduce){#xmBanner .xm-s{animation:none;top:4px}}';
   document.head.appendChild(css);
-  function banner(){
+  function nyBanner(){
+    var el=document.getElementById('nyBanner'), home=document.getElementById('screen-home'); if(!home) return;
+    var d=nyLeft(); if(d<0){ if(el) el.remove(); return; }
+    var txt=d===0?'🎍 새해 복 많이 받아요':d===1?'🎆 올해의 마지막 날이에요':'🎆 새해까지 D-'+d+' · 한 해를 마무리하는 주간이에요';
+    if(!el){ el=document.createElement('div'); el.id='nyBanner'; el.className='ss-ban';
+      el.style.cssText='position:relative;overflow:hidden;margin:0 0 10px;padding:22px 12px 10px;text-align:center;font-size:13.5px;font-weight:700;color:#ffe9b0;border:1px solid #c9a24d;border-radius:8px;background:linear-gradient(#1a1430,#0f0c1e);box-shadow:0 0 14px rgba(201,162,77,.3)';
+      el.innerHTML='<span class="xm-t" style="left:6%">🎆</span><span class="xm-t" style="left:30%;top:6px;font-size:12px">✨</span><span class="xm-t" style="right:28%;top:5px;font-size:12px">🌟</span><span class="xm-t" style="right:6%">🎆</span><div class="ny-x"></div>';
+      home.insertBefore(el,home.firstChild); }
+    el.querySelector('.ny-x').textContent=txt; }
+  function banner(){ try{ nyBanner(); }catch(e){ LQ.err(e); }
     var el=document.getElementById('xmBanner'), home=document.getElementById('screen-home'); if(!home) return;
     var d=xLeft(); if(d<0){ if(el) el.remove(); return; }
     var txt=d===0?'🎄 메리 크리스마스':d===1?'🎄 오늘은 크리스마스 이브예요':'🎄 크리스마스까지 D-'+d+' · 크리스마스 주간이에요';
@@ -140,13 +220,13 @@
     el.querySelector('.xm-x').textContent=txt; }
 
   /* ---------- 스플래시 문구 ---------- */
-  try{ var sp=document.getElementById('spHi'), t0=td(); if(sp){ if(t0.md==='12-25') sp.textContent='🎄 메리 크리스마스, 아멜리아 ❄'; else if(t0.md==='12-24') sp.textContent='🎄 크리스마스 이브예요 ✨'; } }catch(e){ LQ.err(e); }
+  try{ var sp=document.getElementById('spHi'), t0=td(); if(sp){ if(t0.md==='12-25') sp.textContent='🎄 메리 크리스마스, 아멜리아 ❄'; else if(t0.md==='12-24') sp.textContent='🎄 크리스마스 이브예요 ✨'; else if(t0.md==='01-01') sp.textContent='🎍 새해 복 많이 받아요, 아멜리아'; else if(t0.md==='12-31') sp.textContent='🎆 올해의 마지막 날이에요'; else if(isSeol()) sp.textContent='🧧 설날이에요, 아멜리아'; } }catch(e){ LQ.err(e); }
 
   /* ---------- 홈에 올 때마다 확인 ---------- */
   var tm=null;
   function onHome(){ clearTimeout(tm);
     try{ banner(); }catch(e){ LQ.err(e); }
-    tm=setTimeout(function(){ try{ var t=td(); if(t.md==='12-24') runEve(); else if(t.md==='12-25') runDay(); sjRun(); }catch(e){ LQ.err(e); } },4200); }
+    tm=setTimeout(function(){ try{ var t=td(); if(t.md==='12-24') runEve(); else if(t.md==='12-25') runDay(); else if(t.md==='12-31') runNYE(); else if(t.md==='01-01') runNYD(); else if(isSeol()) runSeol(); sjRun(); }catch(e){ LQ.err(e); } },4200); }
   LQ.on('screen:after',function(s){ if(s==='home') onHome(); else clearTimeout(tm); });
   /* 앱을 막 열었을 때는 screen:after가 오지 않아서 한 번 직접 확인해요 */
   setTimeout(function(){ try{ var h=document.getElementById('screen-home'); if(h&&h.classList.contains('active')) onHome(); }catch(e){ LQ.err(e); } },800);

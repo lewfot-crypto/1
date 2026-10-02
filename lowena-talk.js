@@ -510,15 +510,19 @@ function stOn(){ try{ return !(S.settings&&S.settings.sleepStory===false); }catc
 function stIntent(t){ return ST_INTENT.test(t)&&!ST_CRISIS.test(t); }
 function stById(id){ var i; for(i=0;i<ST_LIST.length;i++) if(ST_LIST[i].id===id) return ST_LIST[i]; for(i=0;i<ST_EPS.length;i++) if(ST_EPS[i].id===id) return ST_EPS[i]; return null; }
 function stRnd(a){ return a[Math.floor(Math.random()*a.length)]; }
-/* 할로윈 이야기(st_hw)는 할로윈 주간(10/24~10/31), 전나무 이야기(st_xm)는 크리스마스 주간(12/18~12/25)에만 고르고,
+/* 할로윈 이야기(st_hw)는 할로윈 주간(10/24~10/31), 전나무 이야기(st_xm)는 크리스마스 주간(12/18~12/25),
+   열두 띠 이야기(st_ny)는 새해 무렵(12/29~1/3)에만 고르고,
    그 주에 처음 들려줄 땐 먼저 골라요 */
 function stHwWeek(){ var t=todayStr(); return t.slice(5)>='10-24'&&t.slice(5)<='10-31'; }
 function stXmWeek(){ var t=todayStr(); return t.slice(5)>='12-18'&&t.slice(5)<='12-25'; }
-function stSpecial(id){ return id.indexOf('st_bd')===0||(id.indexOf('st_hw')===0&&!stHwWeek())||(id.indexOf('st_xm')===0&&!stXmWeek()); }
+function stNyWeek(){ var t=todayStr().slice(5); return t>='12-29'||t<='01-03'; }
+function stSpecial(id){ return id.indexOf('st_bd')===0||(id.indexOf('st_hw')===0&&!stHwWeek())||(id.indexOf('st_xm')===0&&!stXmWeek())||(id.indexOf('st_ny')===0&&!stNyWeek()); }
 function stPick(){
   var rec=(S.stRecent=S.stRecent||[]), y=todayStr().slice(0,4);
   if(stHwWeek()&&S.hwStory!==y){ var hw=stById('st_hw_lantern'); if(hw){ S.hwStory=y; rec.push(hw.id); return hw; } }
   if(stXmWeek()&&S.xmStory!==y){ var xs=stById('st_xm_fir'); if(xs){ S.xmStory=y; rec.push(xs.id); return xs; } }
+  var ny=todayStr().slice(5)>='12-29'?String(+y+1):y; /* 12/29~1/3은 새해 쪽 연도로 */
+  if(stNyWeek()&&S.nyStory!==ny){ var zs=stById('st_ny_zodiac'); if(zs){ S.nyStory=ny; rec.push(zs.id); return zs; } }
   var keep=Math.min(rec.length,Math.max(0,ST_LIST.length-2)), recent=rec.slice(-keep||rec.length), pool=ST_LIST.filter(function(s){ return recent.indexOf(s.id)<0&&!stSpecial(s.id); });
   if(!pool.length) pool=ST_LIST.filter(function(s){ return !stSpecial(s.id); }); var s=stRnd(pool); rec.push(s.id); if(rec.length>ST_LIST.length) rec.splice(0,rec.length-ST_LIST.length); return s; }
 var cur=null;
