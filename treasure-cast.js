@@ -230,7 +230,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   function canShow(){
     var sp=document.getElementById('splash'); if(sp){ var cs=getComputedStyle(sp); if(cs.display!=='none'&&cs.visibility!=='hidden'&&+cs.opacity>.05) return false; }
     if(document.hidden) return false;
-    if(typeof byeOpen!=='undefined'&&byeOpen) return false;
+    if(window.lqIsBye&&lqIsBye()) return false;
     if(typeof stampBusy!=='undefined'&&stampBusy) return false;
     if(Date.now()<(window.__mtAutoUntil||0)) return false;
     var on=function(id){ var e=document.getElementById(id); return !!(e&&e.className==='show'); };

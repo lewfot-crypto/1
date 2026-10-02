@@ -6,6 +6,7 @@ const pop=t=>{ if(S.settings.martyPop===false) toast('마티: '+t); else martySh
 function dlg(say,body,btns){ const o=$('askOv'); window._mtB=btns;
   o.innerHTML='<div class="ask-box mg-box"><div class="mg-row"><img class="mg-img" src="'+MARTY_IMG+'" alt=""><div class="speech-bubble">'+say+'</div></div>'+(body||'')+'<div class="mg-foot">'+btns.map((b,i)=>'<button class="'+(b[2]||'ghost-btn')+'" onclick="_mtBtn('+i+')">'+b[0]+'</button>').join('')+'</div></div>';
   o.classList.add('show'); const inp=o.querySelector('input[type=text],input:not([type])'); if(inp) setTimeout(()=>inp.focus(),60); }
+window.dlg=dlg; /* 다른 파일(extras-fx.js 자동 백업 고르기)에서도 쓰도록 */
 window._mtBtn=i=>{ const o=$('askOv'), b=window._mtB[i], before=o.innerHTML, r=b[1]?b[1]():null; if(r!=='keep'&&o.innerHTML===before){ o.classList.remove('show'); o.innerHTML=''; } };
 const _ad=window.askDlg;
 window.askDlg=function(title,inner,ok,no){ if(!inM()) return _ad(title,inner,ok,no);
@@ -194,6 +195,7 @@ if($('screen-master')&&$('screen-master').classList.contains('active')) window.r
 const $=id=>document.getElementById(id);
 const pick=P=>P[Math.floor(Math.random()*P.length)];
 let byeOpen=false;
+window.lqIsBye=function(){ return byeOpen; }; /* 작별 화면이 떠 있는지 (extras-fx.js·treasure-cast.js가 팝업을 미룰 때 봐요) */
 
 document.body.insertAdjacentHTML('beforeend','<div id="byeScreen"></div>');
 /* 상황 파악 */

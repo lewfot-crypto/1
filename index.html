@@ -483,6 +483,10 @@ background:var(--sky,none);opacity:var(--wo,0);transition:opacity 1.6s ease}
 </div>
 
 <script src="core.js"></script>
+<script src="core-quests.js"></script>
+<script src="core-confess.js"></script>
+<script src="core-extras.js"></script>
+<script src="core-boot.js"></script>
 <script>(function(){ /* 기념일 날짜: 아이폰 date 입력칸이 카드를 넘치는 문제를 피하려고 년·월·일 선택으로 */
 function fill(id,a,lab){ var s=document.getElementById(id); if(s) s.innerHTML='<option value="">'+lab+'</option>'+a.map(function(v){ return '<option value="'+v+'">'+v+'</option>'; }).join(''); }
 var y=new Date().getFullYear(), ys=[], ms=[], ds=[], i; for(i=y+1;i>=y-90;i--) ys.push(i); for(i=1;i<=12;i++) ms.push(i); for(i=1;i<=31;i++) ds.push(i);
@@ -557,6 +561,7 @@ a,a *{-webkit-touch-callout:none}
 <script src="stories/story_soseki3.js"></script>
 <script src="stories/story_birthday.js"></script>
 <script src="stories/story_halloween.js"></script>
+<script src="stories/story_winter.js"></script>
 <script src="stories/story_asks.js"></script>
 <script src="lowena-talk.js"></script>
 
@@ -584,6 +589,7 @@ a,a *{-webkit-touch-callout:none}
 <script src="cameos.js"></script>
 <script src="birthday.js"></script>
 <script src="halloween.js"></script>
+<script src="seasons.js"></script>
 <script src="health.js"></script>
 
 

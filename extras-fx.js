@@ -10,7 +10,7 @@
     const b=document.getElementById('autoRestoreBtn'); if(b) b.style.display=a.length?'':'none'; }
   window.restoreAuto=function(){ const a=rd(); if(!a.length){ toast('자동 백업이 아직 없어요'); refreshUI(); return; }
     const go=x=>{ try{ restoreData(JSON.parse(JSON.stringify(x.d))); }catch(e){ toast('이 백업은 읽을 수 없어요'); } };
-    if(typeof dlg==='function') dlg('어느 자동 백업으로 되돌릴까요?','',a.map(x=>['🗂 '+fmt(x.t)+' 백업',()=>go(x)]).concat([['닫기',null]]));
+    if(typeof window.dlg==='function') window.dlg('어느 자동 백업으로 되돌릴까요?','',a.map(x=>['🗂 '+fmt(x.t)+' 백업',()=>go(x)]).concat([['닫기',null]]));
     else go(a[0]); };
   const _ub=window.updateBackupInfo; if(typeof _ub==='function') window.updateBackupInfo=function(){ _ub.apply(this,arguments); refreshUI(); };
 
@@ -20,7 +20,7 @@
   function canShow(){
     const sp=document.getElementById('splash'); if(sp){ const cs=getComputedStyle(sp); if(cs.display!=='none'&&cs.visibility!=='hidden'&&+cs.opacity>.05) return false; }
     if(document.hidden) return false;
-    if(typeof byeOpen!=='undefined'&&byeOpen) return false;
+    if(window.lqIsBye&&lqIsBye()) return false;
     if(typeof stampBusy!=='undefined'&&stampBusy) return false;
     const on=id=>{ const e=document.getElementById(id); return !!(e&&e.className==='show'); };
     if(on('lowenaPop')||on('martyPop')) return false;
