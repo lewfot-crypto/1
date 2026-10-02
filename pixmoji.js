@@ -21,16 +21,14 @@ function drawSpr(d){ var p=d[0], r=d[1], n=Math.round(Math.sqrt(r.length)), F=d.
    게임용 64색 팔레트(Resurrect 64)로 색을 바꾸고, 외딴 점을 정리하고,
    왼쪽 위에서 빛이 오는 것처럼 가장자리를 밝게·어둡게 한 뒤 검은 테두리를 둘러 24칸 도트로 만든다.
    (예전에는 22칸으로 줄이기만 해서 아이폰 이모지를 작게 줄인 것처럼 보였어요) */
-var E32=['be4a2f','d77643','ead4aa','e4a672','b86f50','733e39','3e2731','a22633','e43b44','f77622','feae34','fee761','63c74d','3e8948','265c42','193c3e','124e89','0099db','2ce8f5','ffffff','c0cbdc','8b9bb4','5a6988','3a4466','262b44','181425','ff0044','68386c','b55088','f6757a','e8b796','c28569'];
 var R64=['2e222f','3e3546','625565','966c6c','ab947a','694f62','7f708a','9babb2','c7dcd0','ffffff','6e2727','b33831','ea4f36','f57d4a','ae2334','e83b3b','fb6b1d','f79617','f9c22b','7a3045','9e4539','cd683d','e6904e','fbb954','4c3e24','676633','a2a947','d5e04b','fbff86','165a4c','239063','1ebc73','91db69','cddf6c','313638','374e4a','547e64','92a984','b2ba90','0b5e65','0b8a8f','0eaf9b','30e1b9','8ff8e2','323353','484a77','4d65b4','4d9be6','8fd3ff','45293f','6b3e75','905ea9','a884f3','eaaded','753c54','a24b6f','cf657f','ed8099','831c5d','c32454','f04f78','f68181','fca790','fdcbb0'];
 function mk(h){ return h.map(function(x){ return [parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)]; }); }
-var P32=mk(E32), P64=mk(R64);
+var P64=mk(R64);
 function nearP(P,r,g,b){ var best=0,bd=1e18; for(var i=0;i<P.length;i++){ var p=P[i], dr=r-p[0], dg=g-p[1], db=b-p[2], rm=(r+p[0])/2, d=(2+rm/256)*dr*dr+4*dg*dg+(2+(255-rm)/256)*db*db; if(d<bd){ bd=d; best=i; } } return P[best]; }
-function lum(c){ return .299*c[0]+.587*c[1]+.114*c[2]; }
 function autoV(e,o){ var S=120, b=cv(S), x=b.getContext('2d'); x.textAlign='center'; x.textBaseline='middle';
   x.font=(S*.78)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(e,S/2,S/2+S*.05);
   var D=x.getImageData(0,0,S,S).data, x0=S,y0=S,x1=-1,y1=-1;
-  for(var i=0;i<S*S;i++) if(D[i*4+3]>40){ var px=i%S, py=(i/S)|0; if(px<x0)x0=px; if(px>x1)x1=px; if(py<y0)y0=py; if(py>y1)y1=py; }
+  for(var i=0;i<S*S;i++) if(D[i*4+3]>40){ var bx=i%S, by=(i/S)|0; if(bx<x0)x0=bx; if(bx>x1)x1=bx; if(by<y0)y0=by; if(by>y1)y1=by; }
   if(x1<0) return '';
   var C=o.C, G=C+2, P=o.pal, w=x1-x0+1, h=y1-y0+1, s=Math.max(w,h), m=cv(C), y=m.getContext('2d'); y.imageSmoothingEnabled=true; y.imageSmoothingQuality='high';
   var dw=Math.max(1,Math.round(w/s*C)), dh=Math.max(1,Math.round(h/s*C)); y.drawImage(b,x0,y0,w,h,Math.floor((C-dw)/2),Math.floor((C-dh)/2),dw,dh);
@@ -46,7 +44,7 @@ function autoV(e,o){ var S=120, b=cv(S), x=b.getContext('2d'); x.textAlign='cent
       var tl=!at(X-1,Y)||!at(X,Y-1), br=!at(X+1,Y)||!at(X,Y+1);
       if(tl&&!br) cp2[Y*G+X]=nearP(P,Math.min(255,c[0]*1.25+30),Math.min(255,c[1]*1.25+30),Math.min(255,c[2]*1.25+30));
       else if(br&&!tl) cp2[Y*G+X]=nearP(P,c[0]*.62,c[1]*.6,c[2]*.68); } px=cp2; }
-  var o2=cv(G), z=o2.getContext('2d'), od=z.createImageData(G,G), q=od.data, OUT=o.pal===P64?[46,34,47]:[24,20,37];
+  var o2=cv(G), z=o2.getContext('2d'), od=z.createImageData(G,G), q=od.data, OUT=[46,34,47];
   for(var Y=0;Y<G;Y++) for(var X=0;X<G;X++){ var j=(Y*G+X)*4, c=px[Y*G+X];
     if(c){ q[j]=c[0];q[j+1]=c[1];q[j+2]=c[2];q[j+3]=255; continue; }
     var nb=at(X+1,Y)||at(X-1,Y)||at(X,Y+1)||at(X,Y-1); if(nb){ var dk=o.darkOut?OUT:nearP(P,nb[0]*.35,nb[1]*.3,nb[2]*.38); q[j]=dk[0];q[j+1]=dk[1];q[j+2]=dk[2];q[j+3]=255; } }

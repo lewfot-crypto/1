@@ -752,9 +752,8 @@ function stMatch(t){
     else if(pg===-1){ idx=0; lead='「'+name+'」는 끝까지 들었던 이야기지요. 그래도 좋아요. 처음부터 다시 들려줄게요.'; }
     else { idx=aIdx||0; lead=idx?('「'+name+'」에서 그 이야기는 '+(idx+1)+'화에 나와요. 거기서부터 들려줄게요.'):('「'+name+'」이군요. 처음부터 천천히 들려줄게요.'); }
     return {s:stById(sr+':'+idx),i:pi,lead:lead}; }
-  for(i=0;i<ST_LIST.length&&!hit;i++){ if(0) break; var st=ST_LIST[i], ws=st.t.replace(/^\S+\s/,'').split(/\s+/); for(var k=0;k<ws.length;k++){ var tn=stNorm(ws.slice(k).join('')); if(tn.length>=4&&nt.indexOf(tn)>=0){ hit=st; break; } } }
   if(hit){ var rr=S.stResume&&S.stResume.id===hit.id&&(S.stResume.i||0)>0;
-    return {s:hit,i:rr?S.stResume.i:0,lead:rr?'「'+hit.t.replace(/^\S+\s/,'')+'」를 듣다가 멈췄었지요. 들었던 곳부터 이어서 들려줄게요.':'「'+hit.t.replace(/^\S+\s/,'')+'」 이야기군요. 들려줄게요.'}; }
+    return {s:hit,i:rr?S.stResume.i:0,lead:rr?'「'+hit.t.replace(/^\S+\s/,'')+'」를 듣다가 멈췄었지요. 들었던 곳부터 이어서 들려줄게요.':(/이야기$/.test(hit.t)?'「'+hit.t.replace(/^\S+\s/,'')+'」를 들려줄게요.':'「'+hit.t.replace(/^\S+\s/,'')+'」 이야기군요. 들려줄게요.')}; }
   return null; }
 window.stRequest=function(t){
   var r=null; try{ r=stMatch(t); }catch(e){ LQ.err(e); } if(!r||!r.s) return false;

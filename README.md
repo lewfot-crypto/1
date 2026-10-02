@@ -4,7 +4,7 @@
 
 ## 구성
 - `index.html`, `style.css`, `manifest.json`, `sw.js`(오프라인 캐시, `V` 값을 올리면 갱신)
-- `core.js` 핵심 상태·화면 / `lowena-*.js` 로웨나 대화·AI / `marty.js`, `treasure-cast.js`, `banter.js`, `cameos.js`, `extras-fx.js` 각 기능 / `lines.js` 대사 모음
+- `core.js`·`core-quests.js`·`core-confess.js`·`core-extras.js`·`core-boot.js` 핵심 상태·화면(원래 한 파일을 순서대로 나눔) / `seasons.js` 절기·크리스마스·새해 / `halloween.js`, `birthday.js` 기념일 / `lowena-*.js` 로웨나 대화·AI / `marty.js`, `treasure-cast.js`, `banter.js`, `cameos.js`, `extras-fx.js` 각 기능 / `lines.js` 대사 모음
 - `stories/` 로웨나가 들려주는 이야기 데이터 (아래 참고)
 - `assets/` 이미지
 
