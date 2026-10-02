@@ -2,7 +2,7 @@
    도트 이모지 (pixmoji.js)
    화면에 보이는 아이폰 이모지를 도트 그림으로 바꿔 보여 줘요.
    - 자주 쓰는 이모지 58개는 직접 그린 24×24 도트 그림(아래 SPR)
-   - 나머지 이모지는 그 자리에서 자동으로 도트로 바꿔요
+   - 나머지 이모지는 그 자리에서 자동으로 도트로 바꿔요 (18칸 + 게임용 32색 팔레트)
    - 글자 자체는 그대로 남겨 두고(눈에만 안 보이게) 그림을 겹쳐 보여 줘요.
      그래서 저장된 내용, 복사, 글자 비교 코드는 바뀌지 않아요.
    - 입력칸·선택 목록 안의 이모지는 바꿀 수 없어서 그대로 둬요.
@@ -15,18 +15,24 @@ function cv(n){ var c=document.createElement('canvas'); c.width=c.height=n; retu
 function drawSpr(d){ var c=cv(N), x=c.getContext('2d'), p=d[0], r=d[1];
   for(var i=0;i<r.length;i++){ var ch=r.charAt(i); if(ch==='.') continue; var k=K.indexOf(ch); x.fillStyle='#'+p.substr(k*6,6); x.fillRect(i%N,(i/N)|0,1,1); }
   return c.toDataURL(); }
-/* 직접 그린 그림이 없는 이모지: 크게 그린 뒤 22칸으로 줄이고 색을 단순하게, 테두리를 둘러 도트로 만든다 */
-function autoPx(e){ var S=88, b=cv(S), x=b.getContext('2d'); x.textAlign='center'; x.textBaseline='middle';
-  x.font=(S*.8)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(e,S/2,S/2+S*.05);
-  var M=22, m=cv(M), y=m.getContext('2d'); y.imageSmoothingEnabled=true; y.imageSmoothingQuality='high'; y.drawImage(b,0,0,M,M);
-  var d=y.getImageData(0,0,M,M).data, o=cv(N), z=o.getContext('2d'), od=z.createImageData(N,N), q=od.data, on=new Uint8Array(M*M), any=false;
-  function q8(v){ return Math.min(255,Math.round(v/34)*34+10); }
-  for(var i=0;i<M*M;i++){ var a=d[i*4+3]; if(a>120){ on[i]=1; any=true; var X=i%M+1, Y=((i/M)|0)+1, j=(Y*N+X)*4;
-    for(var k=0;k<3;k++) q[j+k]=q8(d[i*4+k]*255/a); q[j+3]=255; } }
-  if(!any) return '';
-  for(var Y2=0;Y2<N;Y2++) for(var X2=0;X2<N;X2++){ var sx=X2-1, sy=Y2-1; if(sx>=0&&sy>=0&&sx<M&&sy<M&&on[sy*M+sx]) continue;
-    var nb=-1; [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(v){ var ax=sx+v[0], ay=sy+v[1]; if(nb<0&&ax>=0&&ay>=0&&ax<M&&ay<M&&on[ay*M+ax]) nb=((ay+1)*N+(ax+1))*4; });
-    if(nb>=0){ var j2=(Y2*N+X2)*4; q[j2]=q[nb]*.35|0; q[j2+1]=q[nb+1]*.3|0; q[j2+2]=q[nb+2]*.3|0; q[j2+3]=255; } }
+/* 직접 그린 그림이 없는 이모지: 이모지를 그린 뒤 둘레를 잘라 18칸으로 줄이고,
+   게임용 32색 팔레트(Endesga 32)로 색을 바꾸고, 테두리를 둘러 20칸 도트로 만든다.
+   (예전에는 22칸으로 줄이기만 해서 아이폰 이모지를 작게 줄인 것처럼 보였어요) */
+var PAL=['be4a2f','d77643','ead4aa','e4a672','b86f50','733e39','3e2731','a22633','e43b44','f77622','feae34','fee761','63c74d','3e8948','265c42','193c3e','124e89','0099db','2ce8f5','ffffff','c0cbdc','8b9bb4','5a6988','3a4466','262b44','181425','ff0044','68386c','b55088','f6757a','e8b796','c28569'].map(function(h){ return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; });
+function near(r,g,b){ var best=0,bd=1e9; for(var i=0;i<PAL.length;i++){ var p=PAL[i], dr=r-p[0], dg=g-p[1], db=b-p[2], rm=(r+p[0])/2, d=(2+rm/256)*dr*dr+4*dg*dg+(2+(255-rm)/256)*db*db; if(d<bd){ bd=d; best=i; } } return PAL[best]; }
+function autoPx(e){ var S=96, b=cv(S), x=b.getContext('2d'); x.textAlign='center'; x.textBaseline='middle';
+  x.font=(S*.78)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.fillText(e,S/2,S/2+S*.05);
+  var D=x.getImageData(0,0,S,S).data, x0=S,y0=S,x1=-1,y1=-1;
+  for(var i=0;i<S*S;i++) if(D[i*4+3]>40){ var px=i%S, py=(i/S)|0; if(px<x0)x0=px; if(px>x1)x1=px; if(py<y0)y0=py; if(py>y1)y1=py; }
+  if(x1<0) return '';
+  var w=x1-x0+1, h=y1-y0+1, s=Math.max(w,h), C=18, G=20, m=cv(C), y=m.getContext('2d'); y.imageSmoothingEnabled=true; y.imageSmoothingQuality='high';
+  var dw=Math.max(1,Math.round(w/s*C)), dh=Math.max(1,Math.round(h/s*C)); y.drawImage(b,x0,y0,w,h,Math.floor((C-dw)/2),Math.floor((C-dh)/2),dw,dh);
+  var d=y.getImageData(0,0,C,C).data, o=cv(G), z=o.getContext('2d'), od=z.createImageData(G,G), q=od.data, on=new Uint8Array(G*G);
+  for(var k=0;k<C*C;k++){ var a=d[k*4+3]; if(a<140) continue; var X=k%C+1, Y=((k/C)|0)+1, j=(Y*G+X)*4, c=near(d[k*4]*255/a,d[k*4+1]*255/a,d[k*4+2]*255/a);
+    q[j]=c[0]; q[j+1]=c[1]; q[j+2]=c[2]; q[j+3]=255; on[Y*G+X]=1; }
+  for(var Y2=0;Y2<G;Y2++) for(var X2=0;X2<G;X2++){ if(on[Y2*G+X2]) continue; var nb=-1;
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(v){ var ax=X2+v[0], ay=Y2+v[1]; if(nb<0&&ax>=0&&ay>=0&&ax<G&&ay<G&&on[ay*G+ax]) nb=(ay*G+ax)*4; });
+    if(nb>=0){ var j2=(Y2*G+X2)*4, dk=near(q[nb]*.35,q[nb+1]*.3,q[nb+2]*.38); q[j2]=dk[0]; q[j2+1]=dk[1]; q[j2+2]=dk[2]; q[j2+3]=255; } }
   z.putImageData(od,0,0); return o.toDataURL(); }
 function urlFor(e){ var k=e.replace(/\uFE0F/g,''); if(k in cache) return cache[k];
   var u=''; try{ u=SPR[k]?drawSpr(SPR[k]):autoPx(e); }catch(err){ u=''; } cache[k]=u; return u; }
@@ -35,7 +41,12 @@ var RE=/[\u{1F1E6}-\u{1F1FF}]{2}|\p{Extended_Pictographic}\uFE0F?(?:\p{Emoji_Mod
 /* ✦ ★ ✓ ♪ ☾ 같은 글자 기호는 그대로 두고, 이모지 모양으로 보이는 것만 바꾼다 */
 function want(e){ var c=e.codePointAt(0); return c>=0x1F000||e.indexOf('\uFE0F')>=0||EP.test(e)||!!SPR[e.replace(/\uFE0F/g,'')]; }
 var SKIP='script,style,textarea,input,select,option,title,noscript,svg,canvas,.pxe,[contenteditable],[data-nopx]';
-function doText(t){ var s=t.nodeValue; if(!s||s.length<1) return; RE.lastIndex=0; if(!RE.test(s)) return;
+/* ▶ ⚔ ⚙ ⚠ ↩ ⏸ ★ ♪ 같은 기호는 아이폰이 컬러 이모지로 바꿔 보여 줄 때가 있어서,
+   이모지 표시 기호(FE0F)가 없으면 글자 모양 기호(FE0E)를 붙여 글자로 보이게 해요 */
+var TXT=/([\u2190-\u2BFF])(?![\uFE0E\uFE0F])/g, XP=/\p{Extended_Pictographic}/u;
+function textStyle(t){ var s=t.nodeValue; if(!/[\u2190-\u2BFF]/.test(s)) return; var p=t.parentNode; if(!p||p.nodeType!==1||p.closest(SKIP)) return;
+  var n=s.replace(TXT,function(c){ return XP.test(c)?c+'\uFE0E':c; }); if(n!==s) t.nodeValue=n; }
+function doText(t){ try{ textStyle(t); }catch(e){} var s=t.nodeValue; if(!s||s.length<1) return; RE.lastIndex=0; if(!RE.test(s)) return;
   var p=t.parentNode; if(!p||p.nodeType!==1||p.closest(SKIP)) return;
   RE.lastIndex=0; var f=document.createDocumentFragment(), last=0, m, hit=false;
   while((m=RE.exec(s))){ var e=m[0]; if(!want(e)) continue; var u=urlFor(e); if(!u) continue; hit=true;
