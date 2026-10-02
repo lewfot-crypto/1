@@ -1549,8 +1549,11 @@ function cfReply(k){ return LQD.pick('lowena.confess.'+k,CF_LINES[k],{who:'lowen
   window.cfVisit=function(){ try{ var t=todayStr(), V=S.cfVisits=S.cfVisits||[]; if(V.indexOf(t)<0){ V.push(t); if(V.length>60) V.splice(0,V.length-60); save(); } }catch(e){ LQ.err(e); } };
   function visitDays(){ var t0=Date.parse(todayStr()); return (S.cfVisits||[]).filter(function(d){ var q=t0-Date.parse(d); return q>=0&&q<7*864e5; }).length; }
   window.cfCandlesHtml=function(){ var n=Math.min(7,Math.max(1,visitDays())), P=[[-150,46],[-126,32],[134,58],[-176,40],[158,36],[-100,50],[110,42],[-72,34],[84,44]], c=Math.min(P.length,2+n), h='<div class="cf-candles">';
-    for(var i=0;i<c;i++){ var x=P[i][0], hh=P[i][1], d=(-(i*0.37)%1.2).toFixed(2); h+='<i class="cf-pxc" style="left:calc(50% '+(x<0?'- '+(-x):'+ '+x)+'px);height:'+hh+'px;background-image:url('+pxBody(hh)+')"><b class="cf-pxg" style="background-image:url('+pxSpr().g+');animation-delay:'+d+'s"></b><b class="cf-pxf" style="background-image:url('+pxSpr().f+');animation-delay:'+d+'s;animation-duration:'+(0.72+(i%3)*0.11).toFixed(2)+'s"></b></i>'; }
+    for(var i=0;i<c;i++){ var x=P[i][0]; h+=cfPxCandle(P[i][1],i,'calc(50% '+(x<0?'- '+(-x):'+ '+x)+'px)'); }
     return h+'</div>'; };
+  /* 도트 촛불 하나 (밀담실 방, 길게 대화하기 화면에서 같이 써요) */
+  window.cfPxCandle=function(hh,i,left){ var d=(-(i*0.37)%1.2).toFixed(2);
+    return '<i class="cf-pxc" style="left:'+left+';height:'+hh+'px;background-image:url('+pxBody(hh)+')"><b class="cf-pxg" style="background-image:url('+pxSpr().g+');animation-delay:'+d+'s"></b><b class="cf-pxf" style="background-image:url('+pxSpr().f+');animation-delay:'+d+'s;animation-duration:'+(0.72+(i%3)*0.11).toFixed(2)+'s"></b></i>'; };
   /* 도트 촛불: 몸통(높이별)·불꽃(6장 넘김)·빛 무리를 캔버스로 그려 쓴다. 1칸 = 2px */
   var PXC={}, PXS=null;
   function pxCv(w,h){ var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }

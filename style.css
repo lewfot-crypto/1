@@ -99,3 +99,6 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 @keyframes cfPxFlame{from{background-position:0 0}to{background-position:-84px 0}}
 @keyframes cfPxGlow{0%{opacity:.85}18%{opacity:1}31%{opacity:.7}47%{opacity:.95}62%{opacity:.8}80%{opacity:1}100%{opacity:.85}}
 @media (prefers-reduced-motion:reduce){.cf-pxc .cf-pxf,.cf-pxc .cf-pxg{animation:none}}
+#dcOv .dc-cand{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;width:0!important;height:84px;pointer-events:none;z-index:0}
+#dcOv .dc-cand .cf-pxc{bottom:0}
+#dcOv.dc-kb .dc-cand{display:none}

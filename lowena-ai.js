@@ -140,7 +140,8 @@ function addT(txt){ var full=String(txt), pages=(window.LQB&&LQB.split(full))||[
 function addWait(){ var d=add('lw','.','wait'); if(!d) return d; d.style.minWidth='3.4em'; var n=1, t=setInterval(function(){ if(!d.isConnected){ clearInterval(t); return; } n=n%3+1; d.textContent='...'.slice(0,n); },450); return d; }
 function clr(){ var l=log(); if(l) l.innerHTML=''; return l; }
 function ov(){ var o=document.getElementById('dcOv'); if(!o){ o=document.createElement('div'); o.id='dcOv'; document.body.appendChild(o); } return o; }
-function dcHead(){ return '<button class="dc-x" onclick="dcClose()">나가기</button><div class="dc-face"><img id="dcFace" src="'+LW_CROP.greet+'" alt=""></div><div id="dcLog"></div>'; }
+function dcCandles(){ try{ return '<div class="dc-cand">'+cfPxCandle(40,1,'-96px')+cfPxCandle(52,2,'74px')+'</div>'; }catch(e){ LQ.err(e); return ''; } }
+function dcHead(){ return '<button class="dc-x" onclick="dcClose()">나가기</button>'+dcCandles()+'<div class="dc-face"><img id="dcFace" src="'+LW_CROP.greet+'" alt=""></div><div id="dcLog"></div>'; }
 function drawChat(){ var o=ov();
   o.innerHTML=dcHead()+''
    +'<textarea id="dcIn" rows="3" placeholder="편하게 이야기해 줘요." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey&&!event.isComposing&&!/Mobi|Android|iPhone|iPad/.test(navigator.userAgent)){event.preventDefault();dcSend();}"></textarea>'

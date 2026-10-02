@@ -30,10 +30,12 @@
       +'<div style="display:flex;gap:6px;margin-top:10px"><button class="cfb" style="flex:1" onclick="lqErrClear()">기록 지우기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>');
   }catch(e){ LQ.err(e); } };
   window.lqErrClear=function(){ wr([]); closeModal(); try{ toast('오류 기록을 지웠어요'); }catch(e){} };
-  var VER='v6.01'; /* sw.js 의 V 번호와 같게 올려요 */
+  var VER='v6.1'; /* sw.js 의 V 번호와 같게 올려요 */
   /* 업데이트 기록: 설정 맨 아래 버전 번호를 누르면 보여요. 업데이트할 때마다 맨 위에 한 줄씩 추가해요 */
   var LOG=[
-   ['v6.01','2026-10-02',['밀담실 촛불을 도트 그림으로 바꿨어요 (불꽃이 일렁이고 빛이 깜빡여요)',
+   ['v6.1','2026-10-02',['밀담실 촛불을 도트 그림으로 바꿨어요 (불꽃이 일렁이고 빛이 깜빡여요)',
+     '길게 대화하기 화면에도 로웨나 양옆에 도트 촛불 두 개 (글을 쓸 때는 숨어요)',
+     '폰에서 날짜·시간을 골라 미리 눌러 보는 미리보기 페이지 (주소 끝에 /preview/)',
      '앱을 막 열었을 때 생일 주간 배너가 안 보이던 문제 해결',
      '시작 화면 위에 생일 카드가 겹쳐 뜨지 않게',
      '로웨나 인사가 다양해졌어요 (오전·점심·오후·저녁·밤·다시 왔을 때 새 인사 48개)',
