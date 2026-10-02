@@ -455,7 +455,7 @@ function evRow(e,dn,left,urg){ const n=e.items.length; let k,t;
 function renderEvents(){
   const el=document.getElementById('homeEvent'); if(!el) return;
   el.innerHTML=S.events.filter(e=>!evExpired(e)).map(e=>{ const dn=e.items.filter(i=>i.done).length, left=evLeft(e), urg=!e.cleared&&left<=3, ltxt=left===0?'오늘까지':left+'일 남음';
-    return `<div class="section-h">${e.sp?'🎉 특별 이벤트':'🌙 이달의 이벤트 퀘스트'} · ${ltxt}${urg?' ⏳':''}</div><div class="scroll-panel">
+    return `<div class="section-h kr">${e.sp?'🎉 특별 이벤트':'🌙 이달의 이벤트 퀘스트'} · ${ltxt}${urg?' ⏳':''}</div><div class="scroll-panel">
       <div class="panel-title" style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700">${esc(e.name)}</div>
       ${evRow(e,dn,left,urg)}
       ${e.items.map((it,i)=>`<div class="quest-row ${it.done?'done':''}" onclick="toggleEvItem('${e.id}',${i})"><div class="check">${it.done?'✓':''}</div><div class="label">${esc(it.t)}</div></div>`).join('')}

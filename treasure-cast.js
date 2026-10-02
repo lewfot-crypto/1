@@ -101,7 +101,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     return '<div class="als-scene" data-light="'+L+'"><img src="'+ALS_SC[_sc]+'" alt="알레센도의 마법상점" draggable="false"><div class="als-tint"></div><div class="als-glow"></div><div class="als-glow g2"></div></div>'
       +'<div class="als-head"><div class="als-pt"><img src="'+(_sc==='smile'?ALS_IMG_SMILE:ALS_IMG)+'" alt="알레센도"></div><div class="als-bub"><b>알레센도 · 서기관</b>'+esc2(t)+'</div></div>'; }
   function tabs(){ var g=gfReady().length; return tabsHTML('tre',[['shop','진열대'],['own','보유'],['used','사용됨'],['gift','선물'+(g?' 🎁':'')],['ledger','장부']]); }
-  function row(r){ var t=r.gift?['선물','#e6a0c8']:rwTier(r), st=rwState(r), b, rep='<button class="mini-x" style="margin-right:4px;opacity:'+(r.repeatable?1:.4)+'" onclick="toggleRep(\''+r.id+'\')">↻</button>';
+  function row(r){ var t=r.gift?['선물','#e6a0c8']:rwTier(r), st=rwState(r), b, rep='<button class="mini-x rep" style="margin-right:4px;opacity:'+(r.repeatable?1:.4)+'" onclick="toggleRep(\''+r.id+'\')">↻</button>';
     if(st==='used') b='<span class="redeemed">사용됨</span>'; else if(st==='own') b='<button class="ghost-btn" onclick="redeem(\''+r.id+'\')">사용하기</button>';
     else b='<button class="ghost-btn" style="'+((S.gold||0)>=r.price?'':'opacity:.45')+'" onclick="buyReward(\''+r.id+'\')">◈ '+r.price+' 구매</button>';
     return '<div class="treasure-row"><span class="t">'+esc(r.name)+'<small style="color:'+t[1]+';margin-left:6px">'+t[0]+(r.mo?' · 이달의':'')+(r.uses?' · '+r.uses+'회 사용':'')+'</small>'+(r.note?'<div style="font-size:11px;color:#a8b79e;margin-top:3px">'+esc(r.note)+'</div>':'')+'</span><span>'+(st!=='used'&&!r.mo?rep:'')+b+'</span></div>'; }
@@ -186,7 +186,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     if(tab==='shop') body=shopHTML(); else if(tab==='ledger') body=ledgerHTML(); else if(tab==='gift') body=giftHTML();
     else { var list=S.rewards.filter(function(r){ return rwState(r)===tab; }).sort(function(a,b){ return (a.price||0)-(b.price||0); });
       body=(pgSlice('tre',list).map(row).join('')||'<div class="empty">여기엔 아직 아무것도 없어요</div>')+pgHTML('tre',list.length); }
-    document.getElementById('treasureList').innerHTML=head(tab)+'<div class="gold-bar">◈ 골드 '+(S.gold||0).toLocaleString()+'</div>'+chestBtn()+tabs()+body; LQ.fire('treasure:rendered');
+    document.getElementById('treasureList').innerHTML=head(tab)+'<div class="gold-bar">◈<span class="kr">골드</span>'+(S.gold||0).toLocaleString()+'</div>'+chestBtn()+tabs()+body; LQ.fire('treasure:rendered');
     try{ var ab=document.getElementById('addRewardBtn'); if(ab) ab.style.display=(tab==='shop')?'':'none'; }catch(e){ LQ.err(e); } };
   window.shSet=function(v){ FIL.shelf=v; PG.tre=0; _sc=scPick(scFor('shop')); renderTreasure(); };
   window.gfClaim=function(id){ var g=GIFTS.find(function(x){ return x.id===id; }); if(!g) return; S.giftGot=S.giftGot||{}; if(S.giftGot[id]) return;

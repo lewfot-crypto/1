@@ -344,7 +344,7 @@ function renderAchievements(){
   const all=S.achievements, un=all.filter(a=>a.unlocked).length, f=FIL.ach, V=achView();
   const list=V.vis.filter(a=>f==='all'||(f==='on'?a.unlocked:!a.unlocked));
   const rows=pgSlice('ach',list).map(a=>{ const h=a.hidden&&!a.unlocked;
-    return `<div class="seal ${a.unlocked?'':'locked'}"><div class="icon">${a.unlocked?'✦':'🔒'}</div><div style="flex:1"><div class="t">${h?'???':esc(a.name)}${a.unlocked?' · 해금':''}</div><div class="d">${h?'숨겨진 업적이에요':esc(a.desc||'')}</div><div class="d" style="opacity:.7;margin-top:3px">조건: ${h?'???':condLabel(a.cond)} · ◈${halfG(a.gold||20)}${a.unlocked&&a.unlockedAt?' · '+a.unlockedAt:''}</div>${(!a.unlocked&&(!a.cond||a.cond.type==='manual'))?`<button class="ghost-btn" style="margin-top:6px" onclick="manualUnlock('${a.id}')">달성 처리</button>`:''}</div></div>`; }).join('')||'<div class="empty">해당하는 업적이 없어요</div>';
+    return `<div class="seal ${a.unlocked?'':'locked'}"><div class="icon">${a.unlocked?'✦':'🔒'}</div><div style="flex:1"><div class="t">${h?'???':esc(a.name)}${a.unlocked?' · 해금':''}</div><div class="d">${h?'숨겨진 업적이에요':esc(a.desc||'')}</div><div class="d" style="opacity:.7;margin-top:3px">조건: ${h?'???':condLabel(a.cond)} · ◈${halfG(a.gold||20)}${a.unlocked&&a.unlockedAt?' · <span class="nw">'+esc(String(a.unlockedAt))+'</span>':''}</div>${(!a.unlocked&&(!a.cond||a.cond.type==='manual'))?`<button class="ghost-btn" style="margin-top:6px" onclick="manualUnlock('${a.id}')">달성 처리</button>`:''}</div></div>`; }).join('')||'<div class="empty">해당하는 업적이 없어요</div>';
   document.getElementById('achieveList').innerHTML=tabsHTML('ach',[['all','전체'],['on','해금'],['off','잠김']])+rows+pgHTML('ach',list.length);
 }
 function rwState(r){ if(r.redeemed) return 'used'; return (r.owned||!(r.price>0))?'own':'shop'; }
@@ -357,7 +357,7 @@ function renderTreasure(){
     else if(st==='own') b=`<button class="ghost-btn" onclick="redeem('${r.id}')">사용하기</button>`;
     else b=`<button class="ghost-btn" style="${(S.gold||0)>=r.price?'':'opacity:.45'}" onclick="buyReward('${r.id}')">◈ ${r.price} 구매</button>`;
     return `<div class="treasure-row"><span class="t">${esc(r.name)}<small style="color:${tc};margin-left:6px">${tn}${r.uses?' · '+r.uses+'회 사용':''}</small></span><span>${st!=='used'?rep:''}${b}</span></div>`; }).join('')||'<div class="empty">여기엔 아직 아무것도 없어요</div>';
-  document.getElementById('treasureList').innerHTML=`<div class="gold-bar">◈ 골드 ${(S.gold||0).toLocaleString()}</div>${chestBtn()}`+tabsHTML('tre',[['shop','상점 '+cnt('shop')],['own','보유 '+cnt('own')],['used','사용됨 '+cnt('used')]])+rows+pgHTML('tre',list.length);
+  document.getElementById('treasureList').innerHTML=`<div class="gold-bar">◈<span class="kr">골드</span>${(S.gold||0).toLocaleString()}</div>${chestBtn()}`+tabsHTML('tre',[['shop','상점 '+cnt('shop')],['own','보유 '+cnt('own')],['used','사용됨 '+cnt('used')]])+rows+pgHTML('tre',list.length);
 }
 
 

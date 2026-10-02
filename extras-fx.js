@@ -72,7 +72,7 @@
     var dx=Math.abs(x1-x0), dy=-Math.abs(y1-y0), sx_=x0<x1?1:-1, sy_=y0<y1?1:-1, e=dx+dy, n=0;
     for(;;){ if(!every||n%every<every-1) px(c,x0,y0,col,a); n++; if(x0===x1&&y0===y1) break; var e2=2*e; if(e2>=dy){ e+=dy; x0+=sx_; } if(e2<=dx){ e+=dx; y0+=sy_; } } }
   function ring(c,cx0,cy0,rad,col,a,every){ var n=Math.ceil(Math.PI*2*rad*1.6); for(var i=0;i<n;i++){ if(every&&i%every>=every/2) continue; var t=i/n*Math.PI*2; px(c,cx0+Math.cos(t)*rad,cy0+Math.sin(t)*rad,col,a); } }
-  function moon(c,mx,my,rad){ for(var dy=-rad;dy<=rad;dy++) for(var dx=-rad;dx<=rad;dx++) if(dx*dx+dy*dy<=rad*rad&&(dx-2)*(dx-2)+(dy+1)*(dy+1)>(rad-1)*(rad-1)) px(c,mx+dx,my+dy,CREAM,.5); }
+  function moon(c,mx,my,rad){ for(var dy=-rad;dy<=rad;dy++) for(var dx=-rad;dx<=rad;dx++) if(dx*dx+dy*dy<=rad*rad&&(dx-2)*(dx-2)+(dy+1)*(dy+1)>(rad-1)*(rad-1)) px(c,mx+dx,my+dy,CREAM,.16); } /* 글자 뒤로 지나갈 때 튀지 않게 옅게 */
   function addStars(n,ym){ for(var i=0;i<n;i++) dyn.push({t:'s',x:Math.floor(r()*W),y:Math.floor(r()*ym),p:r()*4,v:.5+r()*.9,big:r()<.12,c:r()<.3?GOLD:CREAM}); }
   function addFlies(n){ for(var i=0;i<n;i++) dyn.push({t:'f',x:r()*W,y:H*.3+r()*H*.7,vy:.04+r()*.1,ph:r()*6.28,sw:1.6+r()*3,c:r()<.5?FL1:FL2}); }
 
