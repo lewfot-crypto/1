@@ -1,5 +1,5 @@
 .DS_Store
 *.zip
 node_modules/
-CLAUDE.md
+CLAUDE.local.md
 index_preview.html
