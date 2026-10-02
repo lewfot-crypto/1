@@ -93,3 +93,12 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 #dcOv.dc-kb{padding-bottom:8px;gap:6px}#dcOv.dc-kb .dc-face{display:none}
 /* 팝업이 아이폰 아래 홈 막대·위 상태 표시줄에 가리지 않게 */
 #trChat,#bnCard{bottom:calc(76px + env(safe-area-inset-bottom,0px))}#passBy{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.cf-pxc{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:22px;margin-left:-4px;background:0 0/100% 100% no-repeat;image-rendering:pixelated;image-rendering:crisp-edges}
+.cf-pxc .cf-pxf{position:absolute;left:4px;top:-20px;width:14px;height:22px;background-repeat:no-repeat;background-size:84px 22px;image-rendering:pixelated;image-rendering:crisp-edges;animation:cfPxFlame .78s steps(6) infinite}
+.cf-pxc .cf-pxg{position:absolute;left:-21px;top:-42px;width:64px;height:64px;background-size:64px 64px;image-rendering:pixelated;image-rendering:crisp-edges;animation:cfPxGlow 1.9s steps(1) infinite}
+@keyframes cfPxFlame{from{background-position:0 0}to{background-position:-84px 0}}
+@keyframes cfPxGlow{0%{opacity:.85}18%{opacity:1}31%{opacity:.7}47%{opacity:.95}62%{opacity:.8}80%{opacity:1}100%{opacity:.85}}
+@media (prefers-reduced-motion:reduce){.cf-pxc .cf-pxf,.cf-pxc .cf-pxg{animation:none}}
+#dcOv .dc-cand{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;width:0!important;height:84px;pointer-events:none;z-index:0}
+#dcOv .dc-cand .cf-pxc{bottom:0}
+#dcOv.dc-kb .dc-cand{display:none}
