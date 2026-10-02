@@ -30,9 +30,13 @@
       +'<div style="display:flex;gap:6px;margin-top:10px"><button class="cfb" style="flex:1" onclick="lqErrClear()">기록 지우기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>');
   }catch(e){ LQ.err(e); } };
   window.lqErrClear=function(){ wr([]); closeModal(); try{ toast('오류 기록을 지웠어요'); }catch(e){} };
-  var VER='v6.1'; /* sw.js 의 V 번호와 같게 올려요 */
+  var VER='v6.2'; /* sw.js 의 V 번호와 같게 올려요 */
   /* 업데이트 기록: 설정 맨 아래 버전 번호를 누르면 보여요. 업데이트할 때마다 맨 위에 한 줄씩 추가해요 */
   var LOG=[
+   ['v6.2','2026-10-02',['도트 이모지를 직접 50개 더 그렸어요 (모두 108개)',
+     '움직이는 도트 10개: ✨🌟 반짝임, 🔥🕯 불꽃, 🎃 빛, 😴 Zz, 🎉 꽃가루, 👻 둥실, 🦇 날갯짓, 🐈‍⬛ 눈 깜빡',
+     '직접 그리지 않은 이모지도 게임용 64색 도트로 (빛과 검은 테두리)',
+     '▶ ⚔ ⚙ 같은 기호가 아이폰에서 컬러 이모지로 바뀌지 않게']],
    ['v6.1','2026-10-02',['밀담실 촛불을 도트 그림으로 바꿨어요 (불꽃이 일렁이고 빛이 깜빡여요)',
      '길게 대화하기 화면에도 로웨나 양옆에 도트 촛불 두 개 (글을 쓸 때는 숨어요)',
      '폰에서 날짜·시간을 골라 미리 눌러 보는 미리보기 페이지 (주소 끝에 /preview/)',
