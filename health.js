@@ -30,9 +30,10 @@
       +'<div style="display:flex;gap:6px;margin-top:10px"><button class="cfb" style="flex:1" onclick="lqErrClear()">기록 지우기</button><button class="cfb" style="flex:1" onclick="closeModal()">닫기</button></div>');
   }catch(e){ LQ.err(e); } };
   window.lqErrClear=function(){ wr([]); closeModal(); try{ toast('오류 기록을 지웠어요'); }catch(e){} };
-  var VER='v6.3'; /* sw.js 의 V 번호와 같게 올려요 */
+  var VER='v6.31'; /* sw.js 의 V 번호와 같게 올려요 */
   /* 업데이트 기록: 설정 맨 아래 버전 번호를 누르면 보여요. 업데이트할 때마다 맨 위에 한 줄씩 추가해요 */
   var LOG=[
+   ['v6.31','2026-10-02',['업데이트 기록을 한 장씩 넘겨 볼 수 있어요 (왼쪽으로 밀면 이전 버전)']],
    ['v6.3','2026-10-02',['🎄 크리스마스: 12/18~25 눈 내리는 홈 장식, 이브·당일 카드, 선물 상자 고르기',
      '🎍 새해: 연말 불꽃놀이 장식, 12/31 한 해 마무리(1월 1일에 적은 소원을 다시 꺼내 줘요), 1/1 올해의 소원 적기와 복주머니',
      '🧧 설날: 세배와 알레센도의 세뱃돈',
