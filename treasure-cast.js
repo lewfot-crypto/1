@@ -104,7 +104,8 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
   function row(r){ var t=r.gift?['선물','#e6a0c8']:rwTier(r), st=rwState(r), b, rep='<button class="mini-x rep" style="margin-right:4px;opacity:'+(r.repeatable?1:.4)+'" onclick="toggleRep(\''+r.id+'\')">↻</button>';
     if(st==='used') b='<span class="redeemed">사용됨</span>'; else if(st==='own') b='<button class="ghost-btn" onclick="redeem(\''+r.id+'\')">사용하기</button>';
     else b='<button class="ghost-btn" style="'+((S.gold||0)>=r.price?'':'opacity:.45')+'" onclick="buyReward(\''+r.id+'\')">◈ '+r.price+' 구매</button>';
-    return '<div class="treasure-row"><span class="t">'+esc(r.name)+'<small style="color:'+t[1]+';margin-left:6px">'+t[0]+(r.mo?' · 이달의':'')+(r.uses?' · '+r.uses+'회 사용':'')+'</small>'+(r.note?'<div style="font-size:11px;color:#a8b79e;margin-top:3px">'+esc(r.note)+'</div>':'')+'</span><span>'+(st!=='used'&&!r.mo?rep:'')+b+'</span></div>'; }
+    var wb=st==='shop'?'<button class="mini-x wish'+(wished(r.id)?' on':'')+'" onclick="wishToggle(\''+r.id+'\')" title="소원 목록">'+(wished(r.id)?'★':'☆')+'</button>':'';
+    return '<div class="treasure-row"><span class="t">'+esc(r.name)+'<small style="color:'+t[1]+';margin-left:6px">'+t[0]+(r.mo?' · 이달의':'')+(r.uses?' · '+r.uses+'회 사용':'')+'</small>'+(r.note?'<div style="font-size:11px;color:#a8b79e;margin-top:3px">'+esc(r.note)+'</div>':'')+'</span><span>'+wb+(st!=='used'&&!r.mo?rep:'')+b+'</span></div>'; }
   function dayIdx(n){ var d=todayStr(), h=0; for(var i=0;i<d.length;i++) h=(h*31+d.charCodeAt(i))>>>0; return h%n; }
   function hiddenHTML(){ var n=unl(), open=n>=HID_NEED, h='<div class="shelf-h">🗝️ 숨겨진 진열장</div>';
     if(!open) h+='<div class="als-lock">'+(n>=HID_NEED-3?'열쇠가 조금 반짝이기 시작했어요. 곧 열릴 것 같아요.':'저 안쪽 진열장에는 열쇠가 필요해요. 아멜리아가 모험을 조금 더 이어 가면 열릴 거예요.')+'</div>';
@@ -167,6 +168,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     if(f==='key') return h+hiddenHTML();
     var list=f==='all'?items:items.filter(function(r){ return shelfOf(r)[0]===f; }), page=pgSlice('tre',list);
     if(f==='all'&&PG.tre===0){ var mm=+todayStr().slice(5,7), se=seasonOf(mm); h+='<div class="als-mo">'+({sp:'🌸',su:'🌊',au:'🍂',wi:'❄️'})[se]+' '+mm+'월의 진열이에요. 이 중 절반은 다음 달에 새 물건으로 바뀌어요.</div>'; }
+    if(f==='all'&&PG.tre===0) h+=wishHTML(items);
     if(f==='all'&&items.length){ var pk=items[dayIdx(items.length)], PL=LINES.pick.concat(LQD.get('alesendo.pick')), q=PL[dayIdx(PL.length)];
       h+='<div class="shelf-h">✦ 오늘의 추천</div><div class="als-pick"><div class="k">오늘 입고된 물건</div>'+row(pk).replace('class="treasure-row"','class="treasure-row" style="margin:0"').replace('margin-left:6px','display:block;margin:2px 0 0')+'<div class="q">'+esc2(q)+'</div></div>'; }
     var last=''; page.forEach(function(r){ var s=shelfOf(r); if(f==='all'&&s[0]!==last){ last=s[0]; h+='<div class="shelf-h">'+s[1]+'</div>'; } h+=row(r); });
@@ -182,6 +184,30 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     PG.tre=Math.min(PG.tre,n-1); var pg=L.slice(PG.tre*P,PG.tre*P+P);
     return '<div class="led"><div class="s">📒 알레센도의 장부 · 산 보물 '+L.length+'개 · 쓴 골드 ◈ '+tot.toLocaleString()+'</div>'+(pg.map(function(e){ return '<div class="r"><span>'+esc(e.n)+'</span><i>'+e.d+' · ◈'+e.p+'</i></div>'; }).join('')||'<div class="r"><span>아직 적힌 게 없어요.</span></div>')+'</div>'
       +(n>1?'<div class="pager"><button onclick="pgGo(\'tre\',-1,'+n+')">‹</button><span>'+(PG.tre+1)+' / '+n+'</span><button onclick="pgGo(\'tre\',1,'+n+')">›</button></div>':''); }
+  /* ---------- 소원 목록: ☆를 달아 둔 보상에 골드가 모이면 알레센도가 알려 줘요 (S.wish[id]={n,p,told}) ---------- */
+  function wishes(){ var w=S.wish; if(!w||typeof w!=='object') w=S.wish={}; return w; }
+  function wished(id){ return !!wishes()[id]; }
+  function shopItem(id){ return S.rewards.find(function(r){ return r.id===id&&rwState(r)==='shop'; })||moFind(id); }
+  function wishHTML(items){ var w=wishes(), g=S.gold||0, list=items.filter(function(r){ return w[r.id]; }); if(!list.length) return '';
+    return '<div class="wish-box"><div class="wish-h">★ 소원 목록</div>'+list.map(function(r){ var pct=Math.min(100,Math.round(g/Math.max(1,r.price)*100)), ok=g>=r.price;
+      return '<div class="wish-r"><div class="wish-n"><em>'+esc(r.name)+'</em><span>'+(ok?'살 수 있어요!':'◈ '+(r.price-g)+' 남음')+'</span></div><div class="wish-bar"><i style="width:'+pct+'%"></i></div></div>'; }).join('')+'</div>'; }
+  window.wishToggle=function(id){ var w=wishes(); if(w[id]){ delete w[id]; save(); renderTreasure(); toast('소원 목록에서 뺐어요'); return; }
+    var r=shopItem(id); if(!r) return; w[id]={n:r.name,p:r.price,told:(S.gold||0)>=r.price?1:0}; save(); renderTreasure();
+    toast((S.gold||0)>=r.price?'★ 소원 목록에 담았어요 · 지금 바로 살 수 있어요':'★ 소원 목록에 담았어요 · 골드가 모이면 알레센도가 알려 줘요'); };
+  var WISH_L=['아멜리아, 소원 목록에 적어 두신 「{n}」 말입니다. 이제 살 수 있을 만큼 골드가 모였습니다. 진열대에 잘 모셔 두었습니다.',
+    '장부를 보니 「{n}」에 닿았습니다. 서두르실 필요는 없습니다. 언제든 진열대에서 기다리고 있겠습니다.',
+    '좋은 소식입니다, 아멜리아. 「{n}」을(를) 데려갈 골드가 모였습니다. 오늘 하루 수고하신 덕분입니다.'];
+  function wishCheck(){ var w=wishes(), g=S.gold||0, ready=[], ch=false;
+    Object.keys(w).forEach(function(id){ var it=shopItem(id); if(!it){ delete w[id]; ch=true; return; }
+      var x=w[id]; x.p=it.price; if(g>=x.p&&!x.told){ x.told=1; ready.push(x); ch=true; } else if(g<x.p&&x.told){ x.told=0; ch=true; } });
+    if(ch) save(); if(!ready.length) return;
+    var t=WISH_L[Math.floor(Math.random()*WISH_L.length)].replace('{n}',ready[0].n)+(ready.length>1?' 다른 소원 '+(ready.length-1)+'개도 함께입니다.':'');
+    var sc=document.getElementById('screen-treasure'); if(sc&&sc.classList.contains('active')){ say(t,'joy'); renderTreasure(); return; }
+    if(!window.LQC) return; var K=LQC.kit('ws');
+    LQC.whenFree(function(){ K.card({title:'★ 소원 목록',rows:[['alesendo',t]],extra:'<button class="ghost-btn" style="width:100%;margin-top:8px" id="wsGo">진열대 보러 가기</button>',btn:'고마워요'});
+      var go=document.getElementById('wsGo'); if(go) go.onclick=function(){ LQC.closeCard(); showScreen('treasure'); }; }); }
+  window.lqWishCheck=wishCheck;
+  LQ.on('screen:after',function(s){ if(s==='home'||s==='treasure') setTimeout(function(){ try{ wishCheck(); }catch(e){ LQ.err(e); } },s==='home'?5200:1200); });
   window.renderTreasure=function(){ var tab=FIL.tre, body='';
     if(tab==='shop') body=shopHTML(); else if(tab==='ledger') body=ledgerHTML(); else if(tab==='gift') body=giftHTML();
     else { var list=S.rewards.filter(function(r){ return rwState(r)===tab; }).sort(function(a,b){ return (a.price||0)-(b.price||0); });
@@ -195,7 +221,7 @@ martyMust=function(k){ if(k==='event') return; return _mm.apply(this,arguments);
     save(); say(g.line,'joy'); renderTreasure(); try{ lwFaceTemp('give',60000); }catch(e){ LQ.err(e); } toast('🎁 선물 획득! (보유 탭에서 사용해요)'); };
   function gfNotify(){ var fresh=gfReady().filter(function(g){ return !(S.giftSeen||{})[g.id]; }); if(!fresh.length) return;
     S.giftSeen=S.giftSeen||{}; fresh.forEach(function(g){ S.giftSeen[g.id]=1; }); save(); toast('🎁 알레센도의 선물이 준비됐어요! (TREASURE › 선물)'); }
-  var _caG=checkAchievements; checkAchievements=function(){ var r=_caG.apply(this,arguments); try{ gfNotify(); }catch(e){ LQ.err(e); } return r; };
+  var _caG=checkAchievements; checkAchievements=function(){ var r=_caG.apply(this,arguments); try{ gfNotify(); }catch(e){ LQ.err(e); } try{ wishCheck(); }catch(e){ LQ.err(e); } return r; };
   function logBuy(n,p){ (S.ledger=S.ledger||[]).push({ts:Date.now(),d:todayStr(),n:n,p:p}); }
   window.buyReward=function(id){ var r=S.rewards.find(function(x){ return x.id===id; })||moFind(id); if(!r) return;
     if((S.gold||0)<r.price){ say(rnd(LINES.poor,'poor'),'poor'); toast('골드가 부족해요'); renderTreasure(); return; }
