@@ -349,7 +349,8 @@ function renderCalendar(){
     let cls='nodata', mark='—', bg='';
     if(rec){ cls = rec.cleared?'clear':'notclear'; mark = rec.cleared?'✓':'×'; bg=`background:rgba(${rec.cleared?'90,122,62':'122,50,41'},${(.12+(rec.percent||0)/100*.5).toFixed(2)})`; if(rec.pass&&!rec.cleared){ cls='nodata'; mark='☾'; bg=''; } else if(ds===todayFull&&!rec.cleared){ mark='·'; } }
     const todayCls = ds===todayFull ? ' today':'';
-    html += `<div class="cal-day ${cls}${todayCls}" style="${bg}" onclick="openDayModal('${ds}')"><span>${d}</span><span class="mark">${mark}</span></div>`;
+    const memo=S.sleepLog&&S.sleepLog[ds]&&S.sleepLog[ds].note?'<i class="cal-memo" title="밤의 한 줄"></i>':'';
+    html += `<div class="cal-day ${cls}${todayCls}" style="${bg}" onclick="openDayModal('${ds}')">${memo}<span>${d}</span><span class="mark">${mark}</span></div>`;
   }
   document.getElementById('calGrid').innerHTML = html;
 }
@@ -381,7 +382,7 @@ function openDayModal(ds){
   }).join('') || '<div class="empty">이 날의 퀘스트가 없어요</div>';
   const hint = editable ? '<div class="mdesc" style="margin-top:6px">퀘스트를 눌러 체크를 바꿀 수 있어요. 완료율은 지금 설정된 퀘스트 기준으로 계산돼요.</div>' : '<div class="mdesc" style="margin-top:6px">아직 오지 않은 날이에요.</div>';
   document.getElementById('modalBox').innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button>
-    <h2>${ds}</h2>${hint}${rows}<div class="modal-sec-h">완료율</div><div>${day.percent||0}% · ${day.cleared?'QUEST CLEAR':'QUEST NOT CLEARED'}${day.pass?' · ☾ 쉬는 날':''}</div>`;
+    <h2>${ds}</h2>${hint}${rows}<div class="modal-sec-h">완료율</div><div>${day.percent||0}% · ${day.cleared?'QUEST CLEAR':'QUEST NOT CLEARED'}${day.pass?' · ☾ 쉬는 날':''}</div>${window.lqDayMemo?lqDayMemo(ds):''}`;
   document.getElementById('modalOverlay').classList.add('show');
 }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); document.getElementById('modalBox').classList.remove('menu-mode'); renderQuests(); renderHome(); }
