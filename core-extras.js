@@ -54,7 +54,17 @@ function weekLetterText(){ const t0=Date.parse(todayStr()); const recent=(S.conf
   const detailText=detail.length?'\n\n'+detail.join(', ')+' 들려줬어요.':'';
   let topText=''; try{ const tc={}; recent.forEach(e=>{ if(e.tw){ var _w=String(e.tw).replace(/[“”]/g,''); tc[_w]=(tc[_w]||0)+1; } }); const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a])[0]; if(tk&&tc[tk]>=2) topText='\n\n'+tk+' 얘기가 '+tc[tk]+'번 나왔어요. 요즘 마음에 자주 머무는 주제인가 봐요.'; }catch(e){ LQ.err(e); }
   return '이번 주에 저한테 '+recent.length+'번 이야기해 줬네요.\n\n'+mood+detailText+topText+'\n\n어떤 하루였든, 여기까지 온 당신에게 잘했다고 말해주고 싶어요.'; }
-function openWeekLetter(){ showModal('<h3 style="margin-bottom:6px">로웨나의 주간 편지</h3><div class="mascot-row" style="margin-top:6px">'+mascotImg(56,'cheer')+'<div class="speech-bubble" style="white-space:pre-line">'+esc(weekLetterText())+'</div></div><button class="cfb" style="width:100%;margin-top:12px" onclick="closeModal()">닫기</button>'); }
+/* 주간 편지 머리: 최근 7일 도트 줄(클리어=금빛, 조금 한 날=보라, 쉬는 날=☾)과 가장 잘한 날 */
+function weekStripHTML(){ const W=['일','월','화','수','목','금','토'], t=todayStr(), days=[];
+  for(let i=6;i>=0;i--){ const d=new Date(Date.parse(t+'T00:00:00Z')-i*864e5).toISOString().slice(0,10); days.push(d); }
+  let best=null, cl=0, nights=0;
+  const cells=days.map(d=>{ const r=S.history[d]||{}, n=Object.keys(r.done||{}).filter(k=>r.done[k]).length, p=r.percent||0, dw=new Date(d+'T00:00:00Z').getUTCDay();
+    if(r.cleared) cl++; if((S.sleepLog||{})[d]) nights++;
+    if(n&&(!best||p>=best.p)) best={d,p,dw};
+    const c=r.cleared?'wk-g':(r.pass?'wk-p':(n?'wk-s':'')); return '<div class="wk-c"><i class="wk-d '+c+'">'+(r.pass&&!r.cleared?'☾':'')+'</i><span>'+W[dw]+'</span></div>'; }).join('');
+  const bestTxt=best?'✦ 가장 잘한 날 · '+(+best.d.slice(5,7))+'월 '+(+best.d.slice(8))+'일('+W[best.dw]+') '+Math.round(best.p)+'%':'✦ 이번 주는 쉬어 가는 한 주였어요';
+  return '<div class="wk-box"><div class="wk-row">'+cells+'</div><div class="wk-sum">'+bestTxt+'<br>클리어 '+cl+'일 · 하루 마무리 '+nights+'번</div></div>'; }
+function openWeekLetter(){ showModal('<h3 style="margin-bottom:6px">로웨나의 주간 편지</h3>'+weekStripHTML()+'<div class="mascot-row" style="margin-top:6px">'+mascotImg(56,'cheer')+'<div class="speech-bubble" style="white-space:pre-line">'+esc(weekLetterText())+'</div></div><button class="cfb" style="width:100%;margin-top:12px" onclick="closeModal()">닫기</button>'); }
 
 
 

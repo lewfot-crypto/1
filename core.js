@@ -261,6 +261,7 @@ function toggleQuest(id){
   computeToday(); save();
   if(!before && S.history[t].cleared){ celebClear(); earnDay('clear',5); comebackCheck(); chestCheck(); }
   checkAchievements(); renderHome();
+  try{ if(window.lqQBubbleHit) lqQBubbleHit(id,!!day.done[id]); }catch(e){ LQ.err(e); }
 }
 
 function checkAchievements(){
@@ -315,7 +316,7 @@ function renderHome(){
     list.innerHTML = active.map(q=>{
       const on = !!day.done[q.id];
       return `<div class="quest-row ${on?'done':''}" onclick="toggleQuest('${q.id}')">
-        <div class="check">${on?'✓':''}</div><div class="label">${esc(q.name)}${q.desc?`<div class="qdesc2">${esc(q.desc)}</div>`:''}</div></div>`;
+        <div class="check">${on?'✓':''}</div><div class="label">${esc(q.name)}${q.desc?`<div class="qdesc2">${esc(q.desc)}</div>`:''}</div>${window.lqQBubble?lqQBubble(q.id):''}</div>`;
     }).join('');
   }
   document.getElementById('clearFrac').textContent = `${doneCount} / ${active.length}`;
@@ -348,7 +349,8 @@ function renderCalendar(){
     let cls='nodata', mark='—', bg='';
     if(rec){ cls = rec.cleared?'clear':'notclear'; mark = rec.cleared?'✓':'×'; bg=`background:rgba(${rec.cleared?'90,122,62':'122,50,41'},${(.12+(rec.percent||0)/100*.5).toFixed(2)})`; if(rec.pass&&!rec.cleared){ cls='nodata'; mark='☾'; bg=''; } else if(ds===todayFull&&!rec.cleared){ mark='·'; } }
     const todayCls = ds===todayFull ? ' today':'';
-    html += `<div class="cal-day ${cls}${todayCls}" style="${bg}" onclick="openDayModal('${ds}')"><span>${d}</span><span class="mark">${mark}</span></div>`;
+    const memo=S.sleepLog&&S.sleepLog[ds]&&S.sleepLog[ds].note?'<i class="cal-memo" title="밤의 한 줄"></i>':'';
+    html += `<div class="cal-day ${cls}${todayCls}" style="${bg}" onclick="openDayModal('${ds}')">${memo}<span>${d}</span><span class="mark">${mark}</span></div>`;
   }
   document.getElementById('calGrid').innerHTML = html;
 }
@@ -380,7 +382,7 @@ function openDayModal(ds){
   }).join('') || '<div class="empty">이 날의 퀘스트가 없어요</div>';
   const hint = editable ? '<div class="mdesc" style="margin-top:6px">퀘스트를 눌러 체크를 바꿀 수 있어요. 완료율은 지금 설정된 퀘스트 기준으로 계산돼요.</div>' : '<div class="mdesc" style="margin-top:6px">아직 오지 않은 날이에요.</div>';
   document.getElementById('modalBox').innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button>
-    <h2>${ds}</h2>${hint}${rows}<div class="modal-sec-h">완료율</div><div>${day.percent||0}% · ${day.cleared?'QUEST CLEAR':'QUEST NOT CLEARED'}${day.pass?' · ☾ 쉬는 날':''}</div>`;
+    <h2>${ds}</h2>${hint}${rows}<div class="modal-sec-h">완료율</div><div>${day.percent||0}% · ${day.cleared?'QUEST CLEAR':'QUEST NOT CLEARED'}${day.pass?' · ☾ 쉬는 날':''}</div>${window.lqDayMemo?lqDayMemo(ds):''}`;
   document.getElementById('modalOverlay').classList.add('show');
 }
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); document.getElementById('modalBox').classList.remove('menu-mode'); renderQuests(); renderHome(); }
@@ -501,6 +503,7 @@ function evXtra(){ return {
 function evSpecials(){ return [
 {k:'bday',md:'07-22',pre:7,name:'🎂 아멜리아의 생일 주간',items:['나에게 줄 작은 선물 고르기','좋아하는 음식 먹기','올 한 해 돌아보며 한 줄 적기'],reward:'🎂 생일 보물',gold:80},
 {k:'sakura',md:'04-10',pre:13,name:'🌸 벚꽃 서재의 봄날',items:['벚꽃 보러 천천히 걷기','창문 열고 봄바람 쐬기','봄 음료 한 잔 마시기'],reward:'🌸 벚꽃 보물',gold:60},
+{k:'summer',md:'08-15',pre:14,name:'🌌 한여름 밤의 반딧불',items:['해 진 뒤 바깥 공기 쐬기','시원한 과일 한 접시','밤하늘 별 하나 찾아보기'],reward:'🌌 한여름 밤 보물',gold:60},
 {k:'hween',md:'10-31',pre:7,name:'🎃 할로윈 밤의 모험',items:['좋아하는 간식 하나 준비하기','밤 산책하며 달 올려다보기','촛불이나 작은 조명 켜고 쉬는 밤'],reward:'🎃 할로윈 보물',gold:60},
 {k:'xmas',md:'12-25',pre:7,name:'🎄 크리스마스 이브의 모험',items:['따뜻한 음료 마시며 캐럴 듣기','소중한 사람에게 안부 전하기','겨울밤 조명 보며 산책'],reward:'🎄 크리스마스 보물',gold:60},
 {k:'chuseok',lunar:{2026:'09-25',2027:'09-15',2028:'10-03',2029:'09-22',2030:'09-12'},pre:6,name:'🌕 한가위 보름달',items:['보름달 올려다보기','가족·친구에게 안부 전하기','송편이나 제철 과일 먹기'],reward:'🌕 한가위 보물',gold:60},
