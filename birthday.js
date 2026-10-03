@@ -2,38 +2,16 @@
    생일 당일: 로웨나 인사 + 알레센도의 선물 28골드 + 모두의 한마디 + 겐지 생일 이야기, 연도별 업적
    생일 주간(7/15~): 홈 카운트다운과 특별 이벤트 퀘스트 / 전날·다음 날 한마디 / 설정에서 끄기·태어난 해 입력 */
 (function(){
+  /* 카드 도우미는 card-kit.js (LQC) 를 같이 써요 */
+  var esc=LQC.esc, td=LQC.td, pick=LQC.pick, rnd=LQC.rnd, busy=LQC.busy, whenFree=LQC.whenFree, closeCard=LQC.closeCard, say=LQC.say, NAME=LQC.NAME, K=LQC.kit('bd',{btn:'고마워요'}), rows=K.rows, card=K.card;
   var BM=7, BD=22, GIFT=28;
-  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function on(){ return true; }
   function bd(){ var b=S.bday; if(!b||typeof b!=='object') b=S.bday={}; b.done=b.done||{}; return b; }
-  function td(){ var t=todayStr(); return {y:+t.slice(0,4),m:+t.slice(5,7),d:+t.slice(8,10)}; }
   function utc(y,m,d){ return Date.UTC(y,m-1,d); }
   function daysTo(){ var t=td(), now=utc(t.y,t.m,t.d), diff=Math.round((utc(t.y,BM,BD)-now)/864e5); if(diff<0) diff=Math.round((utc(t.y+1,BM,BD)-now)/864e5); return diff; }
   function isDay(){ var t=td(); return t.m===BM&&t.d===BD; }
   function isAfter(){ var t=td(); return t.m===BM&&t.d===BD+1; }
-  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
 
-  /* ---------- 지금 다른 창이 떠 있지 않을 때만 보여줘요 ---------- */
-  function splashOn(){ var sp=document.getElementById('splash'); if(!sp) return false; var cs=getComputedStyle(sp); return cs.display!=='none'&&cs.visibility!=='hidden'&&+cs.opacity>.05; }
-  function busy(){ var q=function(i){ var e=document.getElementById(i); return e&&e.classList.contains('show'); }, b=false; try{ b=!!stampBusy; }catch(e){ LQ.err(e); }
-    return b||splashOn()||q('askOv')||q('modalOverlay')||q('wlPop')||q('martyPop')||q('lowenaPop')||document.getElementById('achMile')||document.getElementById('lqCard')||document.getElementById('bnCard'); }
-  function whenFree(fn){ var n=0; (function go(){ if(busy()&&n++<40) return void setTimeout(go,1500); var h=document.getElementById('screen-home'); if(h&&h.classList.contains('active')&&!busy()) fn(); })(); }
-  function closeCard(){ var e=document.getElementById('lqCard'); if(e) e.remove(); }
-  function face(k){ var s={
-      lowena:function(){ return typeof mascotImg==='function'?mascotImg(64,'cheer'):''; },
-      marty:function(){ return '<img src="'+MARTY_IMG+'" alt="">'; },
-      wella:function(){ return '<img src="assets/fa2c999a3b.webp" alt="">'; },
-      sina:function(){ return '<img src="'+((window.WL_IMG1||{}).magic||'')+'" alt="">'; },
-      alesendo:function(){ return '<img src="assets/941fef42af.webp" alt="">'; }};
-    try{ return s[k](); }catch(e){ return ''; } }
-  function rows(list){ return list.map(function(r){ return '<div class="lc-row" style="margin-bottom:10px">'+face(r[0])+'<div class="lc-w"><b>'+esc(r[1])+'</b>'+esc(r[0]==='wella'&&window.lqLaugh?lqLaugh(r[2]):r[2])+'</div></div>'; }).join(''); }
-  function card(o){ closeCard(); var e=document.createElement('div'); e.id='lqCard'; e.className='show'+(o.cls?' '+o.cls:'');
-    e.innerHTML='<div class="lc-box" style="max-height:86vh;overflow:auto"><div class="lc-t">'+esc(o.title)+'</div>'+rows(o.rows)+(o.fx?'<div class="lc-fx">'+esc(o.fx)+'</div>':'')
-      +(o.extra||'')+'<button class="gold-btn" id="bdOk">'+esc(o.btn||'고마워요')+'</button></div>';
-    document.body.appendChild(e);
-    document.getElementById('bdOk').onclick=function(){ closeCard(); if(o.next) setTimeout(o.next,250); };
-    try{ sfx('check'); }catch(x){ LQ.err(x); }
-    try{ lqNote(o.rows[0][1],o.rows[0][2]); }catch(x){ LQ.err(x); } }
 
   /* ---------- 대사 ---------- */
   var L={

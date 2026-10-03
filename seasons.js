@@ -6,34 +6,9 @@
    새해: 12/29~1/1 불꽃놀이 배너, 12/31 한 해 마무리(1/1에 적은 소원을 다시 꺼내 줌, 열두 띠 이야기 버튼),
    1/1 새해 인사 → 올해의 소원 적기(S.ny[연도].wish) → 복주머니 고르기 → 모두의 새해 인사, 설날 세배와 세뱃돈 20골드 */
 (function(){
-  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function td(){ var t=todayStr(); return {y:+t.slice(0,4),m:+t.slice(5,7),d:+t.slice(8,10),md:t.slice(5)}; }
-  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
-  function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
+  /* 카드 도우미는 card-kit.js (LQC) 를 같이 써요 */
+  var esc=LQC.esc, td=LQC.td, pick=LQC.pick, rnd=LQC.rnd, busy=LQC.busy, whenFree=LQC.whenFree, closeCard=LQC.closeCard, say=LQC.say, NAME=LQC.NAME, K=LQC.kit('ss'), rows=K.rows, card=K.card;
 
-  /* ---------- 다른 창이 떠 있지 않을 때만 ---------- */
-  function splashOn(){ var sp=document.getElementById('splash'); if(!sp) return false; var cs=getComputedStyle(sp); return cs.display!=='none'&&cs.visibility!=='hidden'&&+cs.opacity>.05; }
-  function busy(){ var q=function(i){ var e=document.getElementById(i); return e&&e.classList.contains('show'); }, b=false; try{ b=!!stampBusy; }catch(e){ LQ.err(e); }
-    return b||splashOn()||q('askOv')||q('modalOverlay')||q('wlPop')||q('martyPop')||q('lowenaPop')||document.getElementById('achMile')||document.getElementById('lqCard')||document.getElementById('bnCard'); }
-  function whenFree(fn){ var n=0; (function go(){ if(busy()&&n++<40) return void setTimeout(go,1500); var h=document.getElementById('screen-home'); if(h&&h.classList.contains('active')&&!busy()) fn(); })(); }
-  function closeCard(){ var e=document.getElementById('lqCard'); if(e) e.remove(); }
-  function face(k){ var s={
-      lowena:function(){ return typeof mascotImg==='function'?mascotImg(64,'cheer'):''; },
-      marty:function(){ return '<img src="'+MARTY_IMG+'" alt="">'; },
-      wella:function(){ return '<img src="assets/fa2c999a3b.webp" alt="">'; },
-      sina:function(){ return '<img src="'+((window.WL_IMG1||{}).magic||'')+'" alt="">'; },
-      alesendo:function(){ return '<img src="assets/941fef42af.webp" alt="">'; }};
-    try{ return s[k](); }catch(e){ return ''; } }
-  var NAME={lowena:'로웨나',marty:'마티',wella:'웰라',sina:'시나',alesendo:'알레센도'};
-  function say(k,t){ return k==='wella'&&window.lqLaugh?lqLaugh(t):t; }
-  function rows(list){ return list.map(function(r){ return '<div class="lc-row" style="margin-bottom:10px">'+face(r[0])+'<div class="lc-w"><b>'+esc(NAME[r[0]]||r[0])+'</b>'+esc(say(r[0],r[1]))+'</div></div>'; }).join(''); }
-  function card(o){ closeCard(); var e=document.createElement('div'); e.id='lqCard'; e.className='show';
-    e.innerHTML='<div class="lc-box" style="max-height:86vh;overflow:auto"><div class="lc-t">'+esc(o.title)+'</div><div id="ssBody">'+rows(o.rows)+(o.fx?'<div class="lc-fx">'+esc(o.fx)+'</div>':'')+'</div>'
-      +(o.extra||'')+(o.btn?'<button class="gold-btn" id="ssOk">'+esc(o.btn)+'</button>':'')+'</div>';
-    document.body.appendChild(e);
-    var ok=document.getElementById('ssOk'); if(ok) ok.onclick=function(){ closeCard(); if(o.next) setTimeout(o.next,250); };
-    try{ sfx('check'); }catch(x){ LQ.err(x); }
-    try{ lqNote(NAME[o.rows[0][0]],o.rows[0][1]); }catch(x){ LQ.err(x); } }
 
   /* ================= 24절기 (해마다 하루쯤 달라질 수 있어 대표 날짜로) ================= */
   var SJ=[
