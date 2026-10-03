@@ -261,6 +261,7 @@ function toggleQuest(id){
   computeToday(); save();
   if(!before && S.history[t].cleared){ celebClear(); earnDay('clear',5); comebackCheck(); chestCheck(); }
   checkAchievements(); renderHome();
+  try{ if(window.lqQBubbleHit) lqQBubbleHit(id,!!day.done[id]); }catch(e){ LQ.err(e); }
 }
 
 function checkAchievements(){
@@ -315,7 +316,7 @@ function renderHome(){
     list.innerHTML = active.map(q=>{
       const on = !!day.done[q.id];
       return `<div class="quest-row ${on?'done':''}" onclick="toggleQuest('${q.id}')">
-        <div class="check">${on?'✓':''}</div><div class="label">${esc(q.name)}${q.desc?`<div class="qdesc2">${esc(q.desc)}</div>`:''}</div></div>`;
+        <div class="check">${on?'✓':''}</div><div class="label">${esc(q.name)}${q.desc?`<div class="qdesc2">${esc(q.desc)}</div>`:''}</div>${window.lqQBubble?lqQBubble(q.id):''}</div>`;
     }).join('');
   }
   document.getElementById('clearFrac').textContent = `${doneCount} / ${active.length}`;
